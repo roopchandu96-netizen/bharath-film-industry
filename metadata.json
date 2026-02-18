@@ -1,0 +1,8 @@
+{
+  "name": "Bharath Film Industry",
+  "description": "The official investment portal for the Bharath Film Industry. Secure producer credits for the next Pan-India blockbusters.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

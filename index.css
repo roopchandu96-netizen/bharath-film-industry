@@ -1,0 +1,94 @@
+/* Custom BFI Styles */
+
+body {
+    background-color: #000000;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+.gold-gradient {
+    background: linear-gradient(135deg, #facc15 0%, #fef08a 30%, #eab308 50%, #fde047 70%, #ca8a04 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+}
+
+.gold-bg {
+    background: linear-gradient(135deg, #facc15 0%, #fef08a 30%, #eab308 50%, #fde047 70%, #ca8a04 100%);
+}
+
+.perspective-lg {
+    perspective: 1000px;
+}
+
+.preserve-3d {
+    transform-style: preserve-3d;
+}
+
+/* Animations */
+.grid-floor {
+    position: fixed;
+    bottom: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background-image:
+        linear-gradient(rgba(250, 204, 21, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(250, 204, 21, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    transform: rotateX(70deg);
+    z-index: -1;
+    pointer-events: none;
+    animation: floor-scroll 40s linear infinite;
+}
+
+@keyframes floor-scroll {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 0 1000px;
+    }
+}
+
+@keyframes ticker {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.animate-ticker {
+    display: inline-block;
+    animation: ticker 60s linear infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #facc15;
+}
+
+.logo-glow {
+    filter: drop-shadow(0 0 15px rgba(250, 204, 21, 0.4));
+}

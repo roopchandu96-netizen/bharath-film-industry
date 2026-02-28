@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/firebase'; // Actually using supabase as per codebase
 import { MovieProject, User } from '../types';
-import { CheckCircle, XCircle, ShieldCheck, DollarSign, Users, Film, AlertTriangle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, ShieldCheck, DollarSign, Users, Film, AlertTriangle, Loader2, Bell } from 'lucide-react';
 import { notifyProjectApproved, notifyInvestmentReceived } from '../services/notificationService';
 
 interface AdminDashboardProps {
@@ -14,6 +14,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     const [pendingProjects, setPendingProjects] = useState<MovieProject[]>([]);
     const [pendingInvestments, setPendingInvestments] = useState<any[]>([]);
     const [pendingUsers, setPendingUsers] = useState<User[]>([]);
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [showNotifications, setShowNotifications] = useState(false);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ totalUsers: 0, totalInvestment: 0, activeProjects: 0 });
 
@@ -65,6 +67,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 setPendingInvestments(investments);
             } else {
                 setPendingInvestments([]);
+            }
+
+            const { data: notifs } = await supabase
+                .from('notifications')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (notifs) {
+                setNotifications(notifs);
             }
 
             // Real Stats Fetching
@@ -151,6 +163,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         }
     };
 
+    const markNotificationRead = async (id: string) => {
+        try {
+            await supabase.from('notifications').update({ read: true }).eq('id', id);
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     if (loading) return (
         <div className="min-h-screen bg-black flex items-center justify-center">
             <Loader2 className="animate-spin text-yellow-500" size={48} />
@@ -165,6 +186,39 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     <p className="text-yellow-500/60 font-mono text-xs uppercase tracking-widest">BFI Administration Node</p>
                 </div>
                 <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:text-yellow-500 transition-colors relative">
+                            <Bell size={20} />
+                            {notifications.filter(n => !n.read).length > 0 && (
+                                <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-black"></span>
+                            )}
+                        </button>
+                        {showNotifications && (
+                            <div className="absolute right-0 mt-2 w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                                <div className="p-4 border-b border-zinc-800 bg-zinc-950">
+                                    <h3 className="text-white font-bold text-sm">System Alerts</h3>
+                                </div>
+                                <div className="max-h-80 overflow-y-auto">
+                                    {notifications.length === 0 ? (
+                                        <div className="p-6 text-center text-zinc-500 text-xs border-b border-zinc-800">
+                                            No active system alerts.
+                                        </div>
+                                    ) : (
+                                        notifications.map(n => (
+                                            <div key={n.id} onClick={() => markNotificationRead(n.id)} className={`p-4 border-b border-zinc-800 cursor-pointer transition-colors ${!n.read ? 'bg-zinc-800/50 hover:bg-zinc-800' : 'hover:bg-zinc-800/30'}`}>
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <span className="text-[10px] font-black uppercase text-yellow-500 tracking-wider flex items-center gap-1">{!n.read && <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></span>}{n.type || 'SYSTEM'}</span>
+                                                    <span className="text-[9px] text-zinc-500 font-mono">{new Date(n.created_at).toLocaleTimeString()}</span>
+                                                </div>
+                                                <p className="text-xs text-white font-medium mb-1">{n.subject}</p>
+                                                <p className="text-[10px] text-zinc-400 leading-relaxed">{n.message}</p>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                     <button onClick={() => {
                         supabase.auth.signOut().then(() => {
                             window.location.hash = ''; // Clear admin hash

@@ -137,9 +137,9 @@ const App: React.FC = () => {
 
       // Keep on portfolio view but refresh might happen via sync
       alert("Synopsis submitted successfully. BFI Admin has been notified via email.");
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("Submission failed. Check network link.");
+      alert(`Submission failed: ${e.message || "Check network link."}`);
     } finally { setIsSubmitting(false); }
   };
 

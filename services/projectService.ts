@@ -43,9 +43,9 @@ export const createProject = async (projectData: Omit<MovieProject, 'id' | 'dire
 
   const newProject = {
     ...projectData,
-    director_id: session.user.id,
-    current_funding: 0,
-    investor_count: 0,
+    directorId: session.user.id,
+    currentFunding: 0,
+    investorCount: 0,
     status: 'PENDING',
   };
 

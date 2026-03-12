@@ -225,7 +225,7 @@ const AuthView: React.FC = () => {
   );
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-white">
       {/* Mobile Top Nav / Left Column on Desktop */}
       <div className="w-full lg:w-[45%] bg-[#0B1527] text-white flex flex-col relative overflow-hidden lg:h-screen lg:rounded-r-3xl z-20 hidden lg:flex">
         {/* Background decorative elements */}

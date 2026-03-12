@@ -334,11 +334,10 @@ const AuthView: React.FC = () => {
             <div className="space-y-6">
               <div>
                 <label className={labelClasses}>I AM A</label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   {[
                     { role: UserRole.INVESTOR, icon: '💰', title: 'Investor', text: 'Fund films' },
                     { role: UserRole.DIRECTOR, icon: '🎬', title: 'Director', text: 'Submit scripts' },
-                    { role: UserRole.PRODUCER, icon: '🎥', title: 'Producer', text: 'Manage films' },
                   ].map((r) => (
                     <button
                       key={r.role}

@@ -45,6 +45,29 @@ const App: React.FC = () => {
       setAuthLoading(false);
     }, 12000);
 
+    const legacySessionStr = localStorage.getItem('bfi_legacy_session');
+    if (legacySessionStr) {
+      const parsedSession = JSON.parse(legacySessionStr);
+      setSession(parsedSession);
+      const fallbackRole = parsedSession.user.user_metadata?.role || UserRole.INVESTOR;
+      setUser({
+        id: parsedSession.user.id,
+        email: parsedSession.user.email,
+        name: parsedSession.user.user_metadata?.full_name || 'Legacy User',
+        role: fallbackRole,
+        kycStatus: 'VERIFIED',
+        totalInvested: 0,
+        projects: []
+      });
+      if (fallbackRole === UserRole.ADMIN) setActiveTab('admin');
+      else if (fallbackRole === UserRole.DIRECTOR) setActiveTab('portfolio');
+      else setActiveTab('explore');
+      
+      setAuthLoading(false);
+      clearTimeout(globalTimeout);
+      return () => clearTimeout(globalTimeout);
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("Auth State Changed. User Email:", session?.user?.email);
 

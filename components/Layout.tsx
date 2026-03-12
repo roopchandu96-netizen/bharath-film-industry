@@ -75,7 +75,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
-      supabase.auth.signOut().then(() => {
+      supabase.auth.signOut().finally(() => {
         localStorage.clear();
         window.location.reload();
       });

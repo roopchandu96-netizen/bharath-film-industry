@@ -23,7 +23,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         let mounted = true;
 
         const load = async () => {
-            // Force timeout to prevent infinite loading
             const timer = setTimeout(() => {
                 if (mounted) setLoading(false);
             }, 5000);
@@ -34,8 +33,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 clearTimeout(timer);
             }
         };
+
         load();
-        return () => { mounted = false; };
+
+        const channel = supabase.channel('admin_updates')
+            .on('postgres_changes', { event: '*', table: 'projects', schema: 'public' }, () => {
+                if (mounted) fetchDashboardData();
+            })
+            .on('postgres_changes', { event: '*', table: 'profiles', schema: 'public' }, () => {
+                if (mounted) fetchDashboardData();
+            })
+            .on('postgres_changes', { event: '*', table: 'investments', schema: 'public' }, () => {
+                if (mounted) fetchDashboardData();
+            })
+            .on('postgres_changes', { event: '*', table: 'notifications', schema: 'public' }, () => {
+                if (mounted) fetchDashboardData();
+            })
+            .subscribe();
+
+        return () => { 
+            mounted = false; 
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     const fetchDashboardData = async () => {

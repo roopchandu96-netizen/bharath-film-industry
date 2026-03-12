@@ -24,26 +24,40 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Initial Data Fetch
+    // Initial Data Fetch & Subscription
     useEffect(() => {
-        if (user?.name) {
-            fetchMyProjects();
-        }
+        if (!user?.id) return;
+
+        fetchMyProjects();
+
+        const channel = supabase
+            .channel('director_projects')
+            .on('postgres_changes', { 
+                event: '*', 
+                table: 'projects', 
+                schema: 'public',
+                filter: `directorId=eq.${user.id}`
+            }, () => {
+                fetchMyProjects();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [user]);
 
     const fetchMyProjects = async () => {
-        console.log("DirectorDashboard: Starting fetch...");
         setLoading(true);
 
         try {
-            if (!user?.name) {
-                return;
-            }
+            if (!user?.id) return;
 
             const { data, error } = await supabase
                 .from('projects')
                 .select('*')
-                .eq('director', user.name);
+                .eq('directorId', user.id)
+                .order('created_at', { ascending: false });
 
             if (data && data.length > 0) {
                 setMyProjects(data as MovieProject[]);

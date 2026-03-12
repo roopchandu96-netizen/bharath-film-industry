@@ -10,28 +10,7 @@ interface LayoutProps {
   role: UserRole;
 }
 
-export const BFILogo: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 200 240" className={className} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="goldGradLayout" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#facc15" />
-        <stop offset="30%" stopColor="#fef08a" />
-        <stop offset="50%" stopColor="#eab308" />
-        <stop offset="80%" stopColor="#fde047" />
-        <stop offset="100%" stopColor="#ca8a04" />
-      </linearGradient>
-      <linearGradient id="blueGradLayout" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#1e3a8a" />
-        <stop offset="100%" stopColor="#1e293b" />
-      </linearGradient>
-    </defs>
-    <path d="M100,20 C80,20 70,35 60,50 C45,50 45,65 45,85 L45,145 L55,145 L55,85 C55,75 60,65 75,65 C85,65 90,50 100,50 C110,50 115,65 125,65 C140,65 145,75 145,85 L145,145 L155,145 L155,85 C155,65 155,50 140,50 C130,35 120,20 100,20 Z" fill="url(#goldGradLayout)" />
-    <path d="M100,45 C85,45 78,55 70,65 C60,65 60,75 60,90 L60,145 L140,145 L140,90 C140,75 140,65 130,65 C122,55 115,45 100,45 Z" fill="url(#blueGradLayout)" />
-    <path d="M25,0 C35,15 50,20 50,35 C50,45 40,50 25,50 C10,50 0,45 0,35 C0,20 15,15 25,0" transform="translate(82, 95) scale(0.7)" fill="none" stroke="url(#goldGradLayout)" strokeWidth="2" />
-    <path d="M25,15 C30,22 35,25 35,35 C35,42 30,45 25,45 C20,45 15,42 15,35 C15,25 20,22 25,15 Z" transform="translate(82, 95) scale(0.7)" fill="url(#goldGradLayout)" />
-    <text x="100" y="195" textAnchor="middle" fill="url(#goldGradLayout)" style={{ fontSize: '56px', fontWeight: '900', fontFamily: 'serif' }}>BFI</text>
-  </svg>
-);
+import { BFILogo } from './BFILogo';
 
 const MarketTicker: React.FC = () => {
   const events = [

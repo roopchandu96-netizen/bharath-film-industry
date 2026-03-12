@@ -3,7 +3,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { MovieProject, UserRole, User } from '../types';
 import { subscribeToActiveProjects } from '../services/projectService';
 import ProjectCard from '../components/ProjectCard';
-import { BFILogo } from '../components/Layout';
+import { BFILogo } from '../components/BFILogo';
 import { Search, Sparkles, Film, PlusCircle, ArrowRight, X, ShieldCheck, Eye, EyeOff, ChevronDown, Filter } from 'lucide-react';
 
 interface ExploreViewProps {

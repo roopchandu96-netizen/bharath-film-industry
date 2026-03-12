@@ -2,7 +2,8 @@
 export enum UserRole {
   INVESTOR = 'INVESTOR',
   DIRECTOR = 'DIRECTOR',
-  ADMIN = 'ADMIN'
+  ADMIN = 'ADMIN',
+  PRODUCER = 'PRODUCER'
 }
 
 export enum ProducerTier {

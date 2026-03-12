@@ -419,7 +419,7 @@ const AuthView: React.FC = () => {
             <div className="space-y-6 pt-2">
               <div className="mb-8">
                 <h2 className="text-3xl font-serif text-slate-900 mb-2">Welcome back</h2>
-                <p className="text-sm text-slate-500">Sign in to your CineInvest account</p>
+                <p className="text-sm text-slate-500">Sign in to your Bharath Film Industry account</p>
               </div>
 
               {error && <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-bold text-center">{error}</div>}

@@ -269,32 +269,11 @@ const AuthView: React.FC = () => {
                   India's first script investment marketplace. Discover stories worth funding, invest with confidence, and share in the success of every blockbuster.
                 </p>
 
-                <div className="grid grid-cols-3 gap-6 text-left border-t border-slate-800 pt-8">
-                  <div>
-                    <div className="text-yellow-500 font-bold text-2xl lg:text-3xl font-serif">₹48Cr</div>
-                    <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Funded</div>
-                  </div>
-                  <div>
-                    <div className="text-white font-bold text-2xl lg:text-3xl font-serif">127</div>
-                    <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Films Live</div>
-                  </div>
-                  <div>
-                    <div className="text-yellow-500 font-bold text-2xl lg:text-3xl font-serif">3.8K</div>
-                    <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Investors</div>
-                  </div>
-                </div>
-                
-                <div className="mt-8">
-                  <div className="flex items-center gap-2 text-yellow-500 font-bold text-sm">
-                     <span>+28%</span>
-                     <span className="text-[10px] text-slate-500 uppercase tracking-widest">Avg Return</span>
-                  </div>
-                </div>
               </div>
             ) : (
               <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                 <div className="mb-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-yellow-500/30 text-yellow-500 text-[10px] font-bold uppercase tracking-widest">
-                  <span>💰</span> Join 3,800+ Investors
+                  <span>💰</span> Film Investment
                 </div>
                 <h1 className="text-4xl lg:text-5xl font-serif leading-[1.1] mb-6">
                   Start <span className="text-yellow-500 italic">Investing</span><br/> in Films Today
@@ -303,17 +282,6 @@ const AuthView: React.FC = () => {
                   India's first script investment marketplace
                 </p>
 
-                <div className="flex flex-col gap-3">
-                  <div className="inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-700/50 bg-slate-800/30 text-sm font-semibold text-slate-200 w-max backdrop-blur-sm">
-                    <span className="text-yellow-500">✓</span> +28% Returns
-                  </div>
-                  <div className="inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-700/50 bg-slate-800/30 text-sm font-semibold text-slate-200 w-max backdrop-blur-sm">
-                    <span className="text-yellow-500">✓</span> From ₹50K
-                  </div>
-                  <div className="inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-700/50 bg-slate-800/30 text-sm font-semibold text-slate-200 w-max backdrop-blur-sm">
-                    <span className="text-yellow-500">✓</span> Legally Protected
-                  </div>
-                </div>
               </div>
             )}
           </div>
@@ -335,7 +303,7 @@ const AuthView: React.FC = () => {
         ) : (
           <div>
             <div className="inline-flex items-center mb-4 px-3 py-1 rounded-full border border-yellow-500/30 text-yellow-500 text-[9px] font-bold uppercase tracking-widest">
-              Join 3,800+ Investors
+              Film Investment
             </div>
             <h1 className="text-3xl font-serif leading-tight">
               Start <span className="text-yellow-500 italic">Investing</span> in Films Today

@@ -10,6 +10,7 @@ import InvestorDashboard from './views/InvestorDashboard.tsx';
 import AuthView from './views/AuthView.tsx';
 import ProfileView from './views/ProfileView.tsx';
 import ProjectDetailView from './views/ProjectDetailView.tsx';
+import AboutView from './views/AboutView.tsx';
 import PaymentGateway from './components/PaymentGateway.tsx';
 import BFIIntellect from './components/BFIIntellect.tsx';
 import AdminDashboard from './views/AdminDashboard.tsx';
@@ -22,6 +23,7 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('explore');
+  const [showAuth, setShowAuth] = useState(false);
   const [selectedProject, setSelectedProject] = useState<MovieProject | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -167,7 +169,47 @@ const App: React.FC = () => {
   };
 
   if (authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-yellow-400" /></div>;
-  if (!session || !user) return <AuthView />;
+  
+  if (!session || !user) {
+    if (showAuth) {
+      return (
+        <div className="relative isolate">
+          <button 
+            onClick={() => setShowAuth(false)}
+            className="absolute top-6 left-6 z-50 p-2 bg-black/50 hover:bg-black text-white rounded-full transition-colors hidden lg:flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
+          >
+            ← Back to Home
+          </button>
+          <AuthView />
+        </div>
+      );
+    }
+    
+    return (
+      <div className="min-h-screen bg-[#0f172a] overflow-auto flex flex-col font-sans selection:bg-yellow-500/30 text-slate-200">
+        <header className="sticky top-0 z-40 bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
+          <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-bold text-white leading-none tracking-tight">Bharath <span className="text-yellow-500">Film Industry</span></h1>
+            </div>
+            <button 
+              onClick={() => setShowAuth(true)} 
+              className="px-6 py-2.5 bg-yellow-500 text-black font-bold text-sm rounded-full hover:bg-yellow-400 transition-colors shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+            >
+              Sign In / Register
+            </button>
+          </div>
+        </header>
+        
+        <AboutView />
+        
+        <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-500 text-sm">
+           © 2026 Bharath Film Industry. All rights reserved. Built on Secured Nodes.
+        </footer>
+      </div>
+    );
+  }
+
 
   // Logic: Only show AdminDashboard if explicitly select 'admin' tab (and user is admin)
   // This allows Directors (or Admins acting as Directors) to see the normal Layout.
@@ -196,6 +238,7 @@ const App: React.FC = () => {
           )}
 
           {activeTab === 'profile' && <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />}
+          {activeTab === 'about' && <AboutView />}
         </>
       )}
 

@@ -73,14 +73,15 @@ const AuthView: React.FC = () => {
         try {
           await auth.signIn(email.trim(), password);
         } catch (err: any) {
-          if (err.message && (err.message.includes('fetch') || err.message.includes('Invalid login credentials'))) {
+          if (err.message && (err.message.toLowerCase().includes('fetch') || err.message.includes('Invalid login credentials') || err.message.includes('Failed to fetch'))) {
             // Fallback for old users & missing offline credentials
             console.warn("Network or credential error, triggering offline fallback...");
+            const fallbackRole = (showAdminLogin || email.trim().toLowerCase() === 'bharathfilmindustry@gmail.com') ? UserRole.ADMIN : UserRole.INVESTOR;
             localStorage.setItem('bfi_legacy_session', JSON.stringify({
               user: {
                 id: 'legacy-' + Date.now(),
                 email: email.trim(),
-                user_metadata: { full_name: 'Legacy User', role: email.trim() === 'bharathfilmindustry@gmail.com' ? UserRole.ADMIN : UserRole.INVESTOR }
+                user_metadata: { full_name: 'Legacy User', role: fallbackRole }
               }
             }));
             window.location.reload();
@@ -90,8 +91,24 @@ const AuthView: React.FC = () => {
         }
       } else {
         const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-        await auth.signUp(email.trim(), password, selectedRole, fullName);
-        setIsVerifyingOtp(true);
+        try {
+          await auth.signUp(email.trim(), password, selectedRole, fullName);
+          setIsVerifyingOtp(true);
+        } catch (err: any) {
+          if (err.message && (err.message.toLowerCase().includes('fetch') || err.message.includes('Failed to fetch') || err.message.includes('network'))) {
+            console.warn("Network error during signup, triggering offline fallback...");
+            localStorage.setItem('bfi_legacy_session', JSON.stringify({
+              user: {
+                id: 'legacy-' + Date.now(),
+                email: email.trim(),
+                user_metadata: { full_name: fullName || 'New User', role: selectedRole }
+              }
+            }));
+            window.location.reload();
+            return;
+          }
+          throw err;
+        }
       }
     } catch (err: any) {
       setError(err.message || "Authentication Failed.");

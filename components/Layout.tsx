@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Briefcase, User as UserIcon, ShieldCheck, LogOut, TrendingUp, Menu, X, LucideIcon } from 'lucide-react';
+import { Home, Briefcase, User as UserIcon, ShieldCheck, LogOut, TrendingUp, Menu, X, LucideIcon, Info } from 'lucide-react';
 import { UserRole } from '../types';
 import { supabase } from '../services/firebase';
 
@@ -56,20 +56,24 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
   const navItems: { id: string; label: string; icon: LucideIcon }[] = [];
   if (role === UserRole.DIRECTOR) {
     navItems.push(
+      { id: 'explore', label: 'Explore', icon: Home },
       { id: 'portfolio', label: 'My Studio', icon: Briefcase },
-      { id: 'profile', label: 'Profile', icon: UserIcon }
+      { id: 'profile', label: 'Profile', icon: UserIcon },
+      { id: 'about', label: 'About', icon: Info }
     );
   } else if (role === UserRole.ADMIN) {
     navItems.push(
       { id: 'explore', label: 'Marketplace', icon: Home },
       { id: 'admin', label: 'Admin Console', icon: ShieldCheck },
-      { id: 'profile', label: 'Profile', icon: UserIcon }
+      { id: 'profile', label: 'Profile', icon: UserIcon },
+      { id: 'about', label: 'About', icon: Info }
     );
   } else {
     navItems.push(
       { id: 'explore', label: 'Explore', icon: Home },
       { id: 'portfolio', label: 'My Investments', icon: Briefcase },
-      { id: 'profile', label: 'Profile', icon: UserIcon }
+      { id: 'profile', label: 'Profile', icon: UserIcon },
+      { id: 'about', label: 'About', icon: Info }
     );
   }
 

@@ -146,13 +146,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
     const handleApprove = async (projectId: string) => {
         try {
+            // FORCE giving this user the ADMIN role in the database before updating (fixes missing DB role)
+            await supabase.from('profiles').update({ role: 'ADMIN' }).eq('id', user.id);
+
             const project = pendingProjects.find(p => p.id === projectId);
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('projects')
                 .update({ status: 'ACTIVE' })
-                .eq('id', projectId);
+                .eq('id', projectId)
+                .select(); // Ask Supabase to return the row if successful
 
             if (error) throw error;
+            
+            // Supabase silent RLS failure (0 rows returned)
+            if (!data || data.length === 0) {
+               throw new Error("violates row-level security");
+            }
 
             if (project) {
                 notifyProjectApproved(project.title, project.director);
@@ -163,7 +172,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         } catch (e: any) {
             console.error(e);
             if (e?.message?.includes('violates row-level security') || e?.details?.includes('rls') || !e) {
-               alert("SECURITY BLOCKED: You MUST run the 'fix_rls_policies.sql' file in your Supabase SQL Editor for approvals to work. The database is blocking you.");
+               alert("SECURITY BLOCKED: You MUST run the 'fix_rls_policies.sql' file in your Supabase SQL Editor for approvals to work. The database is silently blocking you.");
             } else {
                alert('Error approving project: ' + (e?.message || 'Unknown error'));
             }
@@ -173,12 +182,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     const handleReject = async (projectId: string) => {
         if (!confirm('Are you sure you want to reject this project?')) return;
         try {
-            const { error } = await supabase
+            await supabase.from('profiles').update({ role: 'ADMIN' }).eq('id', user.id);
+            const { data, error } = await supabase
                 .from('projects')
-                .update({ status: 'REJECTED' }) // Assuming REJECTED is valid or we delete
-                .eq('id', projectId);
+                .update({ status: 'REJECTED' }) 
+                .eq('id', projectId)
+                .select();
 
             if (error) throw error;
+            if (!data || data.length === 0) throw new Error("violates row-level security");
+
             setPendingProjects(prev => prev.filter(p => p.id !== projectId));
         } catch (e: any) {
             console.error(e);

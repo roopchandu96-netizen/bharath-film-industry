@@ -13,6 +13,7 @@ import ProjectDetailView from './views/ProjectDetailView.tsx';
 import AboutView from './views/AboutView.tsx';
 import PaymentGateway from './components/PaymentGateway.tsx';
 import BFIIntellect from './components/BFIIntellect.tsx';
+import { BFILogo } from './components/BFILogo.tsx';
 import AdminDashboard from './views/AdminDashboard.tsx';
 import DirectorDashboard from './views/DirectorDashboard.tsx';
 import { UserRole, MovieProject, User } from './types.ts';
@@ -190,7 +191,13 @@ const App: React.FC = () => {
         <header className="sticky top-0 z-40 bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
           <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-white leading-none tracking-tight">Bharath <span className="text-yellow-500">Film Industry</span></h1>
+              <div className="w-10 h-10 flex items-center justify-center">
+                <BFILogo className="w-full h-full drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white leading-none tracking-tight">Bharath <span className="text-yellow-500">Film Industry</span></h1>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 sm:block hidden">Decentralized Production</p>
+              </div>
             </div>
             <button 
               onClick={() => setShowAuth(true)} 

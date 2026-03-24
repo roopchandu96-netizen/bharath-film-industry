@@ -249,9 +249,27 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
                     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 max-w-5xl mx-auto shadow-2xl">
                         <div className="flex justify-between items-center border-b border-slate-800 pb-8 mb-8">
                             <h2 className="text-2xl font-bold text-white">Project Details</h2>
-                            <button className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-colors shadow-lg shadow-amber-900/20">
-                                Save Changes
-                            </button>
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={async () => {
+                                        if (activeProject && confirm("Are you sure you want to delete this project? This cannot be undone.")) {
+                                            const { error } = await supabase.from('projects').delete().eq('id', activeProject.id);
+                                            if (error) alert("Error deleting project. Make sure you've run the SQL policies update.");
+                                            else {
+                                                alert("Project deleted.");
+                                                fetchMyProjects();
+                                                setActiveView('dashboard');
+                                            }
+                                        }
+                                    }}
+                                    className="px-6 py-3 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-900/50 font-bold rounded-xl transition-colors shadow-lg shadow-red-900/5"
+                                >
+                                    Delete Project
+                                </button>
+                                <button className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-colors shadow-lg shadow-amber-900/20">
+                                    Save Changes
+                                </button>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">

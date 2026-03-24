@@ -72,19 +72,9 @@ const AuthView: React.FC = () => {
       if (isLogin) {
         try {
           await auth.signIn(email.trim(), password);
-        } catch (err: any) {
-          // Force fallback for ALL errors since backend is inaccessible
-          console.warn("Authentication error intercepted, forcing fallback mode. Error:", err);
-          const fallbackRole = (showAdminLogin || email.trim().toLowerCase() === 'bharathfilmindustry@gmail.com') ? UserRole.ADMIN : UserRole.INVESTOR;
-          localStorage.setItem('bfi_legacy_session', JSON.stringify({
-            user: {
-              id: 'legacy-' + Date.now(),
-              email: email.trim(),
-              user_metadata: { full_name: 'Legacy User', role: fallbackRole }
-            }
-          }));
           window.location.reload();
-          return;
+        } catch (err: any) {
+          throw err;
         }
       } else {
         const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
@@ -92,17 +82,7 @@ const AuthView: React.FC = () => {
           await auth.signUp(email.trim(), password, selectedRole, fullName);
           setIsVerifyingOtp(true);
         } catch (err: any) {
-          // Force fallback for ALL errors since backend is inaccessible
-          console.warn("Signup error intercepted, forcing fallback mode. Error:", err);
-          localStorage.setItem('bfi_legacy_session', JSON.stringify({
-            user: {
-              id: 'legacy-' + Date.now(),
-              email: email.trim(),
-              user_metadata: { full_name: fullName || 'New User', role: selectedRole }
-            }
-          }));
-          window.location.reload();
-          return;
+          throw err;
         }
       }
     } catch (err: any) {

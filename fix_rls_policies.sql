@@ -1,6 +1,12 @@
--- SQL Execution to fix Supabase RLS policies
+-- FIX FOR SUPABASE RLS ERRORS
+-- Run this exactly as is in the Supabase SQL Editor
 
--- Allow ADMIN to update any project (for approvals)
+-- 1. Remove old broken policies to avoid "already exists" errors
+DROP POLICY IF EXISTS "Admins can update any project" ON projects;
+DROP POLICY IF EXISTS "Admins can delete any project" ON projects;
+DROP POLICY IF EXISTS "Directors can delete own projects" ON projects;
+
+-- 2. Create the exact Admin approval policy
 CREATE POLICY "Admins can update any project" ON projects
 FOR UPDATE USING (
   exists (
@@ -9,9 +15,7 @@ FOR UPDATE USING (
   )
 );
 
--- Allow ADMIN to view pending projects, etc. (Actually, public select is already true, but this might be useful)
-
--- Allow ADMIN to delete any project (optional, maybe for future use)
+-- 3. Create the exact Admin deletion policy
 CREATE POLICY "Admins can delete any project" ON projects
 FOR DELETE USING (
   exists (
@@ -20,6 +24,6 @@ FOR DELETE USING (
   )
 );
 
--- Allow DIRECTORS to delete ONLY their own projects
+-- 4. Create the Director delete policy
 CREATE POLICY "Directors can delete own projects" ON projects
 FOR DELETE USING (auth.uid() = "directorId");

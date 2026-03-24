@@ -143,8 +143,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         setPendingInvestments(prev => prev.filter(inv => inv.id !== id));
         alert(`Investment ${id} Verified & Funds Released to Escrow.`);
     };
+    const [processingId, setProcessingId] = useState<string | null>(null);
 
     const handleApprove = async (projectId: string) => {
+        if (processingId) return;
+        setProcessingId(projectId);
         try {
             // FORCE giving this user the ADMIN role in the database before updating (fixes missing DB role)
             await supabase.from('profiles').update({ role: 'ADMIN' }).eq('id', user.id);
@@ -176,11 +179,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             } else {
                alert('Error approving project: ' + (e?.message || 'Unknown error'));
             }
+        } finally {
+            setProcessingId(null);
         }
     };
 
     const handleReject = async (projectId: string) => {
         if (!confirm('Are you sure you want to reject this project?')) return;
+        if (processingId) return;
+        setProcessingId(projectId);
         try {
             await supabase.from('profiles').update({ role: 'ADMIN' }).eq('id', user.id);
             const { data, error } = await supabase
@@ -196,6 +203,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         } catch (e: any) {
             console.error(e);
             alert("SECURITY BLOCKED: You MUST run the 'fix_rls_policies.sql' file in your Supabase SQL Editor for rejections to work.");
+        } finally {
+            setProcessingId(null);
         }
     };
 
@@ -357,14 +366,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
                                         <div className="flex gap-3 pt-2">
                                             <button
+                                                disabled={processingId === project.id}
                                                 onClick={() => handleApprove(project.id)}
-                                                className="flex-1 py-3 bg-yellow-500 text-black font-bold text-xs uppercase rounded-xl hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2"
+                                                className="flex-1 py-3 bg-yellow-500 text-black font-bold text-xs uppercase rounded-xl hover:bg-yellow-400 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                                             >
-                                                <CheckCircle size={16} /> Approve & List
+                                                {processingId === project.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />} 
+                                                Approve & List
                                             </button>
                                             <button
+                                                disabled={processingId === project.id}
                                                 onClick={() => handleReject(project.id)}
-                                                className="flex-1 py-3 bg-zinc-900 text-red-500 border border-zinc-800 font-bold text-xs uppercase rounded-xl hover:bg-red-950/30 transition-colors flex items-center justify-center gap-2"
+                                                className="flex-1 py-3 bg-zinc-900 text-red-500 border border-zinc-800 font-bold text-xs uppercase disabled:opacity-50 rounded-xl hover:bg-red-950/30 transition-colors flex items-center justify-center gap-2"
                                             >
                                                 <XCircle size={16} /> Reject
                                             </button>

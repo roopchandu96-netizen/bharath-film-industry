@@ -160,9 +160,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             setPendingProjects(prev => prev.filter(p => p.id !== projectId));
             alert('Project Approved and Live on Marketplace');
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert('Error approving project');
+            if (e?.message?.includes('violates row-level security') || e?.details?.includes('rls') || !e) {
+               alert("SECURITY BLOCKED: You MUST run the 'fix_rls_policies.sql' file in your Supabase SQL Editor for approvals to work. The database is blocking you.");
+            } else {
+               alert('Error approving project: ' + (e?.message || 'Unknown error'));
+            }
         }
     };
 
@@ -176,9 +180,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             if (error) throw error;
             setPendingProjects(prev => prev.filter(p => p.id !== projectId));
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert('Error rejecting project');
+            alert("SECURITY BLOCKED: You MUST run the 'fix_rls_policies.sql' file in your Supabase SQL Editor for rejections to work.");
         }
     };
 

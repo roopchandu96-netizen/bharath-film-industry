@@ -201,8 +201,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-slate-900 text-center text-slate-600 text-xs">
-          © 2026 Bharath Film Industry. All rights reserved. Built on Secured Nodes.
+        <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-slate-900 text-center text-slate-600 text-xs space-y-2">
+          <div>© 2026 Bharath Film Industry. All rights reserved. Built on Secured Nodes.</div>
+          <div className="text-[10px] text-slate-500 tracking-wider font-mono">
+            UDYAM REGISTRATION NUMBER: UDYAM-AP-23-0080757 &nbsp;|&nbsp; GSTIN: 37CZVPR2615G1ZU
+          </div>
         </div>
       </footer>
     </div>

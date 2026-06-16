@@ -210,8 +210,11 @@ const App: React.FC = () => {
         
         <AboutView />
         
-        <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-500 text-sm">
-           © 2026 Bharath Film Industry. All rights reserved. Built on Secured Nodes.
+        <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-500 text-sm space-y-2">
+          <div>© 2026 Bharath Film Industry. All rights reserved. Built on Secured Nodes.</div>
+          <div className="text-[10px] text-slate-600 tracking-wider font-mono">
+            UDYAM REGISTRATION NUMBER: UDYAM-AP-23-0080757 &nbsp;|&nbsp; GSTIN: 37CZVPR2615G1ZU
+          </div>
         </footer>
       </div>
     );

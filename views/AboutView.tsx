@@ -19,6 +19,16 @@ const AboutView: React.FC = () => {
       {/* Sequence Animation Section */}
       <SequenceAnimation />
 
+      {/* Brand Banner Section */}
+      <div className="relative w-full rounded-[2rem] overflow-hidden border border-slate-800 bg-[#020617] shadow-2xl transition-all duration-500 hover:border-amber-500/20 group">
+        <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/10 to-yellow-500/5 rounded-[2rem] blur-lg opacity-50 group-hover:opacity-75 transition-opacity -z-10" />
+        <img 
+          src="/banner.jpg" 
+          alt="Bharat Film Industry Brand Banner" 
+          className="w-full h-auto object-cover"
+        />
+      </div>
+
       {/* Founder Section */}
       <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-[3rem] p-8 md:p-16 shadow-2xl relative overflow-hidden mt-16">
         {/* Decorative backgrounds */}
@@ -100,6 +110,22 @@ const AboutView: React.FC = () => {
           <p className="text-sm text-slate-400 leading-relaxed">
             Fans transcend from viewers to owners. When a BFI partnered film succeeds at the box office, our investors directly share in the profit.
           </p>
+        </div>
+      </div>
+
+      {/* Compliance / Registration Section */}
+      <div className="p-8 bg-zinc-950/40 border border-slate-800/60 rounded-3xl text-center space-y-3 max-w-3xl mx-auto backdrop-blur-md">
+        <h4 className="text-sm font-bold text-white tracking-widest uppercase text-amber-500">Official Company Registration</h4>
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 text-xs font-mono text-slate-400">
+          <div>
+            <span className="text-slate-600 uppercase font-sans font-bold">UDYAM ID:</span>{' '}
+            <span className="text-white">UDYAM-AP-23-0080757</span>
+          </div>
+          <div className="hidden sm:block text-slate-700">|</div>
+          <div>
+            <span className="text-slate-600 uppercase font-sans font-bold">GSTIN:</span>{' '}
+            <span className="text-white">37CZVPR2615G1ZU</span>
+          </div>
         </div>
       </div>
       

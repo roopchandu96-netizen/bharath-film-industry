@@ -8,7 +8,7 @@ import { downloadInvestmentAgreement } from '../services/fileService';
 import { supabase } from '../services/firebase';
 import {
   LayoutDashboard, Search, PieChart, FileText, Bell, User as UserIcon,
-  Loader2, TrendingUp, Calendar, BadgeCheck, Download, ExternalLink, Filter
+  Loader2, TrendingUp, Calendar, BadgeCheck, Download, ExternalLink, Filter, Scale
 } from 'lucide-react';
 import { notifyInvestmentInterest } from '../services/notificationService';
 
@@ -198,11 +198,57 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
 
         {/* Documents */}
         {activeView === 'documents' && (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-in fade-in duration-300">
             <div>
               <h2 className="text-2xl font-serif text-white mb-1">Legal Repository</h2>
               <p className="text-zinc-500 text-xs uppercase tracking-widest">Contracts & Receipts</p>
             </div>
+
+            {/* Legal Repository Policy Framework Card */}
+            <div className="bg-zinc-950/80 border border-yellow-500/10 p-6 md:p-8 rounded-[2rem] space-y-6 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-yellow-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/4" />
+              <div className="flex items-center gap-3">
+                <span className="p-3 bg-yellow-500/10 text-yellow-500 rounded-2xl"><Scale size={20} /></span>
+                <div>
+                  <h3 className="text-lg font-bold text-white uppercase tracking-wide">Legal Repository Policy</h3>
+                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Contracts &amp; Receipts for Investors</p>
+                </div>
+              </div>
+              
+              <div className="text-xs text-slate-400 leading-relaxed space-y-4 max-h-[320px] overflow-y-auto pr-2 border-t border-zinc-800/80 pt-4">
+                <p><strong>Purpose:</strong> The Legal Repository serves as the official storage and verification system for all investor agreements, transactions, and project-related legal documents conducted through Bharat Film Industry (BFI).</p>
+                
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black uppercase text-yellow-500 tracking-wider">Documents Maintained for Every Investor:</p>
+                  <ul className="list-decimal pl-5 space-y-2 text-xs">
+                    <li><strong>Investor Registration Form:</strong> Contains investor's full name, contact info, address, identity verification details, preferences, signature, and consent.</li>
+                    <li><strong>Investor Agreement:</strong> Legally executed contract between BFI, the Investor, and Project Producer outlining investment amount, revenue sharing terms, risk disclosure, rights, and exit clauses.</li>
+                    <li><strong>Investment Receipt:</strong> Issued receipt containing receipt number, investor name, project name, amount invested, date of payment, payment method, and BFI signature.</li>
+                    <li><strong>Payment Acknowledgement:</strong> Confirmation that investment funds have been received and recorded.</li>
+                    <li><strong>Revenue Distribution Records:</strong> Film revenue statements, sources, investor share calculations, dates, and outstanding balances.</li>
+                    <li><strong>Tax Documentation:</strong> TDS certificates, tax deduction records, and compliance documents where applicable.</li>
+                    <li><strong>Project Updates Archive:</strong> Access to official production updates, shooting logs, post-production progress, and release status.</li>
+                    <li><strong>Legal Notices &amp; Amendments:</strong> Contract amendments, budget revisions, delays, and official communications.</li>
+                  </ul>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div className="p-4 bg-zinc-900/40 rounded-2xl border border-zinc-800">
+                    <p className="text-[9px] font-black uppercase text-white tracking-widest mb-1.5">Digital Record Policy</p>
+                    <p className="text-[10px] text-zinc-400 leading-relaxed">All contracts, receipts, and acknowledgements are digitally stored by BFI, protected via secure access controls, and retained for a minimum period required by law.</p>
+                  </div>
+                  <div className="p-4 bg-zinc-900/40 rounded-2xl border border-zinc-800">
+                    <p className="text-[9px] font-black uppercase text-white tracking-widest mb-1.5">Investor Transparency Policy</p>
+                    <p className="text-[10px] text-zinc-400 leading-relaxed">BFI is committed to providing investors with verified investment records, transaction receipts, revenue-sharing statements, and official project communications.</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl text-[10px] text-zinc-500 leading-normal">
+                  <strong>Disclaimer:</strong> BFI acts as a facilitator connecting investors and film projects. Investment returns are not guaranteed and depend entirely on the commercial performance and revenue generated by the respective film project. All investors acknowledge inherent risks before participating.
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 gap-4">
               {investments.map(inv => (
                 <div key={inv.id} className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-between">

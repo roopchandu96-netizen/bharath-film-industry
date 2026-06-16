@@ -12,6 +12,7 @@ import ProfileView from './views/ProfileView.tsx';
 import ProjectDetailView from './views/ProjectDetailView.tsx';
 import AboutView from './views/AboutView.tsx';
 import OurWorksView from './views/OurWorksView.tsx';
+import TermsView from './views/TermsView.tsx';
 import PaymentGateway from './components/PaymentGateway.tsx';
 import BFIIntellect from './components/BFIIntellect.tsx';
 import { BFILogo } from './components/BFILogo.tsx';
@@ -25,7 +26,7 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('explore');
-  const [loggedOutTab, setLoggedOutTab] = useState<'about' | 'works'>('about');
+  const [loggedOutTab, setLoggedOutTab] = useState<'about' | 'works' | 'terms'>('about');
   const [showAuth, setShowAuth] = useState(false);
   const [selectedProject, setSelectedProject] = useState<MovieProject | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -224,6 +225,16 @@ const App: React.FC = () => {
               >
                 Our Works
               </button>
+              <button
+                onClick={() => setLoggedOutTab('terms')}
+                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
+                  loggedOutTab === 'terms'
+                    ? 'bg-yellow-500 text-black shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Terms
+              </button>
             </div>
 
             <button 
@@ -235,9 +246,16 @@ const App: React.FC = () => {
           </div>
         </header>
         
-        {loggedOutTab === 'about' ? <AboutView /> : <OurWorksView />}
+        {loggedOutTab === 'about' && <AboutView />}
+        {loggedOutTab === 'works' && <OurWorksView />}
+        {loggedOutTab === 'terms' && <TermsView />}
         
-        <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-500 text-sm space-y-2">
+        <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-500 text-sm space-y-4">
+          <div className="flex justify-center gap-6 text-xs font-bold uppercase tracking-wider">
+            <button onClick={() => setLoggedOutTab('about')} className="hover:text-yellow-500 transition-colors">About BFI</button>
+            <button onClick={() => setLoggedOutTab('works')} className="hover:text-yellow-500 transition-colors">Our Works</button>
+            <button onClick={() => setLoggedOutTab('terms')} className="hover:text-yellow-500 transition-colors">Terms of Service</button>
+          </div>
           <div>© 2026 Bharath Film Industry. All rights reserved. Built on Secured Nodes.</div>
           <div className="text-[10px] text-slate-600 tracking-wider font-mono">
             UDYAM REGISTRATION NUMBER: UDYAM-AP-23-0080757 &nbsp;|&nbsp; GSTIN: 37CZVPR2615G1ZU
@@ -284,6 +302,7 @@ const App: React.FC = () => {
           )}
 
           {activeTab === 'works' && <OurWorksView />}
+          {activeTab === 'terms' && <TermsView />}
           {activeTab === 'profile' && <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />}
           {activeTab === 'about' && <AboutView />}
         </>

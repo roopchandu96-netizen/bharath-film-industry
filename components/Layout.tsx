@@ -189,7 +189,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
           <div>
             <h4 className="text-white font-bold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-slate-500">
-              <li><a href="#" className="hover:text-yellow-500 transition-colors">Terms of Service</a></li>
+              <li><button onClick={() => setActiveTab('terms')} className="hover:text-yellow-500 transition-colors text-left w-full">Terms of Service</button></li>
               <li><a href="#" className="hover:text-yellow-500 transition-colors">Privacy Policy</a></li>
               <li><a href="#" className="hover:text-yellow-500 transition-colors">Risk Disclosure</a></li>
             </ul>

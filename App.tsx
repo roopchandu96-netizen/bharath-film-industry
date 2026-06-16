@@ -29,6 +29,7 @@ const App: React.FC = () => {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [investmentRequest, setInvestmentRequest] = useState<{ project: MovieProject; amount: number } | null>(null);
+  const [investorDashboardView, setInvestorDashboardView] = useState('dashboard');
 
   const [newProject, setNewProject] = useState({
     title: '',
@@ -228,7 +229,16 @@ const App: React.FC = () => {
   }
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} role={user.role}>
+    <Layout 
+      activeTab={activeTab} 
+      setActiveTab={(tab) => {
+        setActiveTab(tab);
+        if (tab !== 'portfolio') {
+          setInvestorDashboardView('dashboard');
+        }
+      }} 
+      role={user.role}
+    >
       {selectedProject ? (
         <ProjectDetailView
           project={selectedProject}
@@ -244,7 +254,7 @@ const App: React.FC = () => {
           {activeTab === 'portfolio' && (
             user.role === UserRole.DIRECTOR ?
               <DirectorDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} /> :
-              <InvestorDashboard user={user} />
+              <InvestorDashboard user={user} initialView={investorDashboardView} />
           )}
 
           {activeTab === 'profile' && <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />}
@@ -258,7 +268,14 @@ const App: React.FC = () => {
         <PaymentGateway
           project={investmentRequest.project}
           amount={investmentRequest.amount}
-          onSuccess={() => { setInvestmentRequest(null); setSelectedProject(null); }}
+          user={user!}
+          onSuccess={() => { 
+            setInvestmentRequest(null); 
+            setSelectedProject(null);
+            // Redirect to home/dashboard tab and set view to investments!
+            setActiveTab('portfolio');
+            setInvestorDashboardView('investments');
+          }}
           onCancel={() => setInvestmentRequest(null)}
         />
       )}

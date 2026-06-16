@@ -5,7 +5,7 @@ import { Investment } from "../types";
 export const recordInvestment = async (uid: string, investment: Omit<Investment, 'id'>): Promise<string> => {
   const { data, error } = await supabase
     .from('investments')
-    .insert([{ ...investment, user_id: uid }])
+    .insert([{ ...investment, userId: uid }])
     .select()
     .single();
 
@@ -27,7 +27,7 @@ export const getUserInvestments = async (uid: string): Promise<Investment[]> => 
   const { data, error } = await supabase
     .from('investments')
     .select('*')
-    .eq('user_id', uid)
+    .eq('userId', uid)
     .order('date', { ascending: false });
 
   if (error) return [];

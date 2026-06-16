@@ -15,14 +15,19 @@ import { notifyInvestmentInterest } from '../services/notificationService';
 interface InvestorDashboardProps {
   user: User;
   onProjectSelect?: (project: MovieProject) => void;
+  initialView?: string;
 }
 
-const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSelect }) => {
-  const [activeView, setActiveView] = useState('dashboard');
+const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSelect, initialView = 'dashboard' }) => {
+  const [activeView, setActiveView] = useState(initialView);
   const [investments, setInvestments] = useState<(Investment & { project?: MovieProject })[]>([]);
   const [allProjects, setAllProjects] = useState<MovieProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setActiveView(initialView);
+  }, [initialView]);
 
   useEffect(() => {
     const fetchData = async () => {

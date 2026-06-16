@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import {
   X, ShieldCheck, Landmark, CheckCircle, Copy, ArrowRight, Lock, QrCode
 } from 'lucide-react';
-import { CURRENCY_FORMATTER } from '../constants';
-import { MovieProject } from '../types';
+import { CURRENCY_FORMATTER, TIERS } from '../constants';
+import { MovieProject, User, ProducerTier } from '../types';
 import { notifyInvestmentReceived } from '../services/notificationService';
+import { recordInvestment } from '../services/investmentService';
 
 interface PaymentGatewayProps {
   project: MovieProject;
   amount: number;
+  user: User;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-const PaymentGateway: React.FC<PaymentGatewayProps> = ({ project, amount, onSuccess, onCancel }) => {
+const PaymentGateway: React.FC<PaymentGatewayProps> = ({ project, amount, user, onSuccess, onCancel }) => {
   const [step, setStep] = useState<'INSTRUCTIONS' | 'CONFIRM' | 'SUCCESS'>('INSTRUCTIONS');
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'BANK'>('UPI');
   const [txnId, setTxnId] = useState('');
@@ -23,14 +25,33 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({ project, amount, onSucc
     alert('Copied to clipboard');
   };
 
+  const getTierByAmount = (amount: number): ProducerTier => {
+    const tier = TIERS.find(t => amount >= t.min && amount <= t.max);
+    return tier ? tier.name : ProducerTier.SUPPORTER;
+  };
+
   const handleConfirm = async () => {
     if (!txnId) return alert('Please enter the Transaction Reference ID');
 
-    // Notify Admin of verifyable investment
-    await notifyInvestmentReceived(txnId, amount, "Investor (Online Portal)");
+    try {
+      const tier = getTierByAmount(amount);
+      await recordInvestment(user.id, {
+        userId: user.id,
+        projectId: project.id,
+        amount: amount,
+        date: new Date().toISOString(),
+        tier: tier
+      });
 
-    setStep('SUCCESS');
-    setTimeout(onSuccess, 3000);
+      // Notify Admin of verifyable investment
+      await notifyInvestmentReceived(txnId, amount, user.name);
+
+      setStep('SUCCESS');
+      setTimeout(onSuccess, 3000);
+    } catch (e: any) {
+      console.error(e);
+      alert(`Payment registration failed: ${e.message || "Check connection."}`);
+    }
   };
 
   return (
@@ -185,9 +206,9 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({ project, amount, onSucc
                 <CheckCircle size={40} />
               </div>
               <div>
-                <h3 className="text-2xl font-serif text-white mb-2">Claim Registered</h3>
+                <h3 className="text-2xl font-serif text-white mb-2">Investor payment transfer successfully</h3>
                 <p className="text-zinc-400 text-xs px-8 leading-relaxed">
-                  Your investment of <span className="text-white font-bold">{CURRENCY_FORMATTER.format(amount)}</span> is pending ledger verification. You will receive a Co-Producer Certificate upon clearance.
+                  Your investment of <span className="text-white font-bold">{CURRENCY_FORMATTER.format(amount)}</span> has been successfully recorded. Redirecting to your payment history...
                 </p>
               </div>
               <div className="p-3 bg-zinc-900 text-yellow-500 font-mono text-[10px] rounded-lg tracking-widest uppercase">

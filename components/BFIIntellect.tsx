@@ -76,7 +76,7 @@ const BFIIntellect: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-x-4 bottom-24 z-[110] sm:inset-auto sm:right-6 sm:bottom-24 sm:w-[400px] h-[600px] bg-black/95 backdrop-blur-3xl border border-zinc-800 rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 duration-300">
+    <div className="fixed inset-x-4 top-4 bottom-4 sm:top-auto sm:inset-auto sm:right-6 sm:bottom-24 z-[110] w-auto sm:w-[400px] h-auto sm:h-[600px] bg-black/95 backdrop-blur-3xl border border-zinc-800 rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 duration-300">
       {/* Header */}
       <div className="p-6 border-b border-zinc-800 flex items-center justify-between gold-bg/10 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-transparent pointer-events-none" />
@@ -100,8 +100,8 @@ const BFIIntellect: React.FC = () => {
           >
             <Trash2 size={18} />
           </button>
-          <button onClick={() => setIsOpen(false)} className="p-2 text-zinc-500 hover:text-white transition-colors">
-            <ChevronDown size={24} />
+          <button onClick={() => setIsOpen(false)} className="p-2 text-zinc-500 hover:text-white transition-colors" aria-label="Close Chat">
+            <X size={24} />
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Github, Linkedin, Mail, Twitter, Film, ShieldCheck, Users } from 'lucide-react';
+import SequenceAnimation from '../components/SequenceAnimation.tsx';
 
 const AboutView: React.FC = () => {
   return (
@@ -14,6 +15,9 @@ const AboutView: React.FC = () => {
           Bharath Film Industry (BFI) is India's first script investment marketplace and decentralized production network. We bridge the gap between visionary directors and passionate investors, turning remarkable stories into cinematic reality.
         </p>
       </div>
+
+      {/* Sequence Animation Section */}
+      <SequenceAnimation />
 
       {/* Founder Section */}
       <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-[3rem] p-8 md:p-16 shadow-2xl relative overflow-hidden mt-16">

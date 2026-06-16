@@ -7,13 +7,35 @@ const AboutView: React.FC = () => {
     <div className="max-w-6xl mx-auto px-6 py-12 md:py-24 space-y-16 animate-in fade-in duration-700 text-slate-200">
       
       {/* Hero Section */}
-      <div className="text-center max-w-3xl mx-auto space-y-6">
-        <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif text-white leading-tight">
-          Pioneering the Future of <span className="text-amber-500 italic">Film Investment</span>
-        </h1>
-        <p className="text-slate-400 text-lg leading-relaxed max-w-2xl mx-auto mt-6">
-          Bharath Film Industry (BFI) is India's first script investment marketplace and decentralized production network. We bridge the gap between visionary directors and passionate investors, turning remarkable stories into cinematic reality.
-        </p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="lg:col-span-7 space-y-6 text-left">
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif text-white leading-tight">
+            Pioneering the Future of <span className="text-amber-500 italic">Film Investment</span>
+          </h1>
+          <p className="text-slate-400 text-lg leading-relaxed mt-6">
+            Bharath Film Industry (BFI) is India's first script investment marketplace and decentralized production network. We bridge the gap between visionary directors and passionate investors, turning remarkable stories into cinematic reality.
+          </p>
+        </div>
+        <div className="lg:col-span-5 flex justify-center">
+          <div className="relative group w-full max-w-[300px] aspect-square rounded-[2.5rem] overflow-hidden border border-slate-800 bg-[#020617] shadow-3xl flex items-center justify-center transition-all duration-700 hover:border-amber-500/30">
+            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 rounded-[2.5rem] blur-xl opacity-60 group-hover:opacity-100 transition-opacity -z-10 animate-pulse" />
+            <img 
+              src="/directors_chair_3d.png" 
+              alt="BFI 3D Director's Chair" 
+              className="w-4/5 h-4/5 object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)] transform group-hover:scale-105 group-hover:-rotate-3 transition-all duration-700 animate-float"
+            />
+            <style>{`
+              @keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+                100% { transform: translateY(0px); }
+              }
+              .animate-float {
+                animation: float 4s ease-in-out infinite;
+              }
+            `}</style>
+          </div>
+        </div>
       </div>
 
       {/* Sequence Animation Section */}

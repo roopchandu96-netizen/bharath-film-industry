@@ -148,7 +148,24 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
                     <div className="space-y-12">
                         {!activeProject ? (
                             <div className="flex flex-col items-center justify-center p-20 bg-slate-900/50 border border-slate-800 rounded-[3rem] text-center space-y-6">
-                                <span className="text-6xl">🎬</span>
+                                <div className="w-32 h-32 relative group mb-2 flex items-center justify-center">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 rounded-full blur-lg opacity-60" />
+                                    <img 
+                                      src="/directors_chair_3d.png" 
+                                      alt="3D Director's Chair" 
+                                      className="w-full h-full object-contain animate-float drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
+                                    />
+                                    <style>{`
+                                      @keyframes float {
+                                        0% { transform: translateY(0px); }
+                                        50% { transform: translateY(-8px); }
+                                        100% { transform: translateY(0px); }
+                                      }
+                                      .animate-float {
+                                        animation: float 4s ease-in-out infinite;
+                                      }
+                                    `}</style>
+                                </div>
                                 <h3 className="text-2xl font-bold text-white">No Active Projects</h3>
                                 <p className="text-slate-500 max-w-md">You haven't listed a project yet. Submit your synopsis to get started with BFI funding.</p>
                                 <button

@@ -11,6 +11,7 @@ import AuthView from './views/AuthView.tsx';
 import ProfileView from './views/ProfileView.tsx';
 import ProjectDetailView from './views/ProjectDetailView.tsx';
 import AboutView from './views/AboutView.tsx';
+import OurWorksView from './views/OurWorksView.tsx';
 import PaymentGateway from './components/PaymentGateway.tsx';
 import BFIIntellect from './components/BFIIntellect.tsx';
 import { BFILogo } from './components/BFILogo.tsx';
@@ -24,6 +25,7 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('explore');
+  const [loggedOutTab, setLoggedOutTab] = useState<'about' | 'works'>('about');
   const [showAuth, setShowAuth] = useState(false);
   const [selectedProject, setSelectedProject] = useState<MovieProject | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -200,6 +202,30 @@ const App: React.FC = () => {
                 <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 sm:block hidden">Decentralized Production</p>
               </div>
             </div>
+            {/* Logged Out Navigation */}
+            <div className="flex items-center gap-1 bg-slate-900/50 p-1.5 rounded-full border border-slate-800/80">
+              <button
+                onClick={() => setLoggedOutTab('about')}
+                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
+                  loggedOutTab === 'about'
+                    ? 'bg-yellow-500 text-black shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                About BFI
+              </button>
+              <button
+                onClick={() => setLoggedOutTab('works')}
+                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
+                  loggedOutTab === 'works'
+                    ? 'bg-yellow-500 text-black shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Our Works
+              </button>
+            </div>
+
             <button 
               onClick={() => setShowAuth(true)} 
               className="px-6 py-2.5 bg-yellow-500 text-black font-bold text-sm rounded-full hover:bg-yellow-400 transition-colors shadow-[0_0_15px_rgba(234,179,8,0.3)]"
@@ -209,7 +235,7 @@ const App: React.FC = () => {
           </div>
         </header>
         
-        <AboutView />
+        {loggedOutTab === 'about' ? <AboutView /> : <OurWorksView />}
         
         <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-500 text-sm space-y-2">
           <div>© 2026 Bharath Film Industry. All rights reserved. Built on Secured Nodes.</div>
@@ -257,6 +283,7 @@ const App: React.FC = () => {
               <InvestorDashboard user={user} initialView={investorDashboardView} />
           )}
 
+          {activeTab === 'works' && <OurWorksView />}
           {activeTab === 'profile' && <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />}
           {activeTab === 'about' && <AboutView />}
         </>

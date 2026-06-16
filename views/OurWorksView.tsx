@@ -29,7 +29,7 @@ const OurWorksView: React.FC = () => {
             <div className="relative aspect-video w-full rounded-[2.5rem] overflow-hidden border border-slate-800 bg-[#020617] shadow-2xl">
               <iframe
                 src="https://www.youtube.com/embed/3edAshDQJE4"
-                title="Vishwa Vikhyata Nata Sarwabhouma - Directed by Prathapaneni Roopchandu"
+                title="Preema Preethi - Directed by Prathapaneni Roopchandu"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 className="absolute inset-0 w-full h-full border-0"
@@ -45,7 +45,7 @@ const OurWorksView: React.FC = () => {
             
             <div className="space-y-2">
               <h2 className="text-2xl font-serif text-white leading-tight">
-                Vishwa Vikhyata Nata Sarwabhouma
+                Preema Preethi
               </h2>
               <p className="text-amber-500 font-mono text-xs uppercase tracking-widest font-black">
                 Short Film Showcase

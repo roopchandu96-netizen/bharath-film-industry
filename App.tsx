@@ -18,6 +18,14 @@ import BFIIntellect from './components/BFIIntellect.tsx';
 import { BFILogo } from './components/BFILogo.tsx';
 import AdminDashboard from './views/AdminDashboard.tsx';
 import DirectorDashboard from './views/DirectorDashboard.tsx';
+import WriterDashboard from './views/WriterDashboard.tsx';
+import ActorDashboard from './views/ActorDashboard.tsx';
+import CrewDashboard from './views/CrewDashboard.tsx';
+import VendorDashboard from './views/VendorDashboard.tsx';
+import DistributorDashboard from './views/DistributorDashboard.tsx';
+import ServiceProviderDashboard from './views/ServiceProviderDashboard.tsx';
+import StudentDashboard from './views/StudentDashboard.tsx';
+import ProducerDashboard from './views/ProducerDashboard.tsx';
 import { UserRole, MovieProject, User } from './types.ts';
 import { Loader2, X, Globe, Film, AlignLeft, Tag, UploadCloud } from 'lucide-react';
 
@@ -72,8 +80,8 @@ const App: React.FC = () => {
         projects: []
       });
       if (fallbackRole === UserRole.ADMIN) setActiveTab('admin');
-      else if (fallbackRole === UserRole.DIRECTOR) setActiveTab('portfolio');
-      else setActiveTab('explore');
+      else if (fallbackRole === UserRole.INVESTOR) setActiveTab('explore');
+      else setActiveTab('portfolio');
       
       setAuthLoading(false);
       clearTimeout(globalTimeout);
@@ -104,12 +112,12 @@ const App: React.FC = () => {
           if (userData.role === UserRole.ADMIN) {
             console.log("User is ADMIN. Setting tab to 'admin'");
             setActiveTab('admin');
-          } else if (userData.role === UserRole.DIRECTOR) {
-            console.log("User is DIRECTOR. Setting tab to 'portfolio'");
-            setActiveTab('portfolio');
-          } else {
-            console.log("User is INVESTOR (or other). Setting tab to 'explore'");
+          } else if (userData.role === UserRole.INVESTOR) {
+            console.log("User is INVESTOR. Setting tab to 'explore'");
             setActiveTab('explore');
+          } else {
+            console.log(`User is ${userData.role}. Setting tab to 'portfolio'`);
+            setActiveTab('portfolio');
           }
         } else {
           console.log("No active session. Resetting state.");
@@ -135,12 +143,12 @@ const App: React.FC = () => {
           });
 
           // Set tab based on fallback role
-          if (fallbackRole === UserRole.DIRECTOR) {
-            setActiveTab('portfolio');
-          } else if (fallbackRole === UserRole.ADMIN) {
+          if (fallbackRole === UserRole.ADMIN) {
             setActiveTab('admin');
-          } else {
+          } else if (fallbackRole === UserRole.INVESTOR) {
             setActiveTab('explore');
+          } else {
+            setActiveTab('portfolio');
           }
         }
       } finally {
@@ -336,12 +344,33 @@ const App: React.FC = () => {
         <>
           {activeTab === 'explore' && <ExploreView onSelectProject={setSelectedProject} onQuickInvest={(p) => setInvestmentRequest({ project: p, amount: 100000 })} user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />}
 
-          {/* DIRECTOR DASHBOARD LOGIC */}
-          {activeTab === 'portfolio' && (
-            user.role === UserRole.DIRECTOR ?
-              <DirectorDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} /> :
-              <InvestorDashboard user={user} initialView={investorDashboardView} />
-          )}
+          {/* ROLE DASHBOARD LOGIC */}
+          {activeTab === 'portfolio' && (() => {
+            switch (user.role) {
+              case UserRole.DIRECTOR:
+                return <DirectorDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
+              case UserRole.INVESTOR:
+                return <InvestorDashboard user={user} initialView={investorDashboardView} />;
+              case UserRole.PRODUCER:
+                return <ProducerDashboard user={user} />;
+              case UserRole.WRITER:
+                return <WriterDashboard user={user} />;
+              case UserRole.ACTOR:
+                return <ActorDashboard user={user} />;
+              case UserRole.CREW:
+                return <CrewDashboard user={user} />;
+              case UserRole.VENDOR:
+                return <VendorDashboard user={user} />;
+              case UserRole.DISTRIBUTOR:
+                return <DistributorDashboard user={user} />;
+              case UserRole.SERVICE_PROVIDER:
+                return <ServiceProviderDashboard user={user} />;
+              case UserRole.STUDENT:
+                return <StudentDashboard user={user} />;
+              default:
+                return <InvestorDashboard user={user} initialView={investorDashboardView} />;
+            }
+          })()}
 
           {activeTab === 'works' && <OurWorksView />}
           {activeTab === 'terms' && <TermsView />}

@@ -326,20 +326,28 @@ const AuthView: React.FC = () => {
             <div className="space-y-6">
               <div>
                 <label className={labelClasses}>I AM A</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1 scrollbar-hide border border-zinc-200/60 p-2.5 rounded-2xl bg-zinc-50/50">
                   {[
                     { role: UserRole.INVESTOR, icon: '💰', title: 'Investor', text: 'Fund films' },
-                    { role: UserRole.DIRECTOR, icon: '🎬', title: 'Director', text: 'Submit scripts' },
+                    { role: UserRole.DIRECTOR, icon: '🎬', title: 'Director', text: 'Direct movies' },
+                    { role: UserRole.PRODUCER, icon: '👔', title: 'Producer', text: 'Manage budget' },
+                    { role: UserRole.WRITER, icon: '📄', title: 'Writer', text: 'Licensing/Scripts' },
+                    { role: UserRole.ACTOR, icon: '🎭', title: 'Actor', text: 'Audition calls' },
+                    { role: UserRole.CREW, icon: '🔧', title: 'Crew/VFX', text: 'Technicians' },
+                    { role: UserRole.VENDOR, icon: '📹', title: 'Vendor', text: 'Gear rentals' },
+                    { role: UserRole.DISTRIBUTOR, icon: '🎞️', title: 'Distributor', text: 'OTT/Theaters' },
+                    { role: UserRole.SERVICE_PROVIDER, icon: '⚖️', title: 'Services', text: 'PR & Legal' },
+                    { role: UserRole.STUDENT, icon: '🎓', title: 'Student', text: 'Emerging talent' }
                   ].map((r) => (
                     <button
                       key={r.role}
                       type="button"
-                      className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all ${selectedRole === r.role ? 'border-yellow-500 bg-amber-50 shadow-sm outline outline-1 outline-yellow-500' : 'border-zinc-200 bg-white hover:border-zinc-300'}`}
+                      className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all ${selectedRole === r.role ? 'border-yellow-500 bg-amber-50 shadow-sm outline outline-1 outline-yellow-500' : 'border-zinc-200 bg-white hover:border-zinc-300'}`}
                       onClick={() => setSelectedRole(r.role)}
                     >
-                      <span className="text-xl lg:text-2xl mb-1">{r.icon}</span>
-                      <span className="text-[13px] font-bold text-zinc-800">{r.title}</span>
-                      <span className="text-[10px] text-zinc-500 whitespace-nowrap">{r.text}</span>
+                      <span className="text-lg mb-0.5">{r.icon}</span>
+                      <span className="text-xs font-bold text-zinc-800">{r.title}</span>
+                      <span className="text-[9px] text-zinc-500 whitespace-nowrap">{r.text}</span>
                     </button>
                   ))}
                 </div>

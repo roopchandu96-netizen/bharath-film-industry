@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Briefcase, User as UserIcon, ShieldCheck, LogOut, TrendingUp, Menu, X, LucideIcon, Info, Film } from 'lucide-react';
+import { Home, Briefcase, User as UserIcon, ShieldCheck, LogOut, TrendingUp, Menu, X, LucideIcon, Info, Film, GraduationCap, BookOpen, Settings } from 'lucide-react';
 import { UserRole } from '../types';
 import { supabase } from '../services/firebase';
 
@@ -54,31 +54,39 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems: { id: string; label: string; icon: LucideIcon }[] = [];
+  navItems.push({ id: 'explore', label: role === UserRole.ADMIN ? 'Marketplace' : 'Explore', icon: Home });
+
   if (role === UserRole.DIRECTOR) {
-    navItems.push(
-      { id: 'explore', label: 'Explore', icon: Home },
-      { id: 'portfolio', label: 'My Studio', icon: Briefcase },
-      { id: 'works', label: 'Our Works', icon: Film },
-      { id: 'profile', label: 'Profile', icon: UserIcon },
-      { id: 'about', label: 'About', icon: Info }
-    );
-  } else if (role === UserRole.ADMIN) {
-    navItems.push(
-      { id: 'explore', label: 'Marketplace', icon: Home },
-      { id: 'admin', label: 'Admin Console', icon: ShieldCheck },
-      { id: 'works', label: 'Our Works', icon: Film },
-      { id: 'profile', label: 'Profile', icon: UserIcon },
-      { id: 'about', label: 'About', icon: Info }
-    );
-  } else {
-    navItems.push(
-      { id: 'explore', label: 'Explore', icon: Home },
-      { id: 'portfolio', label: 'My Investments', icon: Briefcase },
-      { id: 'works', label: 'Our Works', icon: Film },
-      { id: 'profile', label: 'Profile', icon: UserIcon },
-      { id: 'about', label: 'About', icon: Info }
-    );
+    navItems.push({ id: 'portfolio', label: 'My Studio', icon: Briefcase });
+  } else if (role === UserRole.INVESTOR) {
+    navItems.push({ id: 'portfolio', label: 'My Investments', icon: Briefcase });
+  } else if (role === UserRole.PRODUCER) {
+    navItems.push({ id: 'portfolio', label: 'Producer Hub', icon: Briefcase });
+  } else if (role === UserRole.WRITER) {
+    navItems.push({ id: 'portfolio', label: 'Writer Studio', icon: BookOpen });
+  } else if (role === UserRole.ACTOR) {
+    navItems.push({ id: 'portfolio', label: 'Talent Portal', icon: Film });
+  } else if (role === UserRole.CREW) {
+    navItems.push({ id: 'portfolio', label: 'Crew Hub', icon: Settings });
+  } else if (role === UserRole.VENDOR) {
+    navItems.push({ id: 'portfolio', label: 'Gear Rentals', icon: Settings });
+  } else if (role === UserRole.DISTRIBUTOR) {
+    navItems.push({ id: 'portfolio', label: 'Distributor Console', icon: TrendingUp });
+  } else if (role === UserRole.SERVICE_PROVIDER) {
+    navItems.push({ id: 'portfolio', label: 'Service Console', icon: ShieldCheck });
+  } else if (role === UserRole.STUDENT) {
+    navItems.push({ id: 'portfolio', label: 'Academy & Grants', icon: GraduationCap });
   }
+
+  if (role === UserRole.ADMIN) {
+    navItems.push({ id: 'admin', label: 'Admin Console', icon: ShieldCheck });
+  }
+
+  navItems.push(
+    { id: 'works', label: 'Our Works', icon: Film },
+    { id: 'profile', label: 'Profile', icon: UserIcon },
+    { id: 'about', label: 'About', icon: Info }
+  );
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {

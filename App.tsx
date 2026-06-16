@@ -249,7 +249,7 @@ const App: React.FC = () => {
                 <BFILogo className="w-full h-full drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white leading-none tracking-tight">Bharath <span className="text-yellow-500">Film Industry</span></h1>
+                <h1 className="text-xl font-bold text-white leading-none tracking-tight">Bharat <span className="text-yellow-500">Film Industry</span></h1>
                 <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 sm:block hidden">Decentralized Production</p>
               </div>
             </div>
@@ -306,7 +306,7 @@ const App: React.FC = () => {
             <button onClick={() => setLoggedOutTab('works')} className="hover:text-yellow-500 transition-colors">Our Works</button>
             <button onClick={() => setLoggedOutTab('terms')} className="hover:text-yellow-500 transition-colors">Terms of Service</button>
           </div>
-          <div>© 2026 Bharath Film Industry. All rights reserved. Built on Secured Nodes.</div>
+           <div>© 2026 Bharat Film Industry. All rights reserved. Built on Secured Nodes.</div>
           <div className="text-[10px] text-slate-600 tracking-wider font-mono">
             UDYAM REGISTRATION NUMBER: UDYAM-AP-23-0080757 &nbsp;|&nbsp; GSTIN: 37CZVPR2615G1ZU
           </div>

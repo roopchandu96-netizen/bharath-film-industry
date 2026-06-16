@@ -334,7 +334,7 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
                     <ExternalLink size={16} className="opacity-50 group-hover:opacity-100" />
                   </a>
                   <a
-                    href="mailto:bharathfilmindustry@gmail.com"
+                    href="mailto:bharatfilmindustry@gmail.com"
                     className="flex items-center justify-between p-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white rounded-2xl transition-all"
                   >
                     <span className="flex items-center gap-3 font-bold uppercase tracking-wide text-xs">

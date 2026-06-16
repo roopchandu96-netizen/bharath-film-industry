@@ -13,7 +13,7 @@ const OurWorksView: React.FC = () => {
           Our Featured <span className="text-amber-500 italic">Works</span>
         </h1>
         <p className="text-slate-400 text-lg leading-relaxed max-w-2xl mx-auto">
-          Explore the official cinematic portfolio produced and directed under the Bharath Film Industry decentralized network.
+          Explore the official cinematic portfolio produced and directed under the Bharat Film Industry decentralized network.
         </p>
       </div>
 
@@ -82,7 +82,7 @@ const OurWorksView: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Production Network</p>
-                  <p className="text-sm font-bold text-white">Bharath Film Industry</p>
+                  <p className="text-sm font-bold text-white">Bharat Film Industry</p>
                 </div>
               </div>
             </div>

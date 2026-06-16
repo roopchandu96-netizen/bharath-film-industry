@@ -85,7 +85,7 @@ const BFIVoiceAdvisor: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } }
           },
-          systemInstruction: 'You are BFI Intellect, the elite financial advisor for the Bharath Film Industry. Provide sharp, professional investment advice regarding Pan-India movie projects. Speak with institutional authority.'
+          systemInstruction: 'You are BFI Intellect, the elite financial advisor for the Bharat Film Industry. Provide sharp, professional investment advice regarding Pan-India movie projects. Speak with institutional authority.'
         }
       });
 

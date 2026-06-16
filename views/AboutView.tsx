@@ -13,7 +13,7 @@ const AboutView: React.FC = () => {
             Pioneering the Future of <span className="text-amber-500 italic">Film Investment</span>
           </h1>
           <p className="text-slate-400 text-lg leading-relaxed mt-6">
-            Bharath Film Industry (BFI) is India's first script investment marketplace and decentralized production network. We bridge the gap between visionary directors and passionate investors, turning remarkable stories into cinematic reality.
+            Bharat Film Industry (BFI) is India's first script investment marketplace and decentralized production network. We bridge the gap between visionary directors and passionate investors, turning remarkable stories into cinematic reality.
           </p>
         </div>
         <div className="lg:col-span-5 flex justify-center">
@@ -80,7 +80,7 @@ const AboutView: React.FC = () => {
                 As a lifelong cinephile and tech innovator, I saw a fundamental flaw in how stories were brought to the screen. Brilliant directors were spending years chasing funding through outdated studio systems, while passionate audiences had no way to invest in the films they actually wanted to see.
               </p>
               <p>
-                I founded <span className="text-white font-bold">Bharath Film Industry</span> to democratize cinematic production. By leveraging modern financial tech and an intuitive marketplace, we are returning the power of the greenlight directly to the people.
+                I founded <span className="text-white font-bold">Bharat Film Industry</span> to democratize cinematic production. By leveraging modern financial tech and an intuitive marketplace, we are returning the power of the greenlight directly to the people.
               </p>
               <p className="font-serif text-amber-500 italic text-2xl pt-4 pl-4 border-l-2 border-amber-500/30">
                 "Our mission is simple: if a story deserves to be told, we ensure it gets funded, filmed, and seen."

@@ -38,7 +38,7 @@ const AuthView: React.FC = () => {
         setShowAdminLogin(true);
         setIsLogin(true);
         setSelectedRole(UserRole.ADMIN);
-        setEmail('bharathfilmindustry@gmail.com');
+        setEmail('bharatfilmindustry@gmail.com');
         setPassword('password'); // Auto-fetch admin credentials for testing
       } else {
         setShowAdminLogin(false);
@@ -64,7 +64,7 @@ const AuthView: React.FC = () => {
     try {
       // Strict Admin Gatekeeper
       if (showAdminLogin) {
-        if (email.toLowerCase() !== 'bharathfilmindustry@gmail.com') {
+        if (email.toLowerCase() !== 'bharatfilmindustry@gmail.com') {
           throw new Error("Access Denied: Unrecognized Command ID.");
         }
       }

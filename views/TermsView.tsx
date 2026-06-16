@@ -15,7 +15,7 @@ const TermsView: React.FC = () => {
           Terms & <span className="text-yellow-500 italic">Conditions</span>
         </h1>
         <p className="text-slate-400 text-lg leading-relaxed max-w-2xl mx-auto">
-          Please review the official rules, regulations, and risk disclosures governing the Bharath Film Industry ecosystem.
+          Please review the official rules, regulations, and risk disclosures governing the Bharat Film Industry ecosystem.
         </p>
       </div>
 

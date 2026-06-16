@@ -445,7 +445,7 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
                                         <div className="pt-6 border-t border-slate-800 space-y-4">
                                             <h4 className="text-slate-400 text-xs font-bold uppercase tracking-widest">Support & Inquiries</h4>
                                             <p className="text-slate-500 text-sm">Need assistance with your project listing? Contact the BFI Admin team directly.</p>
-                                            <a href="mailto:bharathfilmindustry@gmail.com" className="flex items-center justify-center gap-2 w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-colors border border-slate-700">
+                                            <a href="mailto:bharatfilmindustry@gmail.com" className="flex items-center justify-center gap-2 w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-colors border border-slate-700">
                                                 📧 Contact via Email
                                             </a>
                                         </div>

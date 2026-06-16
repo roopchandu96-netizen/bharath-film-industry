@@ -69,7 +69,7 @@ export const generateAgreementFromDoc = async (uid: string, file: File): Promise
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: `Based on the uploaded production document "${file.name}", draft a formal BFI Smart Agreement for the Bharath Film Industry platform. 
+    contents: `Based on the uploaded production document "${file.name}", draft a formal BFI Smart Agreement for the Bharat Film Industry platform. 
     Ensure institutional language, Pan-India jurisdiction, and SEBI compliance is included in the clauses.`
   });
 

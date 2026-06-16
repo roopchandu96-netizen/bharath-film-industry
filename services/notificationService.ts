@@ -4,7 +4,7 @@ import { supabase } from "./firebase";
 // Mock email sending function
 // In a real production app, this would call an Edge Function or API (e.g., SendGrid/AWS SES)
 export const sendEmailNotification = async (subject: string, body: string) => {
-    console.log(`[MOCK EMAIL SERVICE] Sending email to: bharathfilmindustry@gmail.com`);
+    console.log(`[MOCK EMAIL SERVICE] Sending email to: bharatfilmindustry@gmail.com`);
     console.log(`Subject: ${subject}`);
     console.log(`Body: ${body}`);
 
@@ -13,7 +13,7 @@ export const sendEmailNotification = async (subject: string, body: string) => {
     try {
         const { error } = await supabase.from('notifications').insert([{
             type: 'EMAIL_ALERT',
-            recipient: 'bharathfilmindustry@gmail.com',
+            recipient: 'bharatfilmindustry@gmail.com',
             subject: subject,
             message: body,
             read: false,

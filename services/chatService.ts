@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { supabase } from "./firebase.ts";
 
 const SYSTEM_INSTRUCTION = `
-You are 'BFI Intellect', the official AI Investment Advisor for the Bharath Film Industry (BFI) platform.
+You are 'BFI Intellect', the official AI Investment Advisor for the Bharat Film Industry (BFI) platform.
 Your objective is to provide elite financial guidance, project analysis, and platform support.
 
 BFI Ecosystem Context:

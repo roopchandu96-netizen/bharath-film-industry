@@ -250,7 +250,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
             )}
 
             <a
-              href="mailto:bharathfilmindustry@gmail.com"
+              href="mailto:bharatfilmindustry@gmail.com"
               className="px-8 py-4 rounded-2xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white font-black uppercase text-[10px] tracking-widest shadow-xl flex items-center justify-center gap-3 transition-all"
             >
               <Mail size={16} /> Email Support

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  X, ShieldCheck, Landmark, CheckCircle, Copy, ArrowRight, Lock
+  X, ShieldCheck, Landmark, CheckCircle, Copy, ArrowRight, Lock, QrCode
 } from 'lucide-react';
 import { CURRENCY_FORMATTER } from '../constants';
 import { MovieProject } from '../types';
@@ -15,6 +15,7 @@ interface PaymentGatewayProps {
 
 const PaymentGateway: React.FC<PaymentGatewayProps> = ({ project, amount, onSuccess, onCancel }) => {
   const [step, setStep] = useState<'INSTRUCTIONS' | 'CONFIRM' | 'SUCCESS'>('INSTRUCTIONS');
+  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'BANK'>('UPI');
   const [txnId, setTxnId] = useState('');
 
   const copyToClipboard = (text: string) => {
@@ -65,27 +66,77 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({ project, amount, onSucc
 
           {step === 'INSTRUCTIONS' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300">
-              <div className="p-4 bg-zinc-900 rounded-3xl space-y-4 border border-zinc-800">
-                <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-widest text-center">Transfer funds to the following Official Account</p>
+              
+              {/* Payment Method Selector Tabs */}
+              <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-2xl">
+                <button
+                  onClick={() => setPaymentMethod('UPI')}
+                  className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                    paymentMethod === 'UPI'
+                      ? 'bg-yellow-500 text-black shadow-md'
+                      : 'text-zinc-400 hover:text-white hover:bg-slate-800/50'
+                  }`}
+                >
+                  <QrCode size={14} /> UPI QR Code
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('BANK')}
+                  className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                    paymentMethod === 'BANK'
+                      ? 'bg-yellow-500 text-black shadow-md'
+                      : 'text-zinc-400 hover:text-white hover:bg-slate-800/50'
+                  }`}
+                >
+                  <Landmark size={14} /> Bank Transfer
+                </button>
+              </div>
 
-                <div className="space-y-3">
-                  {[
-                    { label: 'Beneficiary Name', value: 'BFI PRODUCTION VAULT LTD' },
-                    { label: 'Bank Name', value: 'HDFC Bank, Mumbai' },
-                    { label: 'Account Number', value: '00600340056789' },
-                    { label: 'IFSC Code', value: 'HDFC0000060' },
-                    { label: 'Account Type', value: 'Current / Escrow' }
-                  ].map((item, i) => (
-                    <div key={i} className="flex justify-between items-center p-3 bg-black rounded-xl border border-zinc-800/50">
-                      <span className="text-[10px] text-zinc-500 uppercase font-bold">{item.label}</span>
+              {paymentMethod === 'UPI' ? (
+                <div className="p-6 bg-zinc-900 rounded-3xl space-y-6 border border-zinc-800 flex flex-col items-center">
+                  <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-widest text-center">Scan QR code using any UPI App</p>
+                  
+                  <div className="relative w-48 aspect-[3/4] bg-white rounded-2xl p-2 shadow-xl border border-zinc-700/50 overflow-hidden">
+                    <img 
+                      src="/upi_qr.png" 
+                      alt="UPI QR Code" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+
+                  <div className="w-full space-y-2">
+                    <div className="flex justify-between items-center p-3 bg-black rounded-xl border border-zinc-800/50 w-full">
+                      <span className="text-[10px] text-zinc-500 uppercase font-bold">UPI ID</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono text-white">{item.value}</span>
-                        <button onClick={() => copyToClipboard(item.value)} className="text-zinc-600 hover:text-yellow-500"><Copy size={12} /></button>
+                        <span className="text-xs font-mono text-white">s0619553827098418@slc</span>
+                        <button onClick={() => copyToClipboard('s0619553827098418@slc')} className="text-zinc-600 hover:text-yellow-500"><Copy size={12} /></button>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-4 bg-zinc-900 rounded-3xl space-y-4 border border-zinc-800">
+                  <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-widest text-center">Transfer funds to the following Official Account</p>
+
+                  <div className="space-y-3">
+                    {[
+                      { label: 'Beneficiary Name', value: 'Bharat film industry' },
+                      { label: 'Bank Name', value: 'Northeast Small Finance Bank' },
+                      { label: 'Account Number', value: '033311501068467' },
+                      { label: 'IFSC Code', value: 'NESF0000333' },
+                      { label: 'Alternate IFSC Code', value: 'NESF0000096' },
+                      { label: 'Account Type', value: 'Current / Escrow' }
+                    ].map((item, i) => (
+                      <div key={i} className="flex justify-between items-center p-3 bg-black rounded-xl border border-zinc-800/50">
+                        <span className="text-[10px] text-zinc-500 uppercase font-bold">{item.label}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono text-white">{item.value}</span>
+                          <button onClick={() => copyToClipboard(item.value)} className="text-zinc-600 hover:text-yellow-500"><Copy size={12} /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-3">
                 <p className="text-[10px] text-zinc-500 italic text-center">

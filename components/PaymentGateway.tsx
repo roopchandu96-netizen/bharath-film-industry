@@ -19,6 +19,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({ project, amount, user, 
   const [step, setStep] = useState<'INSTRUCTIONS' | 'CONFIRM' | 'SUCCESS'>('INSTRUCTIONS');
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'BANK'>('UPI');
   const [txnId, setTxnId] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -32,6 +33,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({ project, amount, user, 
 
   const handleConfirm = async () => {
     if (!txnId) return alert('Please enter the Transaction Reference ID');
+    if (!acceptedTerms) return alert('Please read and accept the terms and conditions');
 
     try {
       const tier = getTierByAmount(amount);
@@ -187,11 +189,27 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({ project, amount, user, 
                 <p className="text-[10px] text-zinc-500 leading-relaxed px-2">
                   Please provide the UTR/Reference number provided by your bank. Our clearance team will verify the detailed ledger within 24 hours.
                 </p>
+
+                {/* Investor Terms checkbox */}
+                <div className="flex items-start gap-3 p-3 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
+                  <input
+                    type="checkbox"
+                    required
+                    id="accepted-investor-terms"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-1 accent-yellow-500 rounded border-zinc-800 bg-zinc-950 w-4 h-4 focus:ring-yellow-500"
+                  />
+                  <label htmlFor="accepted-investor-terms" className="text-[10px] text-zinc-400 leading-relaxed cursor-pointer select-none">
+                    I accept the BFI <strong className="text-yellow-500">Investor Terms &amp; Conditions</strong> (including communication policy, risk disclosure, and loss acknowledgment). (Required)
+                  </label>
+                </div>
               </div>
 
               <button
                 onClick={handleConfirm}
-                className="w-full py-4 bg-yellow-500 text-black font-black uppercase tracking-widest rounded-2xl shadow-lg hover:bg-yellow-400 active:scale-95 transition-all flex items-center justify-center gap-2"
+                disabled={!acceptedTerms || !txnId}
+                className="w-full py-4 bg-yellow-500 text-black font-black uppercase tracking-widest rounded-2xl shadow-lg hover:bg-yellow-400 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ShieldCheck size={16} /> Submit Verification
               </button>

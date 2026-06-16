@@ -36,14 +36,19 @@ const App: React.FC = () => {
 
   const [newProject, setNewProject] = useState({
     title: '',
-    tagline: '',
+    logline: '',
     genre: 'Action/Thriller',
     budget: 50000000,
     fundingGoal: 25000000,
-    description: '', // This acts as the Synopsis
+    synopsis: '',
+    previousWorks: '',
     posterUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80',
     teaserUrl: ''
   });
+  const [scriptFileName, setScriptFileName] = useState('');
+  const [posterFileName, setPosterFileName] = useState('');
+  const [isScriptRegistered, setIsScriptRegistered] = useState(false);
+  const [acceptedDirectorTerms, setAcceptedDirectorTerms] = useState(false);
 
   useEffect(() => {
     // Safety Force Load: In case onAuthStateChange never fires or hangs
@@ -153,10 +158,31 @@ const App: React.FC = () => {
   const handleProjectSubmission = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!isScriptRegistered) {
+      alert("Validation Error: Under BFI terms, you must confirm that the screenplay is officially registered.");
+      return;
+    }
+    if (!acceptedDirectorTerms) {
+      alert("Validation Error: You must read and accept the BFI Director Terms & Conditions before listing.");
+      return;
+    }
     setIsSubmitting(true);
     try {
+      // Append Previous Works to description if exists
+      let finalDescription = newProject.synopsis;
+      if (newProject.previousWorks.trim()) {
+        finalDescription += `\n\n--- Previous Works ---\n${newProject.previousWorks}`;
+      }
+
       await createProject({
-        ...newProject,
+        title: newProject.title,
+        tagline: newProject.logline,
+        genre: newProject.genre,
+        budget: newProject.budget,
+        fundingGoal: newProject.fundingGoal,
+        description: finalDescription,
+        posterUrl: newProject.posterUrl,
+        teaserUrl: newProject.teaserUrl,
         director: user.name,
         status: 'PENDING',
         investorCount: 0,
@@ -165,8 +191,24 @@ const App: React.FC = () => {
       notifyNewSynopsis(user.name, newProject.title);
       setIsProjectModalOpen(false);
 
-      // Keep on portfolio view but refresh might happen via sync
-      alert("Synopsis submitted successfully. BFI Admin has been notified via email.");
+      // Reset form states
+      setNewProject({
+        title: '',
+        logline: '',
+        genre: 'Action/Thriller',
+        budget: 50000000,
+        fundingGoal: 25000000,
+        synopsis: '',
+        previousWorks: '',
+        posterUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80',
+        teaserUrl: ''
+      });
+      setScriptFileName('');
+      setPosterFileName('');
+      setIsScriptRegistered(false);
+      setAcceptedDirectorTerms(false);
+
+      alert("Screenplay listed successfully. BFI Admin has been notified for compliance verification.");
     } catch (e: any) {
       console.error(e);
       alert(`Submission failed: ${e.message || "Check network link."}`);
@@ -328,13 +370,13 @@ const App: React.FC = () => {
 
       {/* Director Project Submission Modal */}
       {isProjectModalOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-6 backdrop-blur-sm">
-          <div className="w-full max-w-2xl bg-zinc-950 border border-yellow-400/20 rounded-[3rem] overflow-hidden shadow-3xl">
-            <div className="p-10">
-              <div className="flex justify-between items-start mb-10">
+        <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-zinc-950 border border-yellow-400/20 rounded-[3rem] shadow-3xl scrollbar-hide">
+            <div className="p-8 md:p-10">
+              <div className="flex justify-between items-start mb-8">
                 <div>
                   <h2 className="text-2xl font-serif text-white">List Production Node</h2>
-                  <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Broadcast cinematic synopsis to producer circuit</p>
+                  <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Broadcast registered creative assets to BFI network</p>
                 </div>
                 <button onClick={() => setIsProjectModalOpen(false)} className="p-2 text-zinc-500 hover:text-white transition-colors"><X /></button>
               </div>
@@ -343,7 +385,7 @@ const App: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1"><Film size={10} /> Film Title</label>
-                    <input required value={newProject.title} onChange={e => setNewProject(p => ({ ...p, title: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none" placeholder="e.g. The Infinite" />
+                    <input required value={newProject.title} onChange={e => setNewProject(p => ({ ...p, title: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none" placeholder="e.g. Preema Preethi" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1"><Tag size={10} /> Genre</label>
@@ -357,37 +399,83 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1">Punchy Tagline</label>
-                  <input required value={newProject.tagline} onChange={e => setNewProject(p => ({ ...p, tagline: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none" placeholder="Every story has a beginning, this one has no end." />
+                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1">Logline</label>
+                  <input required value={newProject.logline} onChange={e => setNewProject(p => ({ ...p, logline: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none" placeholder="A brief, one-sentence summary of your film's main premise..." />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1"><AlignLeft size={10} /> Official Synopsis</label>
-                  <textarea required rows={5} value={newProject.description} onChange={e => setNewProject(p => ({ ...p, description: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none resize-none leading-relaxed" placeholder="Detailed cinematic summary for institutional review..." />
+                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1"><AlignLeft size={10} /> Synopsis</label>
+                  <textarea required rows={4} value={newProject.synopsis} onChange={e => setNewProject(p => ({ ...p, synopsis: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none resize-none leading-relaxed" placeholder="Detailed story outline, themes, and creative direction..." />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1"><UploadCloud size={10} /> Synopsis Document (PDF / DOC)</label>
+                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1">Previous Works (If Done)</label>
+                  <textarea rows={3} value={newProject.previousWorks} onChange={e => setNewProject(p => ({ ...p, previousWorks: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none resize-none leading-relaxed" placeholder="List your past films, portfolio links, or notable accolades..." />
+                </div>
+
+                {/* Script upload */}
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1"><UploadCloud size={10} /> Registered Screenplay / Script File (PDF / DOCX)</label>
                   <div className="relative group">
                     <input
                       type="file"
+                      required
                       accept=".pdf,.doc,.docx,.txt"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) { console.log("File selected:", file.name); }
+                        if (file) { setScriptFileName(file.name); }
                       }}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
                     <div className="w-full bg-zinc-900 border border-zinc-800 border-dashed rounded-2xl py-4 px-6 text-sm text-zinc-400 group-hover:border-yellow-400/50 group-hover:text-yellow-400 transition-all flex items-center justify-center gap-2">
                       <UploadCloud size={16} />
-                      <span>Click to Upload Synopsis File</span>
+                      <span>{scriptFileName || "Click to Upload Screenplay File"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Script Registration Verification */}
+                <div className="flex items-start gap-3 p-3 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl">
+                  <input
+                    type="checkbox"
+                    required
+                    id="is-script-registered"
+                    checked={isScriptRegistered}
+                    onChange={(e) => setIsScriptRegistered(e.target.checked)}
+                    className="mt-1 accent-yellow-500 rounded border-zinc-800 bg-zinc-950 w-4 h-4 focus:ring-yellow-500"
+                  />
+                  <label htmlFor="is-script-registered" className="text-[10px] text-zinc-400 leading-relaxed cursor-pointer select-none">
+                    <strong>Registered Scripts Only:</strong> I confirm this script is officially registered with the Writers Association or Copyright Authority. Unregistered creative works are strictly prohibited under BFI policies. (Required)
+                  </label>
+                </div>
+
+                {/* Poster upload */}
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1"><UploadCloud size={10} /> Movie Poster Image (Optional)</label>
+                  <div className="relative group">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setPosterFileName(file.name);
+                          const localUrl = URL.createObjectURL(file);
+                          setNewProject(p => ({ ...p, posterUrl: localUrl }));
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <div className="w-full bg-zinc-900 border border-zinc-800 border-dashed rounded-2xl py-4 px-6 text-sm text-zinc-400 group-hover:border-yellow-400/50 group-hover:text-yellow-400 transition-all flex items-center justify-center gap-2">
+                      <UploadCloud size={16} />
+                      <span>{posterFileName || "Click to Upload Movie Poster (If Available)"}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1">Poster URL</label>
+                    <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1">Poster URL (Fallback)</label>
                     <input value={newProject.posterUrl} onChange={e => setNewProject(p => ({ ...p, posterUrl: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none" placeholder="https://..." />
                   </div>
                   <div className="space-y-1">
@@ -407,7 +495,22 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <button type="submit" disabled={isSubmitting} className="w-full py-6 bg-yellow-400 text-black font-black uppercase rounded-3xl shadow-xl transition-all mt-4 disabled:opacity-50 hover:bg-yellow-300 active:scale-95 flex items-center justify-center gap-3">
+                {/* Director Terms Verification */}
+                <div className="flex items-start gap-3 p-3 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
+                  <input
+                    type="checkbox"
+                    required
+                    id="accepted-director-terms"
+                    checked={acceptedDirectorTerms}
+                    onChange={(e) => setAcceptedDirectorTerms(e.target.checked)}
+                    className="mt-1 accent-yellow-500 rounded border-zinc-800 bg-zinc-950 w-4 h-4 focus:ring-yellow-500"
+                  />
+                  <label htmlFor="accepted-director-terms" className="text-[10px] text-zinc-400 leading-relaxed cursor-pointer select-none">
+                    I accept the BFI <strong className="text-yellow-500">Director Terms &amp; Conditions</strong> (including budget accuracy, copyright registration requirements, and production responsibilities). (Required)
+                  </label>
+                </div>
+
+                <button type="submit" disabled={isSubmitting || !isScriptRegistered || !acceptedDirectorTerms} className="w-full py-6 bg-yellow-400 text-black font-black uppercase rounded-3xl shadow-xl transition-all mt-4 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-yellow-300 active:scale-95 flex items-center justify-center gap-3">
                   {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <><Globe size={18} /> Broadcast Bidding Node</>}
                 </button>
               </form>

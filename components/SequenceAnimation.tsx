@@ -11,12 +11,38 @@ const SequenceAnimation: React.FC = () => {
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const frameIndexRef = useRef(0);
   const lastTimeRef = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isIntersected, setIsIntersected] = useState(false);
   
   // 24 frames per second
   const fps = 24;
   const frameInterval = 1000 / fps;
 
+  // Viewport intersection observer
   useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsIntersected(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // Frame loading trigger
+  useEffect(() => {
+    if (!isIntersected) return;
+
     let active = true;
     const loadedImages: HTMLImageElement[] = [];
     let count = 0;
@@ -49,7 +75,7 @@ const SequenceAnimation: React.FC = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [isIntersected]);
 
   // Frame tick animation loop
   useEffect(() => {
@@ -126,7 +152,7 @@ const SequenceAnimation: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full max-w-4xl mx-auto mt-8 group">
+    <div ref={containerRef} className="relative w-full max-w-4xl mx-auto mt-8 group">
       {/* Premium glow effects */}
       <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 rounded-[2rem] blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-1000 -z-10" />
       

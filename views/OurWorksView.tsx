@@ -32,6 +32,7 @@ const OurWorksView: React.FC = () => {
                 title="Preema Preethi - Directed by Prathapaneni Roopchandu"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
+                loading="lazy"
                 className="absolute inset-0 w-full h-full border-0"
               />
             </div>

@@ -22,6 +22,8 @@ const AboutView: React.FC = () => {
             <img 
               src="/directors_chair_3d.png" 
               alt="BFI 3D Director's Chair" 
+              width={240}
+              height={240}
               className="w-4/5 h-4/5 object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)] transform group-hover:scale-105 group-hover:-rotate-3 transition-all duration-700 animate-float"
             />
             <style>{`
@@ -47,6 +49,9 @@ const AboutView: React.FC = () => {
         <img 
           src="/banner.jpg" 
           alt="Bharat Film Industry Brand Banner" 
+          width={1200}
+          height={450}
+          loading="lazy"
           className="w-full h-auto object-cover"
         />
       </div>
@@ -64,6 +69,9 @@ const AboutView: React.FC = () => {
               <img 
                 src="/founder.jpg" 
                 alt="Prathapaneni Roopchandu - Founder / CEO" 
+                width={350}
+                height={466}
+                loading="lazy"
                 className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 object-top"
               />
               <div className="absolute bottom-6 left-6 z-20">

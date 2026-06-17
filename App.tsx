@@ -322,7 +322,7 @@ const App: React.FC = () => {
             <button onClick={() => setLoggedOutTab('terms')} className="hover:text-yellow-500 transition-colors">Terms of Service</button>
           </div>
            <div>© 2026 Bharat Film Industry. All rights reserved. Built on Secured Nodes.</div>
-          <div className="text-[10px] text-slate-600 tracking-wider font-mono">
+          <div className="text-[10px] text-slate-400 tracking-wider font-mono">
             UDYAM REGISTRATION NUMBER: UDYAM-AP-23-0080757 &nbsp;|&nbsp; GSTIN: 37CZVPR2615G1ZU
           </div>
         </footer>

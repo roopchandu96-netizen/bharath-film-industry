@@ -151,7 +151,7 @@ const PostsView: React.FC = () => {
             </div>
             <h1 className="text-3xl md:text-5xl font-serif text-white leading-tight">{selectedArticle.title}</h1>
             
-            <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500 pt-2 font-medium">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 pt-2 font-medium">
               <div className="flex items-center gap-1.5">
                 <User size={12} />
                 <span>By {selectedArticle.author}</span>
@@ -183,7 +183,7 @@ const PostsView: React.FC = () => {
 
           <div className="pt-8 border-t border-zinc-900 flex flex-wrap gap-2">
             {selectedArticle.keywords.map((word, idx) => (
-              <span key={idx} className="px-3 py-1 rounded-full bg-zinc-900 text-xs text-zinc-500 font-mono">
+              <span key={idx} className="px-3 py-1 rounded-full bg-zinc-900 text-xs text-zinc-400 font-mono">
                 #{word.replace(/\s+/g, '')}
               </span>
             ))}
@@ -278,14 +278,14 @@ const PostsView: React.FC = () => {
               <div className="space-y-4 relative z-10">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase text-yellow-500 tracking-widest">{article.category}</span>
-                  <span className="text-[10px] font-mono text-zinc-500">{article.readTime}</span>
+                  <span className="text-[10px] font-mono text-zinc-400">{article.readTime}</span>
                 </div>
                 <h3 className="text-xl font-serif text-white group-hover:text-yellow-500 transition-colors leading-snug">{article.title}</h3>
                 <p className="text-zinc-400 text-xs leading-relaxed font-light line-clamp-3">{article.summary}</p>
               </div>
 
               <div className="pt-6 border-t border-zinc-900 flex items-center justify-between relative z-10">
-                <div className="flex items-center gap-1.5 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+                <div className="flex items-center gap-1.5 text-zinc-400 text-[10px] font-black uppercase tracking-widest">
                   <span>Read Article</span>
                   <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -296,7 +296,7 @@ const PostsView: React.FC = () => {
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all text-[10px] font-bold ${
                       likedList.includes(article.id)
                         ? 'bg-rose-500/10 border-rose-500/30 text-rose-500'
-                        : 'bg-zinc-950 border-slate-900 text-zinc-500 hover:text-white'
+                        : 'bg-zinc-950 border-slate-900 text-zinc-400 hover:text-white'
                     }`}
                     id={`btn-like-${article.id}`}
                   >
@@ -306,7 +306,7 @@ const PostsView: React.FC = () => {
 
                   <button 
                     onClick={(e) => handleShare(article, e)}
-                    className="p-1.5 rounded-full bg-zinc-950 border border-slate-900 text-zinc-500 hover:text-white transition-all"
+                    className="p-1.5 rounded-full bg-zinc-950 border border-slate-900 text-zinc-400 hover:text-white transition-all"
                     id={`btn-share-${article.id}`}
                     aria-label="Share article"
                   >
@@ -317,7 +317,7 @@ const PostsView: React.FC = () => {
             </div>
           ))
         ) : (
-          <div className="col-span-full py-16 text-center text-zinc-500 space-y-4">
+          <div className="col-span-full py-16 text-center text-zinc-400 space-y-4">
             <BookOpen size={48} className="mx-auto opacity-30" />
             <p className="text-base uppercase font-black tracking-widest">No articles found matching your query.</p>
           </div>

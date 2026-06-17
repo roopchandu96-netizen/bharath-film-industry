@@ -61,7 +61,7 @@ const OurWorksView: React.FC = () => {
                   <User size={18} />
                 </div>
                 <div>
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Role</p>
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-black">Role</p>
                   <p className="text-sm font-bold text-white">Director & Visionary</p>
                 </div>
               </div>
@@ -71,7 +71,7 @@ const OurWorksView: React.FC = () => {
                   <Award size={18} />
                 </div>
                 <div>
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Credit Attribution</p>
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-black">Credit Attribution</p>
                   <p className="text-sm font-bold text-white">Prathapaneni Roopchandu</p>
                 </div>
               </div>
@@ -81,7 +81,7 @@ const OurWorksView: React.FC = () => {
                   <Calendar size={18} />
                 </div>
                 <div>
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Production Network</p>
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-black">Production Network</p>
                   <p className="text-sm font-bold text-white">Bharat Film Industry</p>
                 </div>
               </div>
@@ -91,7 +91,7 @@ const OurWorksView: React.FC = () => {
 
             {/* Description */}
             <div className="space-y-3">
-              <p className="text-xs uppercase font-black tracking-widest text-zinc-500">Director's Note</p>
+              <p className="text-xs uppercase font-black tracking-widest text-zinc-400">Director's Note</p>
               <p className="text-slate-400 text-xs leading-relaxed">
                 "I worked as the Director for this project. This short film represents our commitment to creating high-caliber independent cinema. Through BFI, we provide directors with full creative freedom and direct connection to audience backing to make stories like this possible."
               </p>

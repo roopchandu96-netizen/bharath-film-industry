@@ -84,6 +84,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
 
   navItems.push(
     { id: 'works', label: 'Our Works', icon: Film },
+    { id: 'posts', label: 'Blog & News', icon: BookOpen },
     { id: 'profile', label: 'Profile', icon: UserIcon },
     { id: 'about', label: 'About', icon: Info }
   );

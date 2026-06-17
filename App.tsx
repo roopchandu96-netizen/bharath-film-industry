@@ -26,6 +26,7 @@ import DistributorDashboard from './views/DistributorDashboard.tsx';
 import ServiceProviderDashboard from './views/ServiceProviderDashboard.tsx';
 import StudentDashboard from './views/StudentDashboard.tsx';
 import ProducerDashboard from './views/ProducerDashboard.tsx';
+import PostsView from './views/PostsView.tsx';
 import { UserRole, MovieProject, User } from './types.ts';
 import { Loader2, X, Globe, Film, AlignLeft, Tag, UploadCloud } from 'lucide-react';
 
@@ -34,7 +35,7 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('explore');
-  const [loggedOutTab, setLoggedOutTab] = useState<'about' | 'works' | 'terms'>('about');
+  const [loggedOutTab, setLoggedOutTab] = useState<'about' | 'works' | 'terms' | 'posts'>('about');
   const [showAuth, setShowAuth] = useState(false);
   const [selectedProject, setSelectedProject] = useState<MovieProject | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -276,6 +277,17 @@ const App: React.FC = () => {
                 Our Works
               </button>
               <button
+                onClick={() => setLoggedOutTab('posts')}
+                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
+                  loggedOutTab === 'posts'
+                    ? 'bg-yellow-500 text-black shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                id="btn-nav-blog"
+              >
+                Blog & News
+              </button>
+              <button
                 onClick={() => setLoggedOutTab('terms')}
                 className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
                   loggedOutTab === 'terms'
@@ -299,11 +311,13 @@ const App: React.FC = () => {
         {loggedOutTab === 'about' && <AboutView />}
         {loggedOutTab === 'works' && <OurWorksView />}
         {loggedOutTab === 'terms' && <TermsView />}
+        {loggedOutTab === 'posts' && <PostsView />}
         
         <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-500 text-sm space-y-4">
           <div className="flex justify-center gap-6 text-xs font-bold uppercase tracking-wider">
             <button onClick={() => setLoggedOutTab('about')} className="hover:text-yellow-500 transition-colors">About BFI</button>
             <button onClick={() => setLoggedOutTab('works')} className="hover:text-yellow-500 transition-colors">Our Works</button>
+            <button onClick={() => setLoggedOutTab('posts')} className="hover:text-yellow-500 transition-colors">Blog & News</button>
             <button onClick={() => setLoggedOutTab('terms')} className="hover:text-yellow-500 transition-colors">Terms of Service</button>
           </div>
            <div>© 2026 Bharat Film Industry. All rights reserved. Built on Secured Nodes.</div>
@@ -376,6 +390,7 @@ const App: React.FC = () => {
           {activeTab === 'terms' && <TermsView />}
           {activeTab === 'profile' && <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />}
           {activeTab === 'about' && <AboutView />}
+          {activeTab === 'posts' && <PostsView />}
         </>
       )}
 

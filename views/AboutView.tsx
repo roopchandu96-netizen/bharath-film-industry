@@ -88,13 +88,13 @@ const AboutView: React.FC = () => {
             </div>
             
             <div className="flex gap-4 pt-6">
-              <button className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-blue-400 hover:border-blue-400 hover:bg-blue-400/10 transition-all">
+              <button aria-label="LinkedIn" className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-blue-400 hover:border-blue-400 hover:bg-blue-400/10 transition-all">
                 <Linkedin size={20} />
               </button>
-              <button className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-800 transition-all">
+              <button aria-label="Twitter" className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-800 transition-all">
                 <Twitter size={20} />
               </button>
-              <button className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-amber-400 hover:border-amber-400 hover:bg-amber-400/10 transition-all">
+              <button aria-label="Email" className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-amber-400 hover:border-amber-400 hover:bg-amber-400/10 transition-all">
                 <Mail size={20} />
               </button>
             </div>
@@ -140,12 +140,12 @@ const AboutView: React.FC = () => {
         <h4 className="text-sm font-bold text-white tracking-widest uppercase text-amber-500">Official Company Registration</h4>
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 text-xs font-mono text-slate-400">
           <div>
-            <span className="text-slate-600 uppercase font-sans font-bold">UDYAM ID:</span>{' '}
+            <span className="text-slate-400 uppercase font-sans font-bold">UDYAM ID:</span>{' '}
             <span className="text-white">UDYAM-AP-23-0080757</span>
           </div>
-          <div className="hidden sm:block text-slate-700">|</div>
+          <div className="hidden sm:block text-slate-400">|</div>
           <div>
-            <span className="text-slate-600 uppercase font-sans font-bold">GSTIN:</span>{' '}
+            <span className="text-slate-400 uppercase font-sans font-bold">GSTIN:</span>{' '}
             <span className="text-white">37CZVPR2615G1ZU</span>
           </div>
         </div>

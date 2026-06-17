@@ -307,13 +307,14 @@ const App: React.FC = () => {
             </button>
           </div>
         </header>
+        <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-12">
+          {loggedOutTab === 'about' && <AboutView />}
+          {loggedOutTab === 'works' && <OurWorksView />}
+          {loggedOutTab === 'terms' && <TermsView />}
+          {loggedOutTab === 'posts' && <PostsView />}
+        </main>
         
-        {loggedOutTab === 'about' && <AboutView />}
-        {loggedOutTab === 'works' && <OurWorksView />}
-        {loggedOutTab === 'terms' && <TermsView />}
-        {loggedOutTab === 'posts' && <PostsView />}
-        
-        <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-500 text-sm space-y-4">
+        <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-400 text-sm space-y-4">
           <div className="flex justify-center gap-6 text-xs font-bold uppercase tracking-wider">
             <button onClick={() => setLoggedOutTab('about')} className="hover:text-yellow-500 transition-colors">About BFI</button>
             <button onClick={() => setLoggedOutTab('works')} className="hover:text-yellow-500 transition-colors">Our Works</button>

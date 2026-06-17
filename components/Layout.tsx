@@ -139,7 +139,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
               <LogOut size={14} />
               LOGOUT
             </button>
-            <button className="md:hidden p-2 text-slate-300" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <button className="md:hidden p-2 text-slate-300" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle Navigation Menu">
               {mobileMenuOpen ? <X /> : <Menu />}
             </button>
           </div>
@@ -181,14 +181,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="space-y-4">
             <BFILogo className="w-12 h-12 grayscale opacity-50" />
-            <p className="text-slate-500 text-sm leading-relaxed">
+            <p className="text-slate-400 text-sm leading-relaxed">
               The world's first decentralized film finance ecosystem, empowering directors and investors through transparent blockchain governance.
             </p>
           </div>
 
           <div>
             <h4 className="text-white font-bold mb-4">Platform</h4>
-            <ul className="space-y-2 text-sm text-slate-500">
+            <ul className="space-y-2 text-sm text-slate-400">
               <li><a href="#" className="hover:text-yellow-500 transition-colors">Marketplace</a></li>
               <li><a href="#" className="hover:text-yellow-500 transition-colors">Studio Tools</a></li>
               <li><a href="#" className="hover:text-yellow-500 transition-colors">Tokenomics</a></li>
@@ -197,7 +197,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
 
           <div>
             <h4 className="text-white font-bold mb-4">Legal</h4>
-            <ul className="space-y-2 text-sm text-slate-500">
+            <ul className="space-y-2 text-sm text-slate-400">
               <li><button onClick={() => setActiveTab('terms')} className="hover:text-yellow-500 transition-colors text-left w-full">Terms of Service</button></li>
               <li><a href="#" className="hover:text-yellow-500 transition-colors">Privacy Policy</a></li>
               <li><a href="#" className="hover:text-yellow-500 transition-colors">Risk Disclosure</a></li>
@@ -213,9 +213,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-slate-900 text-center text-slate-600 text-xs space-y-2">
+        <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-slate-900 text-center text-slate-400 text-xs space-y-2">
           <div>© 2026 Bharat Film Industry. All rights reserved. Built on Secured Nodes.</div>
-          <div className="text-[10px] text-slate-500 tracking-wider font-mono">
+          <div className="text-[10px] text-slate-400 tracking-wider font-mono">
             UDYAM REGISTRATION NUMBER: UDYAM-AP-23-0080757 &nbsp;|&nbsp; GSTIN: 37CZVPR2615G1ZU
           </div>
         </div>

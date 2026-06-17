@@ -308,6 +308,7 @@ const PostsView: React.FC = () => {
                     onClick={(e) => handleShare(article, e)}
                     className="p-1.5 rounded-full bg-zinc-950 border border-slate-900 text-zinc-500 hover:text-white transition-all"
                     id={`btn-share-${article.id}`}
+                    aria-label="Share article"
                   >
                     <Share2 size={12} />
                   </button>

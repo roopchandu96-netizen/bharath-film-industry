@@ -47,6 +47,22 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
   const [activeSubTab, setActiveSubTab] = useState<'BOOKING' | 'HISTORY'>('BOOKING');
   const [switchingRole, setSwitchingRole] = useState(false);
 
+  const [movieReleased, setMovieReleased] = useState(() => {
+    return localStorage.getItem('bfi_movie_released') === 'true';
+  });
+
+  const toggleMovieRelease = () => {
+    const nextState = !movieReleased;
+    setMovieReleased(nextState);
+    localStorage.setItem('bfi_movie_released', String(nextState));
+
+    if (nextState) {
+      alert("OFFICIAL MOVIE RELEASE ACTIVATED!\n\nSimulating SMTP notification: secure, unique viewing links have been emailed to all Movie Lovers who pre-booked passes.\n\nExample pass: https://bfi-cinema.in/watch/[TicketID]");
+    } else {
+      alert("Movie status reset to Pre-Release Phase.");
+    }
+  };
+
   // DRM video modal state
   const [activeDrmMovie, setActiveDrmMovie] = useState<BookingRecord | null>(null);
   const [drmPlaybackStarted, setDrmPlaybackStarted] = useState(false);
@@ -440,6 +456,11 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
   };
 
   const handleWatchMovie = (booking: BookingRecord) => {
+    if (!movieReleased) {
+      alert("Movie Release Access Locked:\n\nNo movie streaming or viewing option is available before the official release. Your secure unique viewing link will be sent to your registered email address once the movie is officially released.");
+      return;
+    }
+
     // Check if link is expired
     const allBookings = db.getCollection('bookings');
     const dbRecord = allBookings.find((b: any) => b.id === booking.id);
@@ -502,6 +523,35 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 animate-in fade-in duration-700 text-slate-200">
+      
+      {/* Simulation / Tester Control Panel */}
+      <div className="bg-slate-950/85 border border-yellow-500/20 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="space-y-1">
+          <span className="text-[9px] font-black text-yellow-500 uppercase tracking-widest block">BFI Simulation Console</span>
+          <h4 className="text-sm font-bold text-white">Movie Release Status Control</h4>
+          <p className="text-[10px] text-zinc-400">
+            Toggle this status to simulate the official release. Movie passes are locked and can only be streamed after release.
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <span className="text-[8px] text-zinc-500 uppercase font-black tracking-wider block">Current Status</span>
+            <span className={`text-xs font-black uppercase tracking-wider ${movieReleased ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {movieReleased ? '🚀 Officially Released' : '🔒 Pre-Release Phase'}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={toggleMovieRelease}
+            className={`py-3 px-6 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 ${
+              movieReleased ? 'bg-zinc-900 border border-zinc-800 text-amber-500 hover:border-amber-500/30' : 'bg-yellow-500 text-black hover:bg-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.25)]'
+            }`}
+          >
+            {movieReleased ? 'Lock Movie (Pre-Release)' : 'Unlock & Trigger Release Webhook'}
+          </button>
+        </div>
+      </div>
       
       {/* Tab Selector */}
       <div className="flex justify-center">
@@ -1156,9 +1206,21 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         <button 
                           type="button" 
                           onClick={() => handleWatchMovie(currentBooking)} 
-                          className="w-full py-4 bg-gradient-to-r from-red-600 to-amber-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(220,38,38,0.3)] animate-pulse"
+                          className={`w-full py-4 text-white font-black text-xs uppercase tracking-widest rounded-2xl active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg ${
+                            movieReleased 
+                              ? 'bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-90 shadow-[0_0_20px_rgba(220,38,38,0.3)] animate-pulse' 
+                              : 'bg-zinc-850 border border-zinc-800 text-zinc-500 cursor-not-allowed'
+                          }`}
                         >
-                          <Play size={14} fill="white" /> Watch Movie Premiere
+                          {movieReleased ? (
+                            <>
+                              <Play size={14} fill="white" /> Watch Movie Premiere
+                            </>
+                          ) : (
+                            <>
+                              <Lock size={14} /> Locked: Releases Soon
+                            </>
+                          )}
                         </button>
                       )}
 
@@ -1248,9 +1310,21 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                             ) : (
                               <button 
                                 onClick={() => handleWatchMovie(booking)} 
-                                className="px-4 py-2 bg-gradient-to-r from-red-600 to-amber-600 text-white font-black text-[9px] uppercase tracking-wider rounded-xl hover:opacity-90 transition-all flex items-center gap-1.5"
+                                className={`px-4 py-2 text-white font-black text-[9px] uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 ${
+                                  movieReleased 
+                                    ? 'bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-90' 
+                                    : 'bg-zinc-800 border border-zinc-700 text-zinc-500 cursor-not-allowed'
+                                }`}
                               >
-                                <Play size={10} fill="white" /> Watch Premiere
+                                {movieReleased ? (
+                                  <>
+                                    <Play size={10} fill="white" /> Watch Premiere
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lock size={10} /> Releases Soon
+                                  </>
+                                )}
                               </button>
                             )}
                           </div>

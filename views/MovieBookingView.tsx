@@ -32,14 +32,16 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
   const [phone, setPhone] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'BANK' | 'CARD'>('CARD');
-  const [step, setStep] = useState<'FORM' | 'PAYMENT' | 'TICKET'>('FORM');
-  const [txnId, setTxnId] = useState('');
+  const [step, setStep] = useState<'FORM' | 'PAYMENT' | 'PAY_PROCESSING' | 'TICKET' | 'PAY_FAILED'>('FORM');
   const [cardNo, setCardNo] = useState('');
   const [cardName, setCardName] = useState(user?.name || '');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [gatewaySimMode, setGatewaySimMode] = useState<'SUCCESS' | 'FAILURE'>('SUCCESS');
+  const [gatewayStatus, setGatewayStatus] = useState<'PENDING_HANDSHAKE' | 'AWAITING_CALLBACK' | 'SUCCESS' | 'FAILED'>('PENDING_HANDSHAKE');
+  const [gatewayProgress, setGatewayProgress] = useState(0);
   const [bookingHistory, setBookingHistory] = useState<BookingRecord[]>([]);
   const [currentBooking, setCurrentBooking] = useState<BookingRecord | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'BOOKING' | 'HISTORY'>('BOOKING');
@@ -160,21 +162,13 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
     return 'BFI-VNS-' + Math.floor(100000 + Math.random() * 900000);
   };
 
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
+  const handlePaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!acceptedTerms) {
       alert('Please accept the pre-booking terms & conditions.');
       return;
     }
 
-    if (paymentMethod === 'UPI' && !txnId) {
-      alert('Please enter your UPI transaction reference ID.');
-      return;
-    }
-    if (paymentMethod === 'BANK' && !txnId) {
-      alert('Please enter your bank transfer reference ID (UTR).');
-      return;
-    }
     if (paymentMethod === 'CARD') {
       if (!cardNo || !cardName || !cardExpiry || !cardCvv) {
         alert('Please fill in all credit card details.');
@@ -182,35 +176,53 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
       }
     }
 
-    setIsProcessing(true);
+    setStep('PAY_PROCESSING');
+    setGatewayProgress(0);
+    setGatewayStatus('PENDING_HANDSHAKE');
 
-    // Simulate network delay for verification
-    setTimeout(() => {
-      const generatedTxn = paymentMethod === 'CARD' ? 'CRD-' + Math.floor(100000 + Math.random() * 900000) : txnId.toUpperCase();
-      const ticketId = generateTicketId();
-      
-      const newBooking: BookingRecord = {
-        id: ticketId,
-        name,
-        email,
-        phone,
-        txnId: generatedTxn,
-        paymentMethod,
-        amount: 59 * quantity,
-        quantity,
-        date: new Date().toISOString(),
-        status: paymentMethod === 'CARD' ? 'CONFIRMED' : 'PENDING_CLEARANCE',
-        watched: false
-      };
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 10;
+      setGatewayProgress(progress);
 
-      db.saveToCollection('bookings', newBooking);
-      sendMovieTicketEmail(newBooking);
-      setCurrentBooking(newBooking);
-      loadBookingHistory();
-      
-      setIsProcessing(false);
-      setStep('TICKET');
-    }, 2000);
+      if (progress >= 30 && progress < 100) {
+        setGatewayStatus('AWAITING_CALLBACK');
+      }
+
+      if (progress >= 100) {
+        clearInterval(interval);
+        
+        setGatewaySimMode(currentMode => {
+          if (currentMode === 'SUCCESS') {
+            const ticketId = generateTicketId();
+            const generatedTxn = 'PAY-' + paymentMethod + '-' + Math.floor(100000 + Math.random() * 900000);
+            
+            const newBooking: BookingRecord = {
+              id: ticketId,
+              name,
+              email,
+              phone,
+              txnId: generatedTxn,
+              paymentMethod,
+              amount: 59 * quantity,
+              quantity,
+              date: new Date().toISOString(),
+              status: 'CONFIRMED',
+              watched: false
+            };
+
+            db.saveToCollection('bookings', newBooking);
+            sendMovieTicketEmail(newBooking);
+            setCurrentBooking(newBooking);
+            loadBookingHistory();
+            setStep('TICKET');
+          } else {
+            setStep('PAY_FAILED');
+          }
+          return currentMode;
+        });
+      }
+    }, 300);
   };
 
   const printTicket = (booking: BookingRecord) => {
@@ -902,17 +914,10 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                             </div>
                           </div>
 
-                          <div className="space-y-1 text-left">
-                            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1">Enter Transaction ID (UTR)</label>
-                            <input 
-                              required 
-                              type="text"
-                              value={txnId} 
-                              onChange={e => setTxnId(e.target.value)} 
-                              className="w-full bg-black border border-zinc-800 rounded-2xl py-3 px-4 text-sm text-white focus:border-yellow-400 outline-none font-mono uppercase" 
-                              placeholder="e.g. UTR883920001" 
-                            />
-                          </div>
+                          <p className="text-[9px] text-zinc-500 leading-relaxed text-center italic">
+                            <Lock size={10} className="inline mr-1" />
+                            Secure gateway webhook will auto-confirm your scan. No receipt or screenshot upload required.
+                          </p>
                         </div>
                       )}
 
@@ -937,17 +942,10 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                             ))}
                           </div>
 
-                      <div className="space-y-1 pt-2">
-                            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1">Enter Bank Transfer UTR ID</label>
-                            <input 
-                              required 
-                              type="text"
-                              value={txnId} 
-                              onChange={e => setTxnId(e.target.value)} 
-                              className="w-full bg-black border border-zinc-800 rounded-2xl py-3 px-4 text-sm text-white focus:border-yellow-400 outline-none font-mono uppercase" 
-                              placeholder="UTR / Reference ID" 
-                            />
-                          </div>
+                          <p className="text-[9px] text-zinc-500 leading-relaxed text-center italic">
+                            <Lock size={10} className="inline mr-1" />
+                            Transfer clearance webhook validates this transfer. No manual UTR entry required.
+                          </p>
                         </div>
                       )}
 
@@ -1014,12 +1012,99 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
 
                       <button 
                         type="submit" 
-                        disabled={isProcessing}
-                        className="w-full py-4 bg-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="w-full py-4 bg-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
                       >
-                        {isProcessing ? 'Processing Transaction...' : 'Complete Pre-Booking'}
+                        Authorize &amp; Pay via Secure Gateway
                       </button>
                     </form>
+                  )}
+
+                  {step === 'PAY_PROCESSING' && (
+                    <div className="space-y-6 text-center py-6 animate-in zoom-in duration-500">
+                      <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 flex items-center justify-center mx-auto animate-spin">
+                        <Lock size={28} />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h3 className="text-base font-bold text-white uppercase tracking-wider">Secure Payment Gateway</h3>
+                        <p className="text-xs text-slate-400">
+                          {gatewayStatus === 'PENDING_HANDSHAKE' 
+                            ? 'Initiating secure payment handshake with gateway...' 
+                            : 'Waiting for server-to-server payment confirmation (webhook)...'}
+                        </p>
+                      </div>
+
+                      <div className="w-full bg-slate-900 border border-slate-800 rounded-full h-2.5 overflow-hidden">
+                        <div 
+                          className="bg-yellow-500 h-full transition-all duration-300"
+                          style={{ width: `${gatewayProgress}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 px-1">
+                        <span>GATEWAY LEDGER CLEARANCE</span>
+                        <span>PROGRESS: {gatewayProgress}%</span>
+                      </div>
+
+                      {/* Webhook Testing Switcher Toggle */}
+                      <div className="bg-slate-950/60 border border-slate-900 p-4 rounded-2xl space-y-3">
+                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block">Simulation Mode Switcher</span>
+                        <div className="flex gap-2 justify-center">
+                          <button
+                            type="button"
+                            onClick={() => setGatewaySimMode('SUCCESS')}
+                            className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-all ${
+                              gatewaySimMode === 'SUCCESS' ? 'bg-green-600 text-white shadow-md' : 'bg-slate-900 text-zinc-500 hover:text-white'
+                            }`}
+                          >
+                            Simulate Webhook Success
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setGatewaySimMode('FAILURE')}
+                            className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-all ${
+                              gatewaySimMode === 'FAILURE' ? 'bg-red-600 text-white shadow-md' : 'bg-slate-900 text-zinc-500 hover:text-white'
+                            }`}
+                          >
+                            Simulate Webhook Failure
+                          </button>
+                        </div>
+                        <p className="text-[8px] text-zinc-600 italic">
+                          Click above to toggle the gateway response before the loader completes (default: Success).
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 'PAY_FAILED' && (
+                    <div className="space-y-6 text-center py-6 animate-in zoom-in duration-500">
+                      <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                        <AlertTriangle size={32} />
+                      </div>
+
+                      <div className="space-y-3 bg-red-500/5 border border-red-500/10 p-5 rounded-2xl text-left">
+                        <h4 className="text-sm font-black text-red-500 uppercase tracking-widest text-center">Payment Not Confirmed</h4>
+                        <p className="text-[10px] text-slate-300 leading-relaxed">
+                          We could not verify your payment with our secure payment system. Your ticket has not been generated. If an amount was debited, it will be processed according to the payment gateway's status or applicable policies. Please do not attempt to upload payment screenshots or manually enter transaction IDs, as bookings are confirmed only after secure payment verification.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setStep('PAYMENT')}
+                          className="flex-1 py-3.5 bg-yellow-500 text-black font-black uppercase text-xs tracking-wider rounded-xl hover:bg-yellow-400 active:scale-95 transition-all"
+                        >
+                          Retry Payment
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setStep('FORM')}
+                          className="flex-1 py-3.5 bg-zinc-900 border border-zinc-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-zinc-800 transition-all"
+                        >
+                          Go Back
+                        </button>
+                      </div>
+                    </div>
                   )}
 
                   {step === 'TICKET' && currentBooking && (

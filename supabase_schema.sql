@@ -36,7 +36,11 @@ create table investments (
   "projectId" uuid references projects(id),
   amount bigint not null,
   date timestamptz default now(),
-  tier text
+  tier text,
+  status text default 'PENDING',
+  "txnId" text,
+  investor text,
+  project text
 );
 
 -- AI History Table

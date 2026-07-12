@@ -134,14 +134,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         }
     };
 
-    const verifyInvestment = (id: string) => {
+    const verifyInvestment = async (id: string) => {
         const inv = pendingInvestments.find(i => i.id === id);
         if (inv) {
             notifyInvestmentReceived(inv.txnId || 'TXN-UNKNOWN', inv.amount, inv.investor);
         }
-        // In real app: Update investment status in DB to 'VERIFIED'
-        setPendingInvestments(prev => prev.filter(inv => inv.id !== id));
-        alert(`Investment ${id} Verified & Funds Released to Escrow.`);
+        try {
+            const { error } = await supabase
+                .from('investments')
+                .update({ status: 'VERIFIED' })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setPendingInvestments(prev => prev.filter(inv => inv.id !== id));
+            alert(`Investment ${id} Verified & Funds Released to Escrow.`);
+        } catch (e: any) {
+            console.error("Investment verification failed:", e);
+            alert("Verification failed: " + (e?.message || "Check network configuration."));
+        }
     };
     const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -279,7 +290,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-3xl">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-yellow-500/10 rounded-xl text-yellow-500"><Users size={20} /></div>
@@ -304,18 +315,24 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             </div>
 
             {/* Admin Navigation Tabs */}
-            <div className="flex gap-4 border-b border-zinc-800 pb-1">
+            <div className="flex gap-4 border-b border-zinc-800 pb-1 overflow-x-auto flex-nowrap scrollbar-hide">
                 <button
                     onClick={() => setActiveAdminTab('projects')}
-                    className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all ${activeAdminTab === 'projects' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                    className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'projects' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
                 >
                     Project Approvals
                 </button>
                 <button
                     onClick={() => setActiveAdminTab('investments')}
-                    className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all ${activeAdminTab === 'investments' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                    className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'investments' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
                 >
                     Investment Gateway
+                </button>
+                <button
+                    onClick={() => setActiveAdminTab('users')}
+                    className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'users' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                >
+                    Member Verification
                 </button>
             </div>
 

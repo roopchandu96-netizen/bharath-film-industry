@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Briefcase, User as UserIcon, ShieldCheck, LogOut, TrendingUp, Menu, X, LucideIcon, Info, Film, GraduationCap, BookOpen, Settings } from 'lucide-react';
+import { Home, Briefcase, User as UserIcon, ShieldCheck, LogOut, TrendingUp, Menu, X, LucideIcon, Info, Film, GraduationCap, BookOpen, Settings, Ticket } from 'lucide-react';
 import { UserRole } from '../types';
 import { supabase } from '../services/firebase';
 
@@ -54,40 +54,53 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems: { id: string; label: string; icon: LucideIcon }[] = [];
-  navItems.push({ id: 'explore', label: role === UserRole.ADMIN ? 'Marketplace' : 'Explore', icon: Home });
-
-  if (role === UserRole.DIRECTOR) {
-    navItems.push({ id: 'portfolio', label: 'My Studio', icon: Briefcase });
-  } else if (role === UserRole.INVESTOR) {
-    navItems.push({ id: 'portfolio', label: 'My Investments', icon: Briefcase });
-  } else if (role === UserRole.PRODUCER) {
-    navItems.push({ id: 'portfolio', label: 'Producer Hub', icon: Briefcase });
-  } else if (role === UserRole.WRITER) {
-    navItems.push({ id: 'portfolio', label: 'Writer Studio', icon: BookOpen });
-  } else if (role === UserRole.ACTOR) {
-    navItems.push({ id: 'portfolio', label: 'Talent Portal', icon: Film });
-  } else if (role === UserRole.CREW) {
-    navItems.push({ id: 'portfolio', label: 'Crew Hub', icon: Settings });
-  } else if (role === UserRole.VENDOR) {
-    navItems.push({ id: 'portfolio', label: 'Gear Rentals', icon: Settings });
-  } else if (role === UserRole.DISTRIBUTOR) {
-    navItems.push({ id: 'portfolio', label: 'Distributor Console', icon: TrendingUp });
-  } else if (role === UserRole.SERVICE_PROVIDER) {
-    navItems.push({ id: 'portfolio', label: 'Service Console', icon: ShieldCheck });
-  } else if (role === UserRole.STUDENT) {
-    navItems.push({ id: 'portfolio', label: 'Academy & Grants', icon: GraduationCap });
+ 
+  if (role === UserRole.MOVIE_LOVER) {
+    navItems.push(
+      { id: 'explore', label: 'Home', icon: Home },
+      { id: 'works', label: 'Movies', icon: Film },
+      { id: 'booking', label: 'Book Tickets', icon: Ticket },
+      { id: 'portfolio', label: 'My Tickets', icon: Ticket },
+      { id: 'profile', label: 'Profile', icon: UserIcon },
+      { id: 'about', label: 'About', icon: Info }
+    );
+  } else {
+    navItems.push({ id: 'explore', label: role === UserRole.ADMIN ? 'Marketplace' : 'Explore', icon: Home });
+ 
+    if (role === UserRole.DIRECTOR) {
+      navItems.push({ id: 'portfolio', label: 'My Studio', icon: Briefcase });
+    } else if (role === UserRole.INVESTOR) {
+      navItems.push({ id: 'portfolio', label: 'My Investments', icon: Briefcase });
+    } else if (role === UserRole.PRODUCER) {
+      navItems.push({ id: 'portfolio', label: 'Producer Hub', icon: Briefcase });
+    } else if (role === UserRole.WRITER) {
+      navItems.push({ id: 'portfolio', label: 'Writer Studio', icon: BookOpen });
+    } else if (role === UserRole.ACTOR) {
+      navItems.push({ id: 'portfolio', label: 'Talent Portal', icon: Film });
+    } else if (role === UserRole.CREW) {
+      navItems.push({ id: 'portfolio', label: 'Crew Hub', icon: Settings });
+    } else if (role === UserRole.VENDOR) {
+      navItems.push({ id: 'portfolio', label: 'Gear Rentals', icon: Settings });
+    } else if (role === UserRole.DISTRIBUTOR) {
+      navItems.push({ id: 'portfolio', label: 'Distributor Console', icon: TrendingUp });
+    } else if (role === UserRole.SERVICE_PROVIDER) {
+      navItems.push({ id: 'portfolio', label: 'Service Console', icon: ShieldCheck });
+    } else if (role === UserRole.STUDENT) {
+      navItems.push({ id: 'portfolio', label: 'Academy & Grants', icon: GraduationCap });
+    }
+ 
+    if (role === UserRole.ADMIN) {
+      navItems.push({ id: 'admin', label: 'Admin Console', icon: ShieldCheck });
+    }
+ 
+    navItems.push(
+      { id: 'booking', label: 'Movie Booking', icon: Film },
+      { id: 'works', label: 'Our Works', icon: Film },
+      { id: 'posts', label: 'Blog & News', icon: BookOpen },
+      { id: 'profile', label: 'Profile', icon: UserIcon },
+      { id: 'about', label: 'About', icon: Info }
+    );
   }
-
-  if (role === UserRole.ADMIN) {
-    navItems.push({ id: 'admin', label: 'Admin Console', icon: ShieldCheck });
-  }
-
-  navItems.push(
-    { id: 'works', label: 'Our Works', icon: Film },
-    { id: 'posts', label: 'Blog & News', icon: BookOpen },
-    { id: 'profile', label: 'Profile', icon: UserIcon },
-    { id: 'about', label: 'About', icon: Info }
-  );
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
@@ -146,9 +159,21 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
         </div>
       </header>
 
+      {/* System Status Bar */}
+      <div className="bg-[#090d16] border-b border-slate-900 px-6 py-2 flex items-center justify-between text-[9px] font-mono tracking-wider text-slate-500">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> NETWORK: BFI_SECURE_NODE</span>
+          <span className="hidden sm:inline">|</span>
+          <span className="hidden sm:inline">KYC STATUS: VERIFIED</span>
+        </div>
+        <div className="flex items-center gap-2 text-yellow-500/80 font-bold uppercase">
+          <span>PORTAL ACTIVE SESSION // ROLE: {role}</span>
+        </div>
+      </div>
+
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-30 bg-[#0f172a] pt-28 px-6 animate-in slide-in-from-top-10 md:hidden">
+        <div className="fixed inset-0 z-30 bg-[#0f172a] pt-[calc(7rem+env(safe-area-inset-top,0px))] px-6 overflow-y-auto animate-in slide-in-from-top-10 md:hidden">
           <div className="flex flex-col gap-4">
             {navItems.map(item => (
               <button
@@ -199,7 +224,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
             <h4 className="text-white font-bold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-slate-400">
               <li><button onClick={() => setActiveTab('terms')} className="hover:text-yellow-500 transition-colors text-left w-full">Terms of Service</button></li>
-              <li><a href="#" className="hover:text-yellow-500 transition-colors">Privacy Policy</a></li>
+              <li><a href="https://sites.google.com/view/bharatfilmindustry/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 transition-colors">Privacy Policy</a></li>
               <li><a href="#" className="hover:text-yellow-500 transition-colors">Risk Disclosure</a></li>
             </ul>
           </div>

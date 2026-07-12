@@ -10,10 +10,7 @@ const ActorDashboard: React.FC<ActorDashboardProps> = ({ user }) => {
   const [activeCall, setActiveCall] = useState<string | null>(null);
   const [reelLink, setReelLink] = useState('');
   const [auditionSubmissions, setAuditionSubmissions] = useState<any[]>([]);
-  const [castingCalls] = useState([
-    { id: '1', project: 'Preema Preethi', role: 'Female Lead (Age 20-25)', description: 'Expressive actor for high-drama romantic scenes. Needs classical dance background.', budget: 'Competitive', deadline: '2026-07-01' },
-    { id: '2', project: 'The Last Monarch', role: 'Supporting General (Age 35-50)', description: 'Commanding posture, strong voice, sword combat training preferred.', budget: 'Per Day Basis', deadline: '2026-06-30' }
-  ]);
+  const [castingCalls] = useState<any[]>([]);
 
   const handleApply = (callId: string) => {
     setActiveCall(callId);
@@ -39,7 +36,7 @@ const ActorDashboard: React.FC<ActorDashboardProps> = ({ user }) => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 text-slate-200">
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Casting Calls', val: castingCalls.length + ' Active', icon: '🎭', color: 'text-amber-500' },
           { label: 'Submissions', val: auditionSubmissions.length, icon: '📼', color: 'text-blue-500' },

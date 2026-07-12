@@ -20,7 +20,7 @@ const AuthView: React.FC = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.INVESTOR);
+  const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.MOVIE_LOVER);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -328,16 +328,15 @@ const AuthView: React.FC = () => {
                 <label className={labelClasses}>I AM A</label>
                 <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1 scrollbar-hide border border-zinc-200/60 p-2.5 rounded-2xl bg-zinc-50/50">
                   {[
+                    { role: UserRole.MOVIE_LOVER, icon: '🎬', title: 'Movie Lover', text: 'Pre-book & watch' },
                     { role: UserRole.INVESTOR, icon: '💰', title: 'Investor', text: 'Fund films' },
-                    { role: UserRole.DIRECTOR, icon: '🎬', title: 'Director', text: 'Direct movies' },
                     { role: UserRole.PRODUCER, icon: '👔', title: 'Producer', text: 'Manage budget' },
+                    { role: UserRole.DIRECTOR, icon: '🎥', title: 'Director', text: 'Direct movies' },
                     { role: UserRole.WRITER, icon: '📄', title: 'Writer', text: 'Licensing/Scripts' },
                     { role: UserRole.ACTOR, icon: '🎭', title: 'Actor', text: 'Audition calls' },
-                    { role: UserRole.CREW, icon: '🔧', title: 'Crew/VFX', text: 'Technicians' },
-                    { role: UserRole.VENDOR, icon: '📹', title: 'Vendor', text: 'Gear rentals' },
+                    { role: UserRole.CREW, icon: '🔧', title: 'Technician', text: 'VFX & Crew' },
                     { role: UserRole.DISTRIBUTOR, icon: '🎞️', title: 'Distributor', text: 'OTT/Theaters' },
-                    { role: UserRole.SERVICE_PROVIDER, icon: '⚖️', title: 'Services', text: 'PR & Legal' },
-                    { role: UserRole.STUDENT, icon: '🎓', title: 'Student', text: 'Emerging talent' }
+                    { role: UserRole.SERVICE_PROVIDER, icon: '💼', title: 'Other Professional', text: 'Industry services' }
                   ].map((r) => (
                     <button
                       key={r.role}
@@ -404,7 +403,7 @@ const AuthView: React.FC = () => {
                 <div className="flex items-start gap-3 pt-2">
                   <input type="checkbox" id="terms" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} className="mt-[3px] min-w-4 w-4 h-4 rounded border-zinc-300 text-yellow-600 focus:ring-yellow-600" />
                   <label htmlFor="terms" className="text-[11px] text-zinc-600 leading-relaxed font-medium block">
-                    I agree to the <a href="#" className="font-bold text-amber-600 hover:underline">Terms of Service</a> and <a href="#" className="font-bold text-amber-600 hover:underline">Privacy Policy</a>. I understand this is a financial investment platform.
+                    I agree to the <a href="#" className="font-bold text-amber-600 hover:underline">Terms of Service</a> and <a href="https://sites.google.com/view/bharatfilmindustry/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-amber-600 hover:underline">Privacy Policy</a>. I understand this is a financial investment platform.
                   </label>
                 </div>
 

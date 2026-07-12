@@ -13,10 +13,7 @@ const DistributorDashboard: React.FC<DistributorDashboardProps> = ({ user }) => 
   const [revenueShare, setRevenueShare] = useState(15);
   const [bids, setBids] = useState<any[]>([]);
 
-  const completedProjects = [
-    { id: '1', title: 'Prema Preethi', director: 'Prathapaneni Roopchandu', duration: '124 Mins', status: 'COMPLETED', genre: 'Romance/Drama', description: 'A modern story of love and destiny set in the heart of the tech hub. High emotional quotient, certified hit potential.' },
-    { id: '2', title: 'The Last Monarch', director: 'S. Raj', duration: '148 Mins', status: 'POST_PRODUCTION', genre: 'Historical Epic', description: 'Epic battle sequences, crowd simulations, CGI monarchs, VFX heavy historical period drama.' }
-  ];
+  const completedProjects: any[] = [];
 
   const handlePlaceBid = (movieId: string) => {
     setActiveMovieId(movieId);
@@ -41,7 +38,7 @@ const DistributorDashboard: React.FC<DistributorDashboardProps> = ({ user }) => 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 text-slate-200">
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Available Films', val: completedProjects.length, icon: '🎞️', color: 'text-amber-500' },
           { label: 'My Acquisition Bids', val: bids.length + ' Active', icon: '📝', color: 'text-blue-500' },
@@ -71,27 +68,33 @@ const DistributorDashboard: React.FC<DistributorDashboardProps> = ({ user }) => 
             </div>
 
             <div className="space-y-4">
-              {completedProjects.map(movie => (
-                <div key={movie.id} className="p-6 bg-zinc-950/60 border border-zinc-900 rounded-2xl space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="text-sm font-bold text-white">{movie.title}</h4>
-                      <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">Director: {movie.director}</p>
-                    </div>
-                    <span className="text-xs text-zinc-500 font-mono">{movie.duration} • {movie.genre}</span>
-                  </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">{movie.description}</p>
-                  <div className="flex justify-between items-center pt-2">
-                    <span className="text-[10px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-3 py-1 rounded-full font-black tracking-wider uppercase">{movie.status}</span>
-                    <button
-                      onClick={() => handlePlaceBid(movie.id)}
-                      className="px-5 py-2 bg-yellow-500 text-black font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-yellow-400 transition-all animate-pulse"
-                    >
-                      Acquire Rights
-                    </button>
-                  </div>
+              {completedProjects.length === 0 ? (
+                <div className="p-6 text-center text-zinc-500 text-xs border border-zinc-900 border-dashed rounded-2xl">
+                  No completed film productions seeking distribution.
                 </div>
-              ))}
+              ) : (
+                completedProjects.map(movie => (
+                  <div key={movie.id} className="p-6 bg-zinc-950/60 border border-zinc-900 rounded-2xl space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">{movie.title}</h4>
+                        <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">Director: {movie.director}</p>
+                      </div>
+                      <span className="text-xs text-zinc-500 font-mono">{movie.duration} • {movie.genre}</span>
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">{movie.description}</p>
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-[10px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-3 py-1 rounded-full font-black tracking-wider uppercase">{movie.status}</span>
+                      <button
+                        onClick={() => handlePlaceBid(movie.id)}
+                        className="px-5 py-2 bg-yellow-500 text-black font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-yellow-400 transition-all animate-pulse"
+                      >
+                        Acquire Rights
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

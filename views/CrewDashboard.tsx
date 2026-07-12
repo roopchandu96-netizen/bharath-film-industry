@@ -12,10 +12,7 @@ const CrewDashboard: React.FC<CrewDashboardProps> = ({ user }) => {
   const [applications, setApplications] = useState<any[]>([]);
   const [portfolioLink, setPortfolioLink] = useState('');
   
-  const techJobs = [
-    { id: '1', project: 'Preema Preethi', role: 'Editor & Colorist', description: 'Requires expertise in DaVinci Resolve & Premiere Pro. Cinematic grade experience necessary.', location: 'Hyderabad, IN', duration: '3 Months Contract' },
-    { id: '2', project: 'The Last Monarch', role: 'VFX Artist (CGI / Crowd Simulation)', description: 'Lead VFX artist to handle crowd rendering, digital environments, and composite layers.', location: 'Remote / Bangalore', duration: '6 Months Contract' }
-  ];
+  const techJobs: any[] = [];
 
   const handleApply = (jobId: string) => {
     setActiveJobId(jobId);
@@ -41,12 +38,12 @@ const CrewDashboard: React.FC<CrewDashboardProps> = ({ user }) => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 text-slate-200">
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Technical Field', val: selectedCrewRole, icon: '🔧', color: 'text-amber-500' },
           { label: 'Open Positions', val: techJobs.length + ' Available', icon: '🎬', color: 'text-blue-500' },
           { label: 'Verified Rating', val: '4.9 ★', icon: '⭐', color: 'text-yellow-400' },
-          { label: 'Total Projects Done', val: '5 Completed', icon: '✅', color: 'text-green-500' }
+          { label: 'Total Projects Done', val: '0 Completed', icon: '✅', color: 'text-green-500' }
         ].map((m, i) => (
           <div key={i} className="p-6 bg-slate-900/50 border border-slate-800 rounded-3xl shadow-xl flex items-center justify-between">
             <div>

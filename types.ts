@@ -10,7 +10,8 @@ export enum UserRole {
   VENDOR = 'VENDOR',
   DISTRIBUTOR = 'DISTRIBUTOR',
   SERVICE_PROVIDER = 'SERVICE_PROVIDER',
-  STUDENT = 'STUDENT'
+  STUDENT = 'STUDENT',
+  MOVIE_LOVER = 'MOVIE_LOVER'
 }
 
 export enum ProducerTier {
@@ -46,6 +47,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  primaryRole: UserRole;
+  activeRole: UserRole;
+  movieLoverActivated?: boolean;
   kycStatus: 'NOT_STARTED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
   totalInvested: number;
   projects: string[];
@@ -60,6 +64,10 @@ export interface Investment {
   amount: number;
   date: string;
   tier: ProducerTier;
+  status?: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  txnId?: string;
+  investor?: string;
+  project?: string;
 }
 
 export interface AIProbabilityResult {

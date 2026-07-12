@@ -10,11 +10,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ user }) => {
   const [gearName, setGearName] = useState('');
   const [category, setCategory] = useState('Camera');
   const [dailyRate, setDailyRate] = useState(15000);
-  const [vendorGear, setVendorGear] = useState([
-    { id: '1', name: 'ARRI Alexa Mini LF', category: 'Camera', dailyRate: 25000, status: 'AVAILABLE' },
-    { id: '2', name: 'RED V-Raptor 8K', category: 'Camera', dailyRate: 22000, status: 'RENTED' },
-    { id: '3', name: 'Aputure 1200d Pro Rig', category: 'Lighting', dailyRate: 5000, status: 'AVAILABLE' }
-  ]);
+  const [vendorGear, setVendorGear] = useState<any[]>([]);
 
   const handleAddGear = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +30,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ user }) => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 text-slate-200">
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Equipment Listed', val: vendorGear.length + ' Items', icon: '📹', color: 'text-amber-500' },
           { label: 'Booking Request', val: '1 Pending', icon: '📅', color: 'text-blue-500' },

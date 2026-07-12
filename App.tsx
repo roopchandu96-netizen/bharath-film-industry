@@ -13,6 +13,7 @@ import ProjectDetailView from './views/ProjectDetailView.tsx';
 import AboutView from './views/AboutView.tsx';
 import OurWorksView from './views/OurWorksView.tsx';
 import TermsView from './views/TermsView.tsx';
+import { MovieBookingView } from './views/MovieBookingView.tsx';
 import PaymentGateway from './components/PaymentGateway.tsx';
 import BFIIntellect from './components/BFIIntellect.tsx';
 import { BFILogo } from './components/BFILogo.tsx';
@@ -28,15 +29,41 @@ import StudentDashboard from './views/StudentDashboard.tsx';
 import ProducerDashboard from './views/ProducerDashboard.tsx';
 import PostsView from './views/PostsView.tsx';
 import { UserRole, MovieProject, User } from './types.ts';
-import { Loader2, X, Globe, Film, AlignLeft, Tag, UploadCloud } from 'lucide-react';
+import { Loader2, X, Globe, Film, AlignLeft, Tag, UploadCloud, Menu } from 'lucide-react';
+
+import { MobileLayout } from './components/MobileLayout.tsx';
+import { MobileHomeView } from './views/mobile/MobileHomeView.tsx';
+import { MobileDiscoverView } from './views/mobile/MobileDiscoverView.tsx';
+import { MobileInvestView } from './views/mobile/MobileInvestView.tsx';
+import { MobileProjectDetailView } from './views/mobile/MobileProjectDetailView.tsx';
+import { MobileAuthView } from './views/mobile/MobileAuthView.tsx';
+import { MobileWriterDashboard } from './views/mobile/MobileWriterDashboard.tsx';
+import { MobileDirectorDashboard } from './views/mobile/MobileDirectorDashboard.tsx';
+import { MobileProducerDashboard } from './views/mobile/MobileProducerDashboard.tsx';
+import { MobileAdminDashboard } from './views/mobile/MobileAdminDashboard.tsx';
+
+
+
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return isMobile;
+};
+
 
 const App: React.FC = () => {
+  const isMobile = useIsMobile();
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('explore');
-  const [loggedOutTab, setLoggedOutTab] = useState<'about' | 'works' | 'terms' | 'posts'>('about');
+  const [loggedOutTab, setLoggedOutTab] = useState<'about' | 'works' | 'terms' | 'posts' | 'booking'>('booking');
   const [showAuth, setShowAuth] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<MovieProject | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -227,6 +254,9 @@ const App: React.FC = () => {
   if (authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-yellow-400" /></div>;
   
   if (!session || !user) {
+    if (isMobile) {
+      return <MobileAuthView />;
+    }
     if (showAuth) {
       return (
         <div className="relative isolate">
@@ -242,9 +272,15 @@ const App: React.FC = () => {
     }
     
     return (
-      <div className="min-h-screen bg-[#0f172a] overflow-auto flex flex-col font-sans selection:bg-yellow-500/30 text-slate-200">
-        <header className="sticky top-0 z-40 bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
-          <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div className="min-h-screen bg-[#020617] overflow-x-hidden flex flex-col font-sans selection:bg-yellow-500/30 text-slate-200 relative">
+        {/* Cinematic ambient background glow */}
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[600px] h-[600px] bg-yellow-500/5 rounded-full blur-[150px] pointer-events-none -z-10" />
+        <div className="absolute top-[40%] left-[20%] w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none -z-10" />
+
+        {/* Floating Glassmorphic Header */}
+        <header className="sticky top-4 z-40 max-w-7xl mx-auto w-[92%] bg-slate-950/65 backdrop-blur-xl border border-white/5 rounded-[2rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] mt-4 px-6 h-20 flex items-center justify-between transition-all duration-300">
+          <div className="max-w-7xl w-full mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 flex items-center justify-center">
                 <BFILogo className="w-full h-full drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]" />
@@ -254,8 +290,18 @@ const App: React.FC = () => {
                 <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 sm:block hidden">Decentralized Production</p>
               </div>
             </div>
-            {/* Logged Out Navigation */}
-            <div className="flex items-center gap-1 bg-slate-900/50 p-1.5 rounded-full border border-slate-800/80">
+            {/* Logged Out Navigation - Hidden on Mobile */}
+            <div className="hidden md:flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/5">
+              <button
+                onClick={() => setLoggedOutTab('booking')}
+                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
+                  loggedOutTab === 'booking'
+                    ? 'bg-yellow-500 text-black shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Movie Booking
+              </button>
               <button
                 onClick={() => setLoggedOutTab('about')}
                 className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
@@ -299,15 +345,54 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            <button 
-              onClick={() => setShowAuth(true)} 
-              className="px-6 py-2.5 bg-yellow-500 text-black font-bold text-sm rounded-full hover:bg-yellow-400 transition-colors shadow-[0_0_15px_rgba(234,179,8,0.3)]"
-            >
-              Sign In / Register
-            </button>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setShowAuth(true)} 
+                className="hidden md:block px-6 py-2.5 bg-yellow-500 text-black font-bold text-xs uppercase tracking-wider rounded-full hover:bg-yellow-400 transition-colors shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+              >
+                Launch App Portal
+              </button>
+              <button className="md:hidden p-2 text-slate-300" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle Navigation Menu">
+                {mobileMenuOpen ? <X /> : <Menu />}
+              </button>
+            </div>
           </div>
         </header>
-        <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-12">
+
+        {/* Mobile Menu Overlay for Logged Out User */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-30 bg-black/95 pt-[calc(8rem+env(safe-area-inset-top,0px))] px-6 overflow-y-auto md:hidden backdrop-blur-md">
+            <div className="flex flex-col gap-4">
+              {[
+                { id: 'booking', label: 'Movie Booking' },
+                { id: 'about', label: 'About BFI' },
+                { id: 'works', label: 'Our Works' },
+                { id: 'posts', label: 'Blog & News' },
+                { id: 'terms', label: 'Terms' }
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { setLoggedOutTab(item.id as any); setMobileMenuOpen(false); }}
+                  className={`flex items-center justify-center p-4 rounded-xl text-lg font-bold border ${loggedOutTab === item.id
+                      ? 'border-yellow-500 bg-yellow-500/10 text-yellow-500'
+                      : 'border-slate-800 bg-slate-900/50 text-slate-400'
+                    }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <button 
+                onClick={() => { setShowAuth(true); setMobileMenuOpen(false); }} 
+                className="w-full py-4 bg-yellow-500 text-black font-bold rounded-xl shadow-lg mt-4 active:scale-95 transition-all text-center"
+              >
+                Launch App Portal
+              </button>
+            </div>
+          </div>
+        )}
+
+        <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-16">
+          {loggedOutTab === 'booking' && <MovieBookingView user={null} />}
           {loggedOutTab === 'about' && <AboutView />}
           {loggedOutTab === 'works' && <OurWorksView />}
           {loggedOutTab === 'terms' && <TermsView />}
@@ -316,6 +401,7 @@ const App: React.FC = () => {
         
         <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-400 text-sm space-y-4">
           <div className="flex justify-center gap-6 text-xs font-bold uppercase tracking-wider">
+            <button onClick={() => setLoggedOutTab('booking')} className="hover:text-yellow-500 transition-colors">Movie Booking</button>
             <button onClick={() => setLoggedOutTab('about')} className="hover:text-yellow-500 transition-colors">About BFI</button>
             <button onClick={() => setLoggedOutTab('works')} className="hover:text-yellow-500 transition-colors">Our Works</button>
             <button onClick={() => setLoggedOutTab('posts')} className="hover:text-yellow-500 transition-colors">Blog & News</button>
@@ -330,10 +416,165 @@ const App: React.FC = () => {
     );
   }
 
+  if (isMobile) {
+    return (
+      <MobileLayout
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        role={user.activeRole || user.role}
+        userName={user.name || 'User'}
+        onOpenSubmission={() => setIsProjectModalOpen(true)}
+      >
+        {selectedProject ? (
+          <MobileProjectDetailView
+            project={selectedProject}
+            onBack={() => setSelectedProject(null)}
+            onInvest={(amount) => setInvestmentRequest({ project: selectedProject, amount })}
+          />
+        ) : (
+          <>
+            {(activeTab === 'home' || activeTab === 'explore') && (
+              (user.activeRole || user.role) === UserRole.ADMIN ? (
+                <MobileAdminDashboard user={user} />
+              ) : (
+                <MobileHomeView 
+                  user={user}
+                  onSelectProject={setSelectedProject}
+                  onOpenSubmission={() => setIsProjectModalOpen(true)}
+                  onQuickInvest={(p, amount) => setInvestmentRequest({ project: p, amount })}
+                />
+              )
+            )}
+            {activeTab === 'discover' && (
+              <MobileDiscoverView 
+                onSelectProject={setSelectedProject} 
+                onOpenSubmission={() => setIsProjectModalOpen(true)}
+              />
+            )}
+            {(activeTab === 'invest' || activeTab === 'portfolio') && (() => {
+              switch (user.activeRole || user.role) {
+                case UserRole.INVESTOR:
+                  return <MobileInvestView user={user} onSelectProject={setSelectedProject} />;
+                case UserRole.ADMIN:
+                  return <AdminDashboard user={user} />;
+                case UserRole.DIRECTOR:
+                  return <MobileDirectorDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
+                case UserRole.WRITER:
+                  return <MobileWriterDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
+                case UserRole.PRODUCER:
+                  return <MobileProducerDashboard user={user} />;
+                case UserRole.MOVIE_LOVER:
+                  return <MovieBookingView user={user} />;
+                default:
+                  return <MobileInvestView user={user} onSelectProject={setSelectedProject} />;
+              }
+            })()}
+            {activeTab === 'profile' && (
+              <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />
+            )}
+             {activeTab === 'about' && (
+               <AboutView />
+             )}
+             {activeTab === 'booking' && (
+               <MovieBookingView user={user} />
+             )}
+           </>
+         )}
+
+        {investmentRequest && (
+          <PaymentGateway
+            project={investmentRequest.project}
+            amount={investmentRequest.amount}
+            user={user!}
+            onSuccess={() => { 
+              setInvestmentRequest(null); 
+              setSelectedProject(null);
+              setActiveTab(isMobile ? 'invest' : 'portfolio');
+            }}
+            onCancel={() => setInvestmentRequest(null)}
+          />
+        )}
+
+        {/* Director Project Submission Modal */}
+        {isProjectModalOpen && (
+          <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-zinc-950 border border-yellow-400/20 rounded-[3rem] shadow-3xl scrollbar-hide">
+              <div className="p-8 md:p-10">
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h2 className="text-2xl font-serif text-white">List Production Node</h2>
+                    <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Broadcast registered creative assets to BFI network</p>
+                  </div>
+                  <button onClick={() => setIsProjectModalOpen(false)} className="p-2 text-zinc-500 hover:text-white transition-colors"><X /></button>
+                </div>
+
+                <form onSubmit={handleProjectSubmission} className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1"><Film size={10} /> Film Title</label>
+                      <input required value={newProject.title} onChange={e => setNewProject(p => ({ ...p, title: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none" placeholder="e.g. Preema Preethi" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1"><Tag size={10} /> Genre</label>
+                      <select value={newProject.genre} onChange={e => setNewProject(p => ({ ...p, genre: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none">
+                        <option>Action/Thriller</option>
+                        <option>Sci-Fi Noir</option>
+                        <option>Historical Epic</option>
+                        <option>Cinematic Drama</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1">Logline</label>
+                    <input required value={newProject.logline} onChange={e => setNewProject(p => ({ ...p, logline: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none" placeholder="A brief, one-sentence summary of your film's main premise..." />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1"><AlignLeft size={10} /> Synopsis</label>
+                    <textarea required rows={4} value={newProject.synopsis} onChange={e => setNewProject(p => ({ ...p, synopsis: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none resize-none leading-relaxed" placeholder="Detailed story outline, themes, and creative direction..." />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1"><UploadCloud size={10} /> Budget & Funding Goal</label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <input required value={newProject.budget} onChange={e => setNewProject(p => ({ ...p, budget: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none" placeholder="e.g. ₹5.00 Cr" />
+                      <input required type="number" value={newProject.fundingGoal || ''} onChange={e => setNewProject(p => ({ ...p, fundingGoal: Number(e.target.value) }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none" placeholder="Funding Goal (INR)" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest px-1 flex items-center gap-1">Poster URL (Optional)</label>
+                    <input value={newProject.posterUrl} onChange={e => setNewProject(p => ({ ...p, posterUrl: e.target.value }))} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-6 text-sm text-white focus:border-yellow-400 outline-none" placeholder="https://example.com/poster.jpg" />
+                  </div>
+
+                  <div className="space-y-3 pt-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" checked={isScriptRegistered} onChange={e => setIsScriptRegistered(e.target.checked)} className="rounded border-zinc-800 text-yellow-500 bg-zinc-900 focus:ring-yellow-500" />
+                      <span className="text-xs text-zinc-400 select-none">Screenplay is registered with Screen Writers Association (SWA)</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" checked={acceptedDirectorTerms} onChange={e => setAcceptedDirectorTerms(e.target.checked)} className="rounded border-zinc-800 text-yellow-500 bg-zinc-900 focus:ring-yellow-500" />
+                      <span className="text-xs text-zinc-400 select-none">I accept the terms and condition of BFI Smart Escrow Protocols</span>
+                    </label>
+                  </div>
+
+                  <button type="submit" disabled={isSubmitting} className="w-full py-4 bg-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2">
+                    {isSubmitting ? <Loader2 className="animate-spin" size={14} /> : null}
+                    Submit Production Node
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+      </MobileLayout>
+    );
+  }
 
   // Logic: Only show AdminDashboard if explicitly select 'admin' tab (and user is admin)
   // This allows Directors (or Admins acting as Directors) to see the normal Layout.
-  if (activeTab === 'admin' && user.role === UserRole.ADMIN) {
+  if (activeTab === 'admin' && (user.activeRole || user.role) === UserRole.ADMIN) {
     return <AdminDashboard user={user} />;
   }
 
@@ -346,13 +587,13 @@ const App: React.FC = () => {
           setInvestorDashboardView('dashboard');
         }
       }} 
-      role={user.role}
+      role={user.activeRole || user.role}
     >
       {selectedProject ? (
         <ProjectDetailView
           project={selectedProject}
           onBack={() => setSelectedProject(null)}
-          onInvest={user.role === UserRole.INVESTOR ? (amount) => setInvestmentRequest({ project: selectedProject, amount }) : undefined}
+          onInvest={(user.activeRole || user.role) === UserRole.INVESTOR ? (amount) => setInvestmentRequest({ project: selectedProject, amount }) : undefined}
           onPlayTrailer={() => { }}
         />
       ) : (
@@ -361,7 +602,7 @@ const App: React.FC = () => {
 
           {/* ROLE DASHBOARD LOGIC */}
           {activeTab === 'portfolio' && (() => {
-            switch (user.role) {
+            switch (user.activeRole || user.role) {
               case UserRole.DIRECTOR:
                 return <DirectorDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
               case UserRole.INVESTOR:
@@ -382,16 +623,19 @@ const App: React.FC = () => {
                 return <ServiceProviderDashboard user={user} />;
               case UserRole.STUDENT:
                 return <StudentDashboard user={user} />;
+              case UserRole.MOVIE_LOVER:
+                return <MovieBookingView user={user} />;
               default:
                 return <InvestorDashboard user={user} initialView={investorDashboardView} />;
             }
           })()}
 
-          {activeTab === 'works' && <OurWorksView />}
-          {activeTab === 'terms' && <TermsView />}
-          {activeTab === 'profile' && <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />}
-          {activeTab === 'about' && <AboutView />}
-          {activeTab === 'posts' && <PostsView />}
+           {activeTab === 'works' && <OurWorksView />}
+           {activeTab === 'booking' && <MovieBookingView user={user} />}
+           {activeTab === 'terms' && <TermsView />}
+           {activeTab === 'profile' && <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />}
+           {activeTab === 'about' && <AboutView />}
+           {activeTab === 'posts' && <PostsView />}
         </>
       )}
 

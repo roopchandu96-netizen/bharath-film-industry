@@ -10,11 +10,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
   const [activeCourse, setActiveCourse] = useState<string | null>(null);
   const [grantApplied, setGrantApplied] = useState(false);
 
-  const courses = [
-    { id: '1', title: 'Independent Filmmaking: Zero to Hero', instructor: 'Prathapaneni Roopchandu', duration: '8 Hours (Self-paced)', lessons: 12, rating: '5.0 ★' },
-    { id: '2', title: 'Cinematography Masterclass: Lighting the Scene', instructor: 'S. Raj', duration: '6 Hours (Video Course)', lessons: 10, rating: '4.9 ★' },
-    { id: '3', title: 'Introduction to Film Finance & Escrow Models', instructor: 'BFI Compliance Team', duration: '3 Hours', lessons: 5, rating: '4.8 ★' }
-  ];
+  const courses: any[] = [];
 
   const handleApplyGrant = () => {
     setGrantApplied(true);
@@ -24,11 +20,11 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 text-slate-200">
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Active Courses', val: courses.length, icon: '🎓', color: 'text-amber-500' },
-          { label: 'Community Grants', val: grantApplied ? '1 Applied' : '₹50K Available', icon: '❤️', color: 'text-red-500' },
-          { label: 'Assigned Mentor', val: 'Director P. Roopchandu', icon: '🤝', color: 'text-blue-500' },
+          { label: 'Community Grants', val: grantApplied ? '1 Applied' : 'None Available', icon: '❤️', color: 'text-red-500' },
+          { label: 'Assigned Mentor', val: 'None Assigned', icon: '🤝', color: 'text-blue-500' },
           { label: 'Masterclass Certificates', val: '0 Earned', icon: '🏆', color: 'text-yellow-400' }
         ].map((m, i) => (
           <div key={i} className="p-6 bg-slate-900/50 border border-slate-800 rounded-3xl shadow-xl flex items-center justify-between">
@@ -52,27 +48,33 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
             </div>
 
             <div className="space-y-4">
-              {courses.map(course => (
-                <div key={course.id} className="p-6 bg-zinc-950/60 border border-zinc-900 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <span className="p-2.5 bg-yellow-500/10 text-yellow-500 rounded-xl"><BookOpen size={16} /></span>
-                      <h4 className="text-sm font-bold text-white">{course.title}</h4>
-                    </div>
-                    <p className="text-xs text-slate-400">Instructor: <strong className="text-white">{course.instructor}</strong> • {course.duration}</p>
-                    <p className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">{course.lessons} Lectures &nbsp;|&nbsp; Rating: {course.rating}</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setActiveCourse(course.title);
-                      alert(`Access Granted: Welcome to "${course.title}". Start learning now.`);
-                    }}
-                    className="px-5 py-2.5 bg-yellow-500 text-black font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-yellow-400 transition-all flex items-center gap-1 shrink-0"
-                  >
-                    Start Class <Play size={10} fill="black" />
-                  </button>
+              {courses.length === 0 ? (
+                <div className="p-6 text-center text-zinc-500 text-xs border border-zinc-900 border-dashed rounded-2xl">
+                  No courses available
                 </div>
-              ))}
+              ) : (
+                courses.map(course => (
+                  <div key={course.id} className="p-6 bg-zinc-950/60 border border-zinc-900 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <span className="p-2.5 bg-yellow-500/10 text-yellow-500 rounded-xl"><BookOpen size={16} /></span>
+                        <h4 className="text-sm font-bold text-white">{course.title}</h4>
+                      </div>
+                      <p className="text-xs text-slate-400">Instructor: <strong className="text-white">{course.instructor}</strong> • {course.duration}</p>
+                      <p className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">{course.lessons} Lectures &nbsp;|&nbsp; Rating: {course.rating}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setActiveCourse(course.title);
+                        alert(`Access Granted: Welcome to "${course.title}". Start learning now.`);
+                      }}
+                      className="px-5 py-2.5 bg-yellow-500 text-black font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-yellow-400 transition-all flex items-center gap-1 shrink-0"
+                    >
+                      Start Class <Play size={10} fill="black" />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

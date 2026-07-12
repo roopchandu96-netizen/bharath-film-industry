@@ -42,7 +42,11 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({ project, amount, user, 
         projectId: project.id,
         amount: amount,
         date: new Date().toISOString(),
-        tier: tier
+        tier: tier,
+        status: 'PENDING',
+        txnId: txnId,
+        investor: user.name,
+        project: project.title
       });
 
       // Notify Admin of verifyable investment

@@ -13,27 +13,14 @@ const ProducerDashboard: React.FC<ProducerDashboardProps> = ({ user }) => {
   const [itemName, setItemName] = useState('');
   const [itemCategory, setItemCategory] = useState('Pre-Production');
   const [itemCost, setItemCost] = useState(500000);
-  const [budgetItems, setBudgetItems] = useState([
-    { id: '1', name: 'Script Purchasing & Development', category: 'Pre-Production', cost: 1200000 },
-    { id: '2', name: 'Camera & Lens Rentals (ARRI Alexa)', category: 'Production', cost: 3500000 },
-    { id: '3', name: 'VFX & CGI Compositing', category: 'Post-Production', cost: 7500000 },
-    { id: '4', name: 'PR & Social Media Marketing Campaign', category: 'Marketing & PR', cost: 2000000 }
-  ]);
+  const [budgetItems, setBudgetItems] = useState<any[]>([]);
 
   // Production Tracking State
-  const [milestones, setMilestones] = useState([
-    { id: '1', title: 'Script Lock & Cast Signing', status: 'COMPLETED', date: '2026-05-10' },
-    { id: '2', title: 'Principal Photography Schedule 1', status: 'IN_PROGRESS', date: '2026-06-25' },
-    { id: '3', title: 'First Cut & Rough Edit assembly', status: 'PENDING', date: '2026-08-15' },
-    { id: '4', title: 'Color Grading & Dolby Atmos Mix', status: 'PENDING', date: '2026-10-01' }
-  ]);
+  const [milestones, setMilestones] = useState<any[]>([]);
 
   // Investor Communications State
   const [chatMessage, setChatMessage] = useState('');
-  const [investorMessages, setInvestorMessages] = useState([
-    { id: '1', sender: 'BFI Syndicate Lead', text: 'Confirming ₹50L tranche release for the second schedule of production.', time: '10:30 AM' },
-    { id: '2', sender: 'Director S. Raj', text: 'Location scouting finished for the climax sequence. Budget within estimated parameters.', time: 'Yesterday' }
-  ]);
+  const [investorMessages, setInvestorMessages] = useState<any[]>([]);
 
   const handleAddBudgetItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,12 +79,12 @@ const ProducerDashboard: React.FC<ProducerDashboardProps> = ({ user }) => {
       {activeView === 'overview' && (
         <div className="space-y-8">
           {/* Metrics Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { label: 'Active Productions', val: '1 Project', icon: <Film className="text-amber-500" />, color: 'bg-amber-500/10' },
+              { label: 'Active Productions', val: '0 Projects', icon: <Film className="text-amber-500" />, color: 'bg-amber-500/10' },
               { label: 'Allocated Budget', val: `₹${(totalAllocatedBudget / 100000).toFixed(0)}L`, icon: <DollarSign className="text-green-500" />, color: 'bg-green-500/10' },
-              { label: 'Milestones Achieved', val: '1 / 4 Complete', icon: <Activity className="text-blue-500" />, color: 'bg-blue-500/10' },
-              { label: 'Connected Investors', val: '12 Active', icon: <Users className="text-purple-500" />, color: 'bg-purple-500/10' }
+              { label: 'Milestones Achieved', val: '0 / 0 Complete', icon: <Activity className="text-blue-500" />, color: 'bg-blue-500/10' },
+              { label: 'Connected Investors', val: '0 Active', icon: <Users className="text-purple-500" />, color: 'bg-purple-500/10' }
             ].map((m, i) => (
               <div key={i} className="p-6 bg-slate-900/50 border border-slate-800 rounded-3xl shadow-xl flex items-center justify-between">
                 <div>

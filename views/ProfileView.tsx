@@ -21,6 +21,70 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+  const [isSwitchingRole, setIsSwitchingRole] = useState(false);
+  const [showActivationModal, setShowActivationModal] = useState(false);
+  const [actualRole, setActualRole] = useState<string | null>(() => {
+    const stored = localStorage.getItem(`bfi_actual_role_${user.id}`);
+    if (!stored && user.role !== UserRole.MOVIE_LOVER) {
+      localStorage.setItem(`bfi_actual_role_${user.id}`, user.role);
+      return user.role;
+    }
+    return stored;
+  });
+
+  const handleSwitchRole = async (targetRole: UserRole, checkFirstTime = false) => {
+    if (checkFirstTime && targetRole === UserRole.MOVIE_LOVER && !user.movieLoverActivated) {
+      setShowActivationModal(true);
+      return;
+    }
+
+    setIsSwitchingRole(true);
+    setMessage(null);
+    try {
+      // 1. Update Supabase Auth User Metadata
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { role: targetRole }
+      });
+      if (authError) throw authError;
+
+      // 2. Prepare database updates
+      const updates: Partial<User> = {
+        activeRole: targetRole,
+        role: targetRole // Keep legacy role field synced
+      };
+      if (targetRole === UserRole.MOVIE_LOVER) {
+        updates.movieLoverActivated = true;
+      }
+
+      await updateUserInFirestore(user.id, updates);
+
+      // Update parent state
+      onUpdate({ ...user, ...updates });
+      setMessage({ type: 'success', text: `Role switched to ${targetRole} successfully. Reloading workspace...` });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err: any) {
+      console.error("Role switch error:", err);
+      // Fallback local updates
+      const updates: Partial<User> = {
+        activeRole: targetRole,
+        role: targetRole
+      };
+      if (targetRole === UserRole.MOVIE_LOVER) {
+        updates.movieLoverActivated = true;
+      }
+      onUpdate({ ...user, ...updates });
+      setMessage({ type: 'success', text: `Workspace role updated to ${targetRole} locally. Reloading workspace...` });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } finally {
+      setIsSwitchingRole(false);
+      setShowActivationModal(false);
+    }
+  };
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
@@ -222,8 +286,95 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
               )}
             </div>
           </div>
+
+          {/* Workspace Role Toggle */}
+          <div className="p-10 rounded-[3rem] bg-zinc-950 border border-zinc-900 shadow-2xl space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-white tracking-tight">Switch Role</h3>
+              <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Toggle Workspace Mode</p>
+            </div>
+
+            <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 text-xs">
+              <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider">Current Active Role:</span>
+              <p className="font-extrabold text-white text-sm mt-1 flex items-center gap-1.5 animate-pulse">
+                {(user.activeRole || user.role) === UserRole.MOVIE_LOVER ? '🎬 Movie Lover' : (user.activeRole || user.role)}
+              </p>
+            </div>
+
+            <p className="text-[10px] text-zinc-400 leading-relaxed">
+              Toggle between your professional workspace and viewer mode to book tickets or stream releases without duplicate profiles.
+            </p>
+
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => handleSwitchRole(UserRole.MOVIE_LOVER, true)}
+                disabled={isSwitchingRole || (user.activeRole || user.role) === UserRole.MOVIE_LOVER}
+                className="w-full py-4 rounded-2xl bg-yellow-500 disabled:bg-yellow-500/10 disabled:text-zinc-600 disabled:border disabled:border-zinc-800/50 text-black font-extrabold text-xs uppercase tracking-wider hover:bg-yellow-400 active:scale-95 disabled:scale-100 disabled:pointer-events-none transition-all flex items-center justify-center gap-2"
+              >
+                {isSwitchingRole && (user.activeRole || user.role) !== UserRole.MOVIE_LOVER ? (
+                  <Loader2 className="animate-spin" size={14} />
+                ) : (
+                  <span>Switch to Movie Lover</span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSwitchRole((user.primaryRole || user.role) as UserRole, false)}
+                disabled={isSwitchingRole || (user.activeRole || user.role) !== UserRole.MOVIE_LOVER}
+                className="w-full py-4 rounded-2xl bg-zinc-900 border border-yellow-500/20 hover:border-yellow-500/40 text-yellow-500 font-extrabold text-xs uppercase tracking-wider disabled:opacity-20 disabled:border-zinc-950 disabled:text-zinc-600 active:scale-95 disabled:scale-100 disabled:pointer-events-none transition-all flex items-center justify-center gap-2"
+              >
+                {isSwitchingRole && (user.activeRole || user.role) === UserRole.MOVIE_LOVER ? (
+                  <Loader2 className="animate-spin" size={14} />
+                ) : (
+                  <span>Switch Back to {user.primaryRole || user.role}</span>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Become a Movie Lover Modal */}
+      {showActivationModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-zinc-950 border-2 border-yellow-500/20 rounded-[3rem] p-8 max-w-md w-full text-center space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(234,179,8,0.15)]">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl pointer-events-none" />
+            
+            <div className="w-16 h-16 rounded-[1.5rem] bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mx-auto text-yellow-500">
+              <Award size={32} />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-white tracking-tight">Become a Movie Lover</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Support original cinema and enjoy exclusive movie pre-bookings, premieres, and future benefits.
+              </p>
+              <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black pt-2">
+                Continue?
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowActivationModal(false)}
+                className="py-3 px-4 bg-zinc-900 border border-zinc-800 text-zinc-400 rounded-2xl text-xs font-bold uppercase hover:bg-zinc-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchRole(UserRole.MOVIE_LOVER, false)}
+                className="py-3 px-4 bg-yellow-500 text-black rounded-2xl text-xs font-black uppercase hover:bg-yellow-400 active:scale-95 transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)]"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Global Contact / Support Section */}
       <div className="w-full">
@@ -232,13 +383,13 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
             <h3 className="text-xl font-bold text-white tracking-tight">Concierge Support</h3>
             <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest"> Direct Assistance & Inquiries</p>
             <p className="text-zinc-600 text-sm leading-relaxed">
-              Need help with your account, investments, or project listings? Our support team is available to assist you via email. {user.role === UserRole.INVESTOR && 'Investors can also use our exclusive WhatsApp concierge.'}
+              Need help with your account, investments, or project listings? Our support team is available to assist you via email. {(user.role === UserRole.INVESTOR || user.role === 'INVESTOR' || user.role === UserRole.ADMIN || user.role === 'ADMIN') && 'Investors can also use our exclusive WhatsApp concierge.'}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
             {/* Role-Based Contact Options */}
-            {user.role === UserRole.INVESTOR && (
+            {(user.role === UserRole.INVESTOR || user.role === 'INVESTOR' || user.role === UserRole.ADMIN || user.role === 'ADMIN') && (
               <a
                 href="https://wa.me/919652919968"
                 target="_blank"

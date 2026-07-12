@@ -21,6 +21,25 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onBack, 
   const [aiResult, setAiResult] = useState<AIProbabilityResult | null>(null);
   const [marketPulse, setMarketPulse] = useState<string>("");
   const [loadingAi, setLoadingAi] = useState(false);
+  const [userBids, setUserBids] = useState<Investment[]>([]);
+
+  const handleBFIContact = (personName: string, roleOrProject: string) => {
+    const subject = encodeURIComponent(`Connection Request: Inquiry for ${personName} (${roleOrProject})`);
+    const body = encodeURIComponent(`Hello BFI Team,\n\nI would like to contact "${personName}" (${roleOrProject}) for work-related reasons. Please help arrange this connection.\n\nThank you.`);
+    
+    const mailtoUrl = `mailto:bharatfilmindustry@gmail.com?subject=${subject}&body=${body}`;
+    const whatsappUrl = `https://wa.me/919652919968?text=${encodeURIComponent(`Hello BFI Team, I want to connect with ${personName} (${roleOrProject}) for work. Please arrange this.`)}`;
+
+    const choice = window.confirm(
+      `To protect user privacy, direct contact is disabled. Your connection request will be routed to BFI Admin.\n\nClick OK to contact via WhatsApp, or Cancel to contact via Email.`
+    );
+
+    if (choice) {
+      window.open(whatsappUrl, '_blank');
+    } else {
+      window.location.href = mailtoUrl;
+    }
+  };
 
   useEffect(() => {
     const getAiAnalysis = async () => {
@@ -41,19 +60,20 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onBack, 
     getAiAnalysis();
   }, [project]);
 
-  const milestones = [
-    { label: "Synopsis & Character Bible", status: "COMPLETED", pct: 100 },
-    { label: "Pre-Production (Casting/Loc)", status: "IN_PROGRESS", pct: 45 },
-    { label: "Principal Photography", status: "PENDING", pct: 0 },
-    { label: "VFX & Post-Production", status: "PENDING", pct: 0 },
-    { label: "Marketing & Theatrical Release", status: "PENDING", pct: 0 }
-  ];
-
-  const recentBids = [
-    { user: "P. Sharma", amount: "₹50,00,000", time: "2h ago", tier: "Associate" },
-    { user: "KV Rao", amount: "₹1,25,00,000", time: "5h ago", tier: "Co-Producer" },
-    { user: "Anonymous", amount: "₹10,00,000", time: "1d ago", tier: "Supporter" }
-  ];
+  useEffect(() => {
+    const fetchUserBids = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const invs = await getUserInvestments(session.user.id);
+          setUserBids(invs.filter(i => i.projectId === project.id));
+        }
+      } catch (err) {
+        console.error("Error fetching user bids:", err);
+      }
+    };
+    fetchUserBids();
+  }, [project.id]);
 
   const selectedTier = TIERS.find(t => investAmount >= t.min && investAmount <= t.max) || TIERS[TIERS.length - 1];
 
@@ -157,7 +177,14 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onBack, 
             <p className="text-zinc-300 text-base leading-relaxed font-serif tracking-wide whitespace-pre-wrap">{project.description}</p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-10 border-t border-zinc-900">
-              <div><span className="text-[9px] font-black text-zinc-500 uppercase">Director</span><p className="text-sm font-bold text-white">{project.director}</p></div>
+              <div 
+                onClick={() => handleBFIContact(project.director, `Director of ${project.title}`)}
+                className="cursor-pointer group hover:opacity-80"
+                title="Request Connection via BFI"
+              >
+                <span className="text-[9px] font-black text-zinc-500 uppercase group-hover:text-yellow-400">Director 📞</span>
+                <p className="text-sm font-bold text-white group-hover:text-yellow-400 underline decoration-dotted">{project.director}</p>
+              </div>
               <div><span className="text-[9px] font-black text-zinc-500 uppercase">Budget</span><p className="text-sm font-bold text-white">{CURRENCY_FORMATTER.format(project.budget)}</p></div>
               <div><span className="text-[9px] font-black text-zinc-500 uppercase">Registry ID</span><p className="text-sm font-bold text-yellow-400">BFI-{project.id.slice(-8).toUpperCase()}</p></div>
               <div><span className="text-[9px] font-black text-zinc-500 uppercase">Status</span><p className="text-sm font-bold text-green-500">{project.status}</p></div>
@@ -189,18 +216,26 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onBack, 
             <div className="p-8 rounded-[3rem] bg-zinc-950 border border-zinc-900 space-y-6">
               <div className="flex items-center gap-2 mb-2">
                 <Activity className="text-zinc-700" size={14} />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Recent Bid Activity</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Your Recent Bids</h3>
               </div>
               <div className="space-y-4">
-                {recentBids.map((bid, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b border-zinc-900/50 last:border-0">
-                    <div>
-                      <p className="text-[11px] font-black text-zinc-400 uppercase">{bid.user}</p>
-                      <p className="text-[8px] font-bold text-zinc-600">{bid.time} • {bid.tier} Tier</p>
-                    </div>
-                    <p className="text-xs font-black text-yellow-400">{bid.amount}</p>
+                {userBids.length === 0 ? (
+                  <div className="text-center py-4 text-xs text-zinc-500">
+                    No bids placed by you yet.
                   </div>
-                ))}
+                ) : (
+                  userBids.map((bid) => (
+                    <div key={bid.id} className="flex items-center justify-between py-2 border-b border-zinc-900/50 last:border-0">
+                      <div>
+                        <p className="text-[11px] font-black text-zinc-400 uppercase">You</p>
+                        <p className="text-[8px] font-bold text-zinc-600">
+                          {new Date(bid.date).toLocaleDateString()} • {bid.tier} Tier
+                        </p>
+                      </div>
+                      <p className="text-xs font-black text-yellow-400">{CURRENCY_FORMATTER.format(bid.amount)}</p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 

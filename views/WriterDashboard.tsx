@@ -13,10 +13,7 @@ const WriterDashboard: React.FC<WriterDashboardProps> = ({ user }) => {
   const [logline, setLogline] = useState('');
   const [registrationNo, setRegistrationNo] = useState('');
   const [isRegistered, setIsRegistered] = useState(false);
-  const [scripts, setScripts] = useState([
-    { id: '1', title: 'Prema Preethi', genre: 'Romance/Drama', logline: 'A modern story of love and destiny set in the heart of the tech hub.', registration: 'WGA-88392-IN', status: 'MATCHED' },
-    { id: '2', title: 'The Last Monarch', genre: 'Historical Epic', logline: 'An aging king fights to save his empire from betrayal.', registration: 'SWA-99201-IN', status: 'UNDER_REVIEW' }
-  ]);
+  const [scripts, setScripts] = useState<any[]>([]);
 
   const handleListScript = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +40,7 @@ const WriterDashboard: React.FC<WriterDashboardProps> = ({ user }) => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 text-slate-200">
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Scripts Listed', val: scripts.length, icon: '📄', color: 'text-amber-500' },
           { label: 'SWA Registered', val: '100%', icon: '🛡️', color: 'text-green-500' },

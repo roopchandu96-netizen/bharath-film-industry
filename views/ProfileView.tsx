@@ -24,12 +24,18 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
   const [isSwitchingRole, setIsSwitchingRole] = useState(false);
   const [showActivationModal, setShowActivationModal] = useState(false);
   const [actualRole, setActualRole] = useState<string | null>(() => {
-    const stored = localStorage.getItem(`bfi_actual_role_${user.id}`);
-    if (!stored && user.role !== UserRole.MOVIE_LOVER) {
-      localStorage.setItem(`bfi_actual_role_${user.id}`, user.role);
-      return user.role;
+    if (!user) return null;
+    try {
+      const stored = localStorage.getItem(`bfi_actual_role_${user.id}`);
+      if (!stored && user.role !== UserRole.MOVIE_LOVER) {
+        localStorage.setItem(`bfi_actual_role_${user.id}`, user.role);
+        return user.role;
+      }
+      return stored;
+    } catch (e) {
+      console.error("Failed to read actual role from storage:", e);
+      return user.role || null;
     }
-    return stored;
   });
 
   const handleSwitchRole = async (targetRole: UserRole, checkFirstTime = false) => {

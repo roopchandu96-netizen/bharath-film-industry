@@ -93,15 +93,23 @@ const App: React.FC = () => {
       setAuthLoading(false);
     }, 12000);
 
-    const legacySessionStr = localStorage.getItem('bfi_legacy_session');
-    if (legacySessionStr) {
-      const parsedSession = JSON.parse(legacySessionStr);
-      setSession(parsedSession);
-      const fallbackRole = parsedSession.user.user_metadata?.role || UserRole.INVESTOR;
+    let legacySession: any = null;
+    try {
+      const legacySessionStr = localStorage.getItem('bfi_legacy_session');
+      if (legacySessionStr) {
+        legacySession = JSON.parse(legacySessionStr);
+      }
+    } catch (e) {
+      console.error("Failed to parse legacy session from storage:", e);
+    }
+
+    if (legacySession && legacySession.user) {
+      setSession(legacySession);
+      const fallbackRole = legacySession.user.user_metadata?.role || UserRole.INVESTOR;
       setUser({
-        id: parsedSession.user.id,
-        email: parsedSession.user.email,
-        name: parsedSession.user.user_metadata?.full_name || 'Legacy User',
+        id: legacySession.user.id,
+        email: legacySession.user.email,
+        name: legacySession.user.user_metadata?.full_name || 'Legacy User',
         role: fallbackRole,
         kycStatus: 'VERIFIED',
         totalInvested: 0,

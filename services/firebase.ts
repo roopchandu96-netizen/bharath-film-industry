@@ -78,16 +78,25 @@ export const db = {
   from: (table: string) => supabase.from(table),
   
   getCollection: (key: string) => {
-    const data = localStorage.getItem(`bfi_ledger_${key}`);
-    return data ? JSON.parse(data) : [];
+    try {
+      const data = localStorage.getItem(`bfi_ledger_${key}`);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      console.error(`Failed to get collection bfi_ledger_${key}:`, e);
+      return [];
+    }
   },
 
   saveToCollection: (key: string, item: any) => {
-    const data = localStorage.getItem(`bfi_ledger_${key}`);
-    const collection = data ? JSON.parse(data) : [];
-    collection.push(item);
-    localStorage.setItem(`bfi_ledger_${key}`, JSON.stringify(collection));
-    window.dispatchEvent(new Event('storage'));
+    try {
+      const data = localStorage.getItem(`bfi_ledger_${key}`);
+      const collection = data ? JSON.parse(data) : [];
+      collection.push(item);
+      localStorage.setItem(`bfi_ledger_${key}`, JSON.stringify(collection));
+      window.dispatchEvent(new Event('storage'));
+    } catch (e) {
+      console.error(`Failed to save to collection bfi_ledger_${key}:`, e);
+    }
   }
 };
 

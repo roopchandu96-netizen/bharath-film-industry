@@ -29,17 +29,14 @@ interface MovieBookingViewProps {
 export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'BANK' | 'CARD'>('CARD');
-  const [step, setStep] = useState<'FORM' | 'PAYMENT' | 'PAY_PROCESSING' | 'TICKET' | 'PAY_FAILED'>('FORM');
+  const [step, setStep] = useState<'FORM' | 'PAYMENT' | 'PAY_PROCESSING' | 'PAY_PENDING' | 'PAY_FAILED' | 'PAY_CANCELLED' | 'PAY_CONFIRMED'>('FORM');
   const [cardNo, setCardNo] = useState('');
   const [cardName, setCardName] = useState(user?.name || '');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [gatewaySimMode, setGatewaySimMode] = useState<'SUCCESS' | 'FAILURE'>('SUCCESS');
+  const [gatewaySimMode, setGatewaySimMode] = useState<'SUCCESS' | 'FAILURE' | 'PENDING' | 'CANCELLED'>('SUCCESS');
   const [gatewayStatus, setGatewayStatus] = useState<'PENDING_HANDSHAKE' | 'AWAITING_CALLBACK' | 'SUCCESS' | 'FAILED'>('PENDING_HANDSHAKE');
   const [gatewayProgress, setGatewayProgress] = useState(0);
   const [bookingHistory, setBookingHistory] = useState<BookingRecord[]>([]);
@@ -231,9 +228,13 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
             sendMovieTicketEmail(newBooking);
             setCurrentBooking(newBooking);
             loadBookingHistory();
-            setStep('TICKET');
-          } else {
+            setStep('PAY_CONFIRMED');
+          } else if (currentMode === 'FAILURE') {
             setStep('PAY_FAILED');
+          } else if (currentMode === 'PENDING') {
+            setStep('PAY_PENDING');
+          } else if (currentMode === 'CANCELLED') {
+            setStep('PAY_CANCELLED');
           }
           return currentMode;
         });
@@ -1098,7 +1099,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                       {/* Webhook Testing Switcher Toggle */}
                       <div className="bg-slate-950/60 border border-slate-900 p-4 rounded-2xl space-y-3">
                         <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block">Simulation Mode Switcher</span>
-                        <div className="flex gap-2 justify-center">
+                        <div className="grid grid-cols-2 gap-2">
                           <button
                             type="button"
                             onClick={() => setGatewaySimMode('SUCCESS')}
@@ -1106,7 +1107,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                               gatewaySimMode === 'SUCCESS' ? 'bg-green-600 text-white shadow-md' : 'bg-slate-900 text-zinc-500 hover:text-white'
                             }`}
                           >
-                            Simulate Webhook Success
+                            Success
                           </button>
                           <button
                             type="button"
@@ -1115,26 +1116,44 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                               gatewaySimMode === 'FAILURE' ? 'bg-red-600 text-white shadow-md' : 'bg-slate-900 text-zinc-500 hover:text-white'
                             }`}
                           >
-                            Simulate Webhook Failure
+                            Failure
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setGatewaySimMode('PENDING')}
+                            className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-all ${
+                              gatewaySimMode === 'PENDING' ? 'bg-amber-600 text-white shadow-md' : 'bg-slate-900 text-zinc-500 hover:text-white'
+                            }`}
+                          >
+                            Pending
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setGatewaySimMode('CANCELLED')}
+                            className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-all ${
+                              gatewaySimMode === 'CANCELLED' ? 'bg-zinc-700 text-white shadow-md' : 'bg-slate-900 text-zinc-500 hover:text-white'
+                            }`}
+                          >
+                            Cancel
                           </button>
                         </div>
                         <p className="text-[8px] text-zinc-600 italic">
-                          Click above to toggle the gateway response before the loader completes (default: Success).
+                          Click above to toggle the simulated webhook response before progress reaches 100%.
                         </p>
                       </div>
                     </div>
                   )}
 
-                  {step === 'PAY_FAILED' && (
+                  {step === 'PAY_PENDING' && (
                     <div className="space-y-6 text-center py-6 animate-in zoom-in duration-500">
-                      <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(239,68,68,0.2)]">
-                        <AlertTriangle size={32} />
+                      <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto animate-pulse">
+                        <Clock size={32} />
                       </div>
-
-                      <div className="space-y-3 bg-red-500/5 border border-red-500/10 p-5 rounded-2xl text-left">
-                        <h4 className="text-sm font-black text-red-500 uppercase tracking-widest text-center">Payment Not Confirmed</h4>
-                        <p className="text-[10px] text-slate-300 leading-relaxed">
-                          We could not verify your payment with our secure payment system. Your ticket has not been generated. If an amount was debited, it will be processed according to the payment gateway's status or applicable policies. Please do not attempt to upload payment screenshots or manually enter transaction IDs, as bookings are confirmed only after secure payment verification.
+                      
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-black text-amber-500 uppercase tracking-widest text-center">Payment Pending</h4>
+                        <p className="text-[10px] text-slate-300 leading-relaxed text-left bg-slate-905/50 border border-slate-800 p-4 rounded-xl">
+                          We are waiting for confirmation from our secure payment gateway.
                         </p>
                       </div>
 
@@ -1148,23 +1167,69 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => setStep('FORM')}
+                          onClick={() => setStep('PAY_CANCELLED')}
                           className="flex-1 py-3.5 bg-zinc-900 border border-zinc-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-zinc-800 transition-all"
                         >
-                          Go Back
+                          Cancel Booking
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {step === 'TICKET' && currentBooking && (
+                  {step === 'PAY_FAILED' && (
+                    <div className="space-y-6 text-center py-6 animate-in zoom-in duration-500">
+                      <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                        <AlertTriangle size={32} />
+                      </div>
+
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-black text-red-500 uppercase tracking-widest text-center">Payment Failed</h4>
+                        <p className="text-[10px] text-slate-300 leading-relaxed text-left bg-slate-905/50 border border-slate-800 p-4 rounded-xl">
+                          Your payment could not be verified. No amount has been successfully received.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setStep('PAYMENT')}
+                        className="w-full py-3.5 bg-yellow-500 text-black font-black uppercase text-xs tracking-wider rounded-xl hover:bg-yellow-400 active:scale-95 transition-all"
+                      >
+                        Retry Payment
+                      </button>
+                    </div>
+                  )}
+
+                  {step === 'PAY_CANCELLED' && (
+                    <div className="space-y-6 text-center py-6 animate-in zoom-in duration-500">
+                      <div className="w-16 h-16 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 flex items-center justify-center mx-auto">
+                        <X size={32} />
+                      </div>
+
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-black text-zinc-400 uppercase tracking-widest text-center">Payment Cancelled</h4>
+                        <p className="text-[10px] text-slate-400 leading-relaxed text-left bg-slate-905/50 border border-slate-800 p-4 rounded-xl">
+                          Your booking has not been completed because the payment was cancelled.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setStep('FORM')}
+                        className="w-full py-3.5 bg-yellow-500 text-black font-black uppercase text-xs tracking-wider rounded-xl hover:bg-yellow-400 active:scale-95 transition-all"
+                      >
+                        Book New Ticket
+                      </button>
+                    </div>
+                  )}
+
+                  {step === 'PAY_CONFIRMED' && currentBooking && (
                     <div className="space-y-6 text-center animate-in zoom-in duration-500">
                       <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mx-auto">
                         <CheckCircle size={32} />
                       </div>
                       <div>
-                        <h3 className="text-xl font-serif text-white">Booking Confirmed!</h3>
-                        <p className="text-xs text-slate-400 mt-1">Thank you for supporting *Vishwavikhyatha Nata Sarvabhouma*</p>
+                        <h3 className="text-base font-bold text-white uppercase tracking-wider">Payment Confirmed</h3>
+                        <p className="text-xs text-slate-400 mt-1">Your payment has been successfully verified. Your booking is now confirmed.</p>
                       </div>
 
                       {/* Digital Ticket Preview */}

@@ -1,6 +1,15 @@
 -- UPDATE BFI DATABASE POLICIES
 -- Run this exactly as is in your Supabase SQL Editor.
 
+-- 0. Helper function to fetch the current active role from the profiles table.
+CREATE OR REPLACE FUNCTION public.get_active_role()
+RETURNS text AS $$
+  SELECT coalesce(
+    (SELECT active_role FROM public.profiles WHERE id = auth.uid()),
+    'MOVIE_LOVER'
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
 -- 1. Project Select Policy for Investors
 DROP POLICY IF EXISTS "Access projects based on active role" ON public.projects;
 CREATE POLICY "Access projects based on active role" ON public.projects

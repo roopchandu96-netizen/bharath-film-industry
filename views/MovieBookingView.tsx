@@ -29,6 +29,9 @@ interface MovieBookingViewProps {
 export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'BANK' | 'CARD'>('CARD');
   const [step, setStep] = useState<'FORM' | 'PAYMENT' | 'PAY_PROCESSING' | 'PAY_PENDING' | 'PAY_FAILED' | 'PAY_CANCELLED' | 'PAY_CONFIRMED'>('FORM');
   const [cardNo, setCardNo] = useState('');
   const [cardName, setCardName] = useState(user?.name || '');

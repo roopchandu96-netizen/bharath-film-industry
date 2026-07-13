@@ -205,7 +205,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
       setGatewayProgress(40);
 
       // 2. Generate Booking Reference ID
-      const bookingRef = generateBookingRef();
+      const bookingRef = generateTicketId();
 
       // 3. Insert movie_bookings record
       const { data: bookingData, error: bookingErr } = await supabase

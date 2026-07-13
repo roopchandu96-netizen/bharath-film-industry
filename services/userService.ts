@@ -29,6 +29,15 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
       }
     }
     
+    // Completely migrate and eradicate MOVIE_LOVER role from database for all users
+    if (profile.role === 'MOVIE_LOVER' || profile.active_role === 'MOVIE_LOVER' || profile.primary_role === 'MOVIE_LOVER') {
+      const targetRole = UserRole.INVESTOR;
+      await supabase.from('profiles').update({ role: targetRole, active_role: targetRole, primary_role: targetRole }).eq('id', supabaseUser.id);
+      profile.role = targetRole;
+      profile.active_role = targetRole;
+      profile.primary_role = targetRole;
+    }
+    
     // Enforce actual registered role: Reset active_role and role back to primary_role if they switch-toggled earlier.
     if (profile.primary_role && profile.primary_role !== UserRole.MOVIE_LOVER && (profile.active_role === UserRole.MOVIE_LOVER || profile.role === UserRole.MOVIE_LOVER)) {
       await supabase.from('profiles').update({ role: profile.primary_role, active_role: profile.primary_role }).eq('id', supabaseUser.id);
@@ -55,6 +64,10 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
   // Metadata from Supabase Auth options or inputs
   const finalName = name || supabaseUser.user_metadata?.full_name || "BFI Member";
   let finalRole = role || supabaseUser.user_metadata?.role || UserRole.INVESTOR;
+
+  if (finalRole === UserRole.MOVIE_LOVER) {
+    finalRole = UserRole.INVESTOR;
+  }
 
   if (supabaseUser.email === 'bharatfilmindustry@gmail.com') {
     finalRole = UserRole.ADMIN;

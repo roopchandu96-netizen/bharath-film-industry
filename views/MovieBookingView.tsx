@@ -54,12 +54,6 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
   const [showSwitchGateModal, setShowSwitchGateModal] = useState(false);
   const [isSwitchingGate, setIsSwitchingGate] = useState(false);
 
-  useEffect(() => {
-    if (user && (user.activeRole || user.role) !== UserRole.MOVIE_LOVER) {
-      setShowSwitchGateModal(true);
-    }
-  }, [user]);
-
   const handleGateSwitchToMovieLover = async () => {
     setIsSwitchingGate(true);
     try {
@@ -163,12 +157,6 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
 
   const handlePaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const activeRole = user?.activeRole || user?.role;
-    if (activeRole !== UserRole.MOVIE_LOVER) {
-      alert('Ticket booking is available only in Movie Lover Mode.');
-      setShowSwitchGateModal(true);
-      return;
-    }
 
     if (!acceptedTerms) {
       alert('Please accept the pre-booking terms & conditions.');
@@ -1404,43 +1392,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
       )}
 
 
-      {/* Switch Gate Modal */}
-      {showSwitchGateModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
-          <div className="bg-zinc-950 border-2 border-yellow-500/20 rounded-[3rem] p-8 max-w-md w-full text-center space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(234,179,8,0.15)]">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl pointer-events-none" />
-            
-            <div className="w-16 h-16 rounded-[1.5rem] bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mx-auto text-yellow-500 animate-bounce">
-              <Ticket size={32} />
-            </div>
 
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-white tracking-tight">Ticket booking is available only in Movie Lover Mode.</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Switch to Movie Lover to continue.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowSwitchGateModal(false)}
-                className="py-3 px-4 bg-zinc-900 border border-zinc-800 text-zinc-400 rounded-2xl text-xs font-bold uppercase hover:bg-zinc-800 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleGateSwitchToMovieLover}
-                disabled={isSwitchingGate}
-                className="py-3 px-4 bg-yellow-500 text-black rounded-2xl text-xs font-black uppercase hover:bg-yellow-400 active:scale-95 transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)]"
-              >
-                Switch to Movie Lover
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Simulated Gateway Modal */}
       {showGatewayModal && (

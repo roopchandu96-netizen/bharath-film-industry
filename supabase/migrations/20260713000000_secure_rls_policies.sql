@@ -116,16 +116,15 @@ alter table public.movie_bookings enable row level security;
 drop policy if exists "Users can view their own bookings" on public.movie_bookings;
 drop policy if exists "Users can create their own pending bookings" on public.movie_bookings;
 drop policy if exists "Users can insert own bookings when Movie Lover" on public.movie_bookings;
+drop policy if exists "Users can insert own bookings" on public.movie_bookings;
 drop policy if exists "Only admin can update bookings" on public.movie_bookings;
 drop policy if exists "Only admin can delete bookings" on public.movie_bookings;
 
 create policy "Users can select own bookings" on public.movie_bookings for select
 using (auth.uid() = user_id);
 
-create policy "Users can insert own bookings when Movie Lover" on public.movie_bookings for insert
-with check (
-  ((public.get_active_role() = 'MOVIE_LOVER' or public.get_active_role() = 'ADMIN') and auth.uid() = user_id)
-);
+create policy "Users can insert own bookings" on public.movie_bookings for insert
+with check (auth.uid() = user_id);
 
 create policy "Only admin can update bookings" on public.movie_bookings for update
 using (public.get_active_role() = 'ADMIN');

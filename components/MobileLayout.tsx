@@ -33,6 +33,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
     { id: 'profile', label: 'Profile', icon: User }
   ] : [
     { id: 'home', label: 'Home', icon: Home },
+    { id: 'booking', label: 'Booking', icon: Film },
     { id: 'discover', label: 'Discover', icon: Compass },
     { id: 'invest', label: 'Invest', icon: DollarSign },
     { id: 'profile', label: 'Profile', icon: User },

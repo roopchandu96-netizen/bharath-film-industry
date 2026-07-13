@@ -1405,9 +1405,9 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xl font-bold text-white tracking-tight">Role Switch Required</h3>
+              <h3 className="text-xl font-bold text-white tracking-tight">Ticket booking is available only in Movie Lover Mode.</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Ticket booking is available only while using the Movie Lover role.
+                Switch to Movie Lover to continue.
               </p>
             </div>
 

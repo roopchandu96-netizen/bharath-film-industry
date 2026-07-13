@@ -37,12 +37,19 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onSelectProject, onQuickInves
     );
 
     return () => unsubscribe();
-  }, [user.id, user.role]);
+  }, [user.id, user.role, user.activeRole]);
+
+  const activeRole = user.activeRole || user.role;
+  const isAuthorized = activeRole === UserRole.INVESTOR || activeRole === UserRole.DIRECTOR || activeRole === UserRole.WRITER || activeRole === UserRole.ADMIN;
 
   const filteredProjects = useMemo(() => {
+    if (!isAuthorized) {
+      return [];
+    }
+
     return projects.filter(p => {
-      // Privacy Rule: Directors can ONLY see their own projects
-      if (user.role === UserRole.DIRECTOR && p.director !== user.name) {
+      // Privacy Rule: Directors and Writers can ONLY see their own projects
+      if ((activeRole === UserRole.DIRECTOR || activeRole === UserRole.WRITER) && p.directorId !== user.id && p.director !== user.name) {
         return false;
       }
 
@@ -52,7 +59,7 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onSelectProject, onQuickInves
       const matchesGenre = selectedGenre === 'All' || p.genre === selectedGenre;
       return matchesSearch && matchesGenre;
     });
-  }, [projects, searchQuery, selectedGenre, user.role, user.name]);
+  }, [projects, searchQuery, selectedGenre, activeRole, user.id, user.name, isAuthorized]);
 
   if (loading) {
     return (
@@ -64,6 +71,22 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onSelectProject, onQuickInves
           </div>
         </div>
         <p className="text-[10px] text-yellow-400 uppercase tracking-[0.5em] font-black animate-pulse">Establishing Secure Bidding Link</p>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="max-w-md mx-auto text-center py-24 space-y-6">
+        <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+          <EyeOff size={28} />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold font-serif text-white">Access Denied (403)</h2>
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            Your active role (<strong className="text-white">{activeRole}</strong>) does not have permission to view scripts or projects.
+          </p>
+        </div>
       </div>
     );
   }

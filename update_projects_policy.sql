@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS public.movie_bookings (
 );
 
 -- Ensure all booking fields exist in movie_bookings
+ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS booking_id TEXT UNIQUE;
 ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS quantity INTEGER DEFAULT 1;

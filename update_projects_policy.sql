@@ -63,6 +63,11 @@ ALTER TABLE public.movie_bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
 
+-- Grant access to standard Supabase roles
+GRANT ALL ON public.movie_bookings TO postgres, service_role, authenticated, anon;
+GRANT ALL ON public.payments TO postgres, service_role, authenticated, anon;
+GRANT ALL ON public.tickets TO postgres, service_role, authenticated, anon;
+
 -- ==========================================
 -- 2. USER PROFILE & PROJECTS SCHEMA UPDATES
 -- ==========================================

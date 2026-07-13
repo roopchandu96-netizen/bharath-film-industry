@@ -111,6 +111,21 @@ $$ LANGUAGE sql SECURITY DEFINER;
 -- 4. SECURITY & ROW LEVEL SECURITY (RLS) POLICIES
 -- ==========================================
 
+-- ------------------------------------------
+-- PROFILES POLICIES
+-- ------------------------------------------
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- Admins can update all profiles (for approving KYC status)
+DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
+CREATE POLICY "Admins can update all profiles" ON public.profiles FOR UPDATE
+  USING (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+-- ------------------------------------------
+-- PROJECTS (SCRIPTS) POLICIES
+-- ------------------------------------------
+ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+
 -- Project Select Policy for Investors
 DROP POLICY IF EXISTS "Access projects based on active role" ON public.projects;
 CREATE POLICY "Access projects based on active role" ON public.projects
@@ -121,6 +136,47 @@ FOR SELECT USING (
   OR
   (public.get_active_role() = 'ADMIN')
 );
+
+-- Directors can insert screenplays
+DROP POLICY IF EXISTS "Directors can insert projects" ON public.projects;
+CREATE POLICY "Directors can insert projects" ON public.projects FOR INSERT
+  WITH CHECK (
+    (public.get_active_role() = 'DIRECTOR' and auth.uid() = "directorId")
+    or
+    (public.get_active_role() = 'ADMIN')
+  );
+
+-- Directors and Admins can update screenplays
+DROP POLICY IF EXISTS "Directors can update own projects" ON public.projects;
+CREATE POLICY "Directors can update own projects" ON public.projects FOR UPDATE
+  USING (
+    (public.get_active_role() = 'DIRECTOR' and auth.uid() = "directorId")
+    or
+    (public.get_active_role() = 'ADMIN')
+  );
+
+-- Directors and Admins can delete screenplays
+DROP POLICY IF EXISTS "Directors can delete own projects" ON public.projects;
+CREATE POLICY "Directors can delete own projects" ON public.projects FOR DELETE
+  USING (
+    (public.get_active_role() = 'DIRECTOR' and auth.uid() = "directorId")
+    or
+    (public.get_active_role() = 'ADMIN')
+  );
+
+-- Admins can update any project status
+DROP POLICY IF EXISTS "Admins can update any project" ON public.projects;
+CREATE POLICY "Admins can update any project" ON public.projects FOR UPDATE
+  USING (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+-- Admins can delete any project
+DROP POLICY IF EXISTS "Admins can delete any project" ON public.projects;
+CREATE POLICY "Admins can delete any project" ON public.projects FOR DELETE
+  USING (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+-- ------------------------------------------
+-- MOVIE BOOKINGS POLICIES
+-- ------------------------------------------
 
 -- User Policies for Bookings
 DROP POLICY IF EXISTS "Users can view their own bookings" ON public.movie_bookings;
@@ -143,6 +199,10 @@ CREATE POLICY "Admins can select all bookings" ON public.movie_bookings FOR SELE
 DROP POLICY IF EXISTS "Admins can update all bookings" ON public.movie_bookings;
 CREATE POLICY "Admins can update all bookings" ON public.movie_bookings FOR UPDATE
   USING (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+-- ------------------------------------------
+-- PAYMENTS POLICIES
+-- ------------------------------------------
 
 -- User Policies for Payments
 DROP POLICY IF EXISTS "Users can view payments for their own bookings" ON public.payments;
@@ -172,6 +232,10 @@ CREATE POLICY "Admins can insert all payments" ON public.payments FOR INSERT
 DROP POLICY IF EXISTS "Admins can update all payments" ON public.payments;
 CREATE POLICY "Admins can update all payments" ON public.payments FOR UPDATE
   USING (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+-- ------------------------------------------
+-- TICKETS POLICIES
+-- ------------------------------------------
 
 -- User Policies for Tickets
 DROP POLICY IF EXISTS "Users can view tickets for their own bookings" ON public.tickets;

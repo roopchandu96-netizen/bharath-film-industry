@@ -28,6 +28,11 @@ ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS email TEXT;
 ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS name TEXT;
 ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMPTZ;
 
+-- Drop check constraints to avoid casing issues (pending vs PENDING)
+ALTER TABLE public.movie_bookings DROP CONSTRAINT IF EXISTS movie_bookings_status_check;
+ALTER TABLE public.movie_bookings DROP CONSTRAINT IF EXISTS movie_bookings_payment_status_check;
+ALTER TABLE public.movie_bookings DROP CONSTRAINT IF EXISTS movie_bookings_booking_status_check;
+
 -- Create Payments Table if not exists
 CREATE TABLE IF NOT EXISTS public.payments (
   id uuid default gen_random_uuid() primary key,
@@ -47,6 +52,9 @@ ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS gateway_signature TEXT;
 ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS amount NUMERIC NOT NULL DEFAULT 0;
 ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS verified_at TIMESTAMPTZ;
+
+-- Drop payments check constraints to avoid casing issues
+ALTER TABLE public.payments DROP CONSTRAINT IF EXISTS payments_payment_status_check;
 
 -- Create Tickets Table if not exists
 CREATE TABLE IF NOT EXISTS public.tickets (
@@ -123,8 +131,8 @@ DROP POLICY IF EXISTS "Users can create their own pending bookings" ON public.mo
 CREATE POLICY "Users can create their own pending bookings" ON public.movie_bookings FOR INSERT
   WITH CHECK (
     auth.uid() = user_id 
-    and status = 'pending' 
-    and payment_status = 'pending'
+    and (status = 'PENDING' OR status = 'pending')
+    and (payment_status = 'PENDING' OR payment_status = 'pending')
   );
 
 -- Admin Policies for Movie Bookings
@@ -148,7 +156,7 @@ CREATE POLICY "Users can insert payments for their pending bookings" ON public.p
       select 1 from public.movie_bookings 
       where public.movie_bookings.id = payments.booking_id 
       and public.movie_bookings.user_id = auth.uid()
-      and public.movie_bookings.status = 'pending'
+      and (public.movie_bookings.status = 'PENDING' OR public.movie_bookings.status = 'pending')
     )
   );
 

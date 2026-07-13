@@ -214,8 +214,8 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
           user_id: session.user.id,
           booking_id: bookingRef,
           amount: 59 * quantity,
-          status: 'pending',
-          payment_status: 'pending',
+          status: 'PENDING',
+          payment_status: 'PENDING',
           quantity,
           phone,
           email: session.user.email || '',
@@ -235,7 +235,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
           booking_id: bookingData.id,
           gateway_order_id: utrId.trim(),
           amount: 59 * quantity,
-          payment_status: 'pending'
+          payment_status: 'PENDING'
         }]);
 
       if (paymentErr) {

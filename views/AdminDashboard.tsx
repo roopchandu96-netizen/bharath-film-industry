@@ -121,7 +121,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         payment_status
                     )
                 `)
-                .eq('status', 'pending');
+                .eq('status', 'PENDING');
 
             if (bookings) {
                 const formatted = bookings.map((b: any) => ({
@@ -210,8 +210,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             const { error: mbError } = await supabase
                 .from('movie_bookings')
                 .update({
-                    status: 'confirmed',
-                    payment_status: 'verified',
+                    status: 'CONFIRMED',
+                    payment_status: 'VERIFIED',
                     confirmed_at: timestamp
                 })
                 .eq('id', bookingId);
@@ -222,7 +222,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             const { error: payError } = await supabase
                 .from('payments')
                 .update({
-                    payment_status: 'verified',
+                    payment_status: 'VERIFIED',
                     verified_at: timestamp
                 })
                 .eq('booking_id', bookingId);
@@ -266,8 +266,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             const { error: mbError } = await supabase
                 .from('movie_bookings')
                 .update({
-                    status: 'failed',
-                    payment_status: 'failed'
+                    status: 'FAILED',
+                    payment_status: 'FAILED'
                 })
                 .eq('id', bookingId);
 
@@ -277,7 +277,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             const { error: payError } = await supabase
                 .from('payments')
                 .update({
-                    payment_status: 'failed'
+                    payment_status: 'FAILED'
                 })
                 .eq('booking_id', bookingId);
 

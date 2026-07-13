@@ -317,54 +317,6 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
             </div>
           </div>
 
-          {/* Workspace Role Toggle */}
-          {user.primaryRole !== UserRole.MOVIE_LOVER && (
-            <div className="p-10 rounded-[3rem] bg-zinc-950 border border-zinc-900 shadow-2xl space-y-6">
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white tracking-tight">Switch Role</h3>
-                <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Toggle Workspace Mode</p>
-              </div>
-
-            <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 text-xs">
-              <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider">Current Active Role:</span>
-              <p className="font-extrabold text-white text-sm mt-1 flex items-center gap-1.5 animate-pulse">
-                {(user.activeRole || user.role) === UserRole.MOVIE_LOVER ? '🎬 Movie Lover' : (user.activeRole || user.role)}
-              </p>
-            </div>
-
-            <p className="text-[10px] text-zinc-400 leading-relaxed">
-              Toggle between your professional workspace and viewer mode to book tickets or stream releases without duplicate profiles.
-            </p>
-
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => handleSwitchRole(UserRole.MOVIE_LOVER, true)}
-                disabled={isSwitchingRole || (user.activeRole || user.role) === UserRole.MOVIE_LOVER}
-                className="w-full py-4 rounded-2xl bg-yellow-500 disabled:bg-yellow-500/10 disabled:text-zinc-600 disabled:border disabled:border-zinc-800/50 text-black font-extrabold text-xs uppercase tracking-wider hover:bg-yellow-400 active:scale-95 disabled:scale-100 disabled:pointer-events-none transition-all flex items-center justify-center gap-2"
-              >
-                {isSwitchingRole && (user.activeRole || user.role) !== UserRole.MOVIE_LOVER ? (
-                  <Loader2 className="animate-spin" size={14} />
-                ) : (
-                  <span>Switch to Movie Lover</span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSwitchRole(resolvedPrimaryRole as UserRole, false)}
-                disabled={isSwitchingRole || (user.activeRole || user.role) !== UserRole.MOVIE_LOVER}
-                className="w-full py-4 rounded-2xl bg-zinc-900 border border-yellow-500/20 hover:border-yellow-500/40 text-yellow-500 font-extrabold text-xs uppercase tracking-wider disabled:opacity-20 disabled:border-zinc-950 disabled:text-zinc-600 active:scale-95 disabled:scale-100 disabled:pointer-events-none transition-all flex items-center justify-center gap-2"
-              >
-                {isSwitchingRole && (user.activeRole || user.role) === UserRole.MOVIE_LOVER ? (
-                  <Loader2 className="animate-spin" size={14} />
-                ) : (
-                  <span>Switch Back to {resolvedPrimaryRole}</span>
-                )}
-              </button>
-            </div>
-          </div>
-          )}
         </div>
       </div>
 

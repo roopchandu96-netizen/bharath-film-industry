@@ -29,6 +29,13 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
       }
     }
     
+    // Enforce actual registered role: Reset active_role and role back to primary_role if they switch-toggled earlier.
+    if (profile.primary_role && profile.primary_role !== UserRole.MOVIE_LOVER && (profile.active_role === UserRole.MOVIE_LOVER || profile.role === UserRole.MOVIE_LOVER)) {
+      await supabase.from('profiles').update({ role: profile.primary_role, active_role: profile.primary_role }).eq('id', supabaseUser.id);
+      profile.role = profile.primary_role;
+      profile.active_role = profile.primary_role;
+    }
+    
     return {
       id: profile.id,
       name: profile.name,

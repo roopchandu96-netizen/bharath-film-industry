@@ -20,7 +20,7 @@ const AuthView: React.FC = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.MOVIE_LOVER);
+  const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.INVESTOR);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -328,7 +328,6 @@ const AuthView: React.FC = () => {
                 <label className={labelClasses}>I AM A</label>
                 <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1 scrollbar-hide border border-zinc-200/60 p-2.5 rounded-2xl bg-zinc-50/50">
                   {[
-                    { role: UserRole.MOVIE_LOVER, icon: '🎬', title: 'Movie Lover', text: 'Pre-book & watch' },
                     { role: UserRole.INVESTOR, icon: '💰', title: 'Investor', text: 'Fund films' },
                     { role: UserRole.PRODUCER, icon: '👔', title: 'Producer', text: 'Manage budget' },
                     { role: UserRole.DIRECTOR, icon: '🎥', title: 'Director', text: 'Direct movies' },

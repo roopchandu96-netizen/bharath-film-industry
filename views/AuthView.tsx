@@ -39,7 +39,7 @@ const AuthView: React.FC = () => {
         setIsLogin(true);
         setSelectedRole(UserRole.ADMIN);
         setEmail('bharatfilmindustry@gmail.com');
-        setPassword('password'); // Auto-fetch admin credentials for testing
+        setPassword('Damalcheruvu@57152'); // Auto-fetch admin credentials for testing
       } else {
         setShowAdminLogin(false);
       }

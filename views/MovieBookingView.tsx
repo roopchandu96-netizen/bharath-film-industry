@@ -44,27 +44,6 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
   const [activeSubTab, setActiveSubTab] = useState<'BOOKING' | 'HISTORY'>('BOOKING');
   const [switchingRole, setSwitchingRole] = useState(false);
 
-  const [movieReleased, setMovieReleased] = useState(() => {
-    return localStorage.getItem('bfi_movie_released') === 'true';
-  });
-
-  const toggleMovieRelease = () => {
-    const nextState = !movieReleased;
-    setMovieReleased(nextState);
-    localStorage.setItem('bfi_movie_released', String(nextState));
-
-    if (nextState) {
-      alert("OFFICIAL MOVIE RELEASE ACTIVATED!\n\nSimulating SMTP notification: secure, unique viewing links have been emailed to all Movie Lovers who pre-booked passes.\n\nExample pass: https://bfi-cinema.in/watch/[TicketID]");
-    } else {
-      alert("Movie status reset to Pre-Release Phase.");
-    }
-  };
-
-  // DRM video modal state
-  const [activeDrmMovie, setActiveDrmMovie] = useState<BookingRecord | null>(null);
-  const [drmPlaybackStarted, setDrmPlaybackStarted] = useState(false);
-  const [drmViewingProgress, setDrmViewingProgress] = useState(0);
-
   const [posterLanguage, setPosterLanguage] = useState<'EN' | 'TE'>('TE');
   const [activeMediaTab, setActiveMediaTab] = useState<'LAUNCH' | 'TRACK'>('LAUNCH');
 
@@ -456,53 +435,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
     printWindow.document.close();
   };
 
-  const handleWatchMovie = (booking: BookingRecord) => {
-    if (!movieReleased) {
-      alert("Movie Release Access Locked:\n\nNo movie streaming or viewing option is available before the official release. Your secure unique viewing link will be sent to your registered email address once the movie is officially released.");
-      return;
-    }
 
-    // Check if link is expired
-    const allBookings = db.getCollection('bookings');
-    const dbRecord = allBookings.find((b: any) => b.id === booking.id);
-    if (dbRecord?.watched) {
-      alert("DRM Access Denied: This secure viewing link has expired. Single viewing session limit reached.");
-      return;
-    }
-    setActiveDrmMovie(booking);
-    setDrmPlaybackStarted(false);
-    setDrmViewingProgress(0);
-  };
-
-  const startDrmPlayback = () => {
-    setDrmPlaybackStarted(true);
-    // Mark as watched immediately upon playback start
-    const allBookings = db.getCollection('bookings');
-    const updated = allBookings.map((b: any) => {
-      if (b.id === activeDrmMovie?.id) {
-        return { ...b, watched: true };
-      }
-      return b;
-    });
-    localStorage.setItem('bfi_ledger_bookings', JSON.stringify(updated));
-    loadBookingHistory();
-
-    // Start progress simulation
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setDrmViewingProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-      }
-    }, 1500);
-  };
-
-  const closeDrmPlayer = () => {
-    setActiveDrmMovie(null);
-    setDrmPlaybackStarted(false);
-    setDrmViewingProgress(0);
-  };
 
   const startNewBooking = () => {
     setName(user?.name || '');
@@ -525,34 +458,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 animate-in fade-in duration-700 text-slate-200">
       
-      {/* Simulation / Tester Control Panel */}
-      <div className="bg-slate-950/85 border border-yellow-500/20 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl pointer-events-none" />
-        <div className="space-y-1">
-          <span className="text-[9px] font-black text-yellow-500 uppercase tracking-widest block">BFI Simulation Console</span>
-          <h4 className="text-sm font-bold text-white">Movie Release Status Control</h4>
-          <p className="text-[10px] text-zinc-400">
-            Toggle this status to simulate the official release. Movie passes are locked and can only be streamed after release.
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <span className="text-[8px] text-zinc-500 uppercase font-black tracking-wider block">Current Status</span>
-            <span className={`text-xs font-black uppercase tracking-wider ${movieReleased ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {movieReleased ? '🚀 Officially Released' : '🔒 Pre-Release Phase'}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={toggleMovieRelease}
-            className={`py-3 px-6 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 ${
-              movieReleased ? 'bg-zinc-900 border border-zinc-800 text-amber-500 hover:border-amber-500/30' : 'bg-yellow-500 text-black hover:bg-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.25)]'
-            }`}
-          >
-            {movieReleased ? 'Lock Movie (Pre-Release)' : 'Unlock & Trigger Release Webhook'}
-          </button>
-        </div>
-      </div>
+
       
       {/* Tab Selector */}
       <div className="flex justify-center">
@@ -1267,27 +1173,16 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         </div>
                       </div>
 
-                      {currentBooking.status === 'CONFIRMED' && (
-                        <button 
-                          type="button" 
-                          onClick={() => handleWatchMovie(currentBooking)} 
-                          className={`w-full py-4 text-white font-black text-xs uppercase tracking-widest rounded-2xl active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg ${
-                            movieReleased 
-                              ? 'bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-90 shadow-[0_0_20px_rgba(220,38,38,0.3)] animate-pulse' 
-                              : 'bg-zinc-850 border border-zinc-800 text-zinc-500 cursor-not-allowed'
-                          }`}
-                        >
-                          {movieReleased ? (
-                            <>
-                              <Play size={14} fill="white" /> Watch Movie Premiere
-                            </>
-                          ) : (
-                            <>
-                              <Lock size={14} /> Locked: Releases Soon
-                            </>
-                          )}
-                        </button>
-                      )}
+                      {/* Secure Release Notification Banner */}
+                      <div className="p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl flex items-start gap-3 text-left">
+                        <Lock className="text-yellow-500 shrink-0 mt-0.5" size={16} />
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-black text-yellow-500 uppercase tracking-wider block">Official Release Access Flow</span>
+                          <p className="text-[10px] text-slate-300 leading-normal">
+                            When the movie is officially released, your secure unique viewing link will be sent to your registered email address (<strong className="text-white font-mono">{currentBooking.email}</strong>). No manual unlocking is required on the website.
+                          </p>
+                        </div>
+                      </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <button 
@@ -1367,31 +1262,8 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                           Billed: ₹{booking.amount.toFixed(2)} for {booking.quantity} ticket(s) on {new Date(booking.date).toLocaleDateString()}
                         </p>
                         {booking.status === 'CONFIRMED' && (
-                          <div className="pt-2">
-                            {isExpired ? (
-                              <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                                <Lock size={12} /> Link Expired (Viewed)
-                              </span>
-                            ) : (
-                              <button 
-                                onClick={() => handleWatchMovie(booking)} 
-                                className={`px-4 py-2 text-white font-black text-[9px] uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 ${
-                                  movieReleased 
-                                    ? 'bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-90' 
-                                    : 'bg-zinc-800 border border-zinc-700 text-zinc-500 cursor-not-allowed'
-                                }`}
-                              >
-                                {movieReleased ? (
-                                  <>
-                                    <Play size={10} fill="white" /> Watch Premiere
-                                  </>
-                                ) : (
-                                  <>
-                                    <Lock size={10} /> Releases Soon
-                                  </>
-                                )}
-                              </button>
-                            )}
+                          <div className="pt-2 flex items-center gap-1.5 text-[9px] font-bold text-yellow-500 uppercase tracking-wider">
+                            <Lock size={12} /> Viewing link will be emailed on release
                           </div>
                         )}
                       </div>
@@ -1428,120 +1300,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
         </div>
       )}
 
-      {/* Simulated DRM Movie Player Modal */}
-      {activeDrmMovie && (
-        <div className="fixed inset-0 z-[300] bg-black/98 backdrop-blur-2xl flex items-center justify-center p-4">
-          <div className="w-full max-w-4xl bg-zinc-950 border border-red-500/30 rounded-[2rem] overflow-hidden shadow-2xl relative">
-            
-            <div className="p-6 bg-slate-900/40 border-b border-zinc-800 flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                <span className="text-[10px] font-mono tracking-widest text-red-500 font-bold uppercase">BFI SECURE MEDIA NODE</span>
-              </div>
-              <button 
-                onClick={closeDrmPlayer} 
-                className="px-4 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-bold text-zinc-400 hover:text-white transition-colors"
-              >
-                Close Stream
-              </button>
-            </div>
 
-            <div className="p-8 space-y-6 text-center">
-              {!drmPlaybackStarted ? (
-                <div className="max-w-md mx-auto space-y-6 py-12">
-                  <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mx-auto">
-                    <Lock size={28} />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-serif text-white">DRM Authorization Active</h3>
-                    <p className="text-zinc-400 text-xs leading-relaxed">
-                      This is a secure viewing stream for **Vishwavikhyatha Nata Sarvabhouma** issued to **{activeDrmMovie.email}**.
-                    </p>
-                  </div>
-
-                  <div className="bg-black/60 border border-zinc-800/80 rounded-2xl p-5 text-left text-[11px] text-zinc-500 space-y-2 leading-relaxed">
-                    <p className="text-yellow-500/80 font-bold uppercase tracking-wider">🔒 Secure Viewing DRM Rules:</p>
-                    <p>• One-time access session only. Playback cannot be restarted once closed.</p>
-                    <p>• Unique viewing link credentials verified for {activeDrmMovie.email}.</p>
-                    <p>• Unauthorized recording, redistribution, or stream cloning will result in immediate cancellation of access.</p>
-                  </div>
-
-                  <button
-                    onClick={startDrmPlayback}
-                    className="w-full py-4 bg-gradient-to-r from-red-600 to-amber-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95"
-                  >
-                    Authorize &amp; Play Premiere
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Simulated video player screen */}
-                  <div className="aspect-video w-full bg-black rounded-2xl relative border border-zinc-800 shadow-2xl flex flex-col justify-center items-center overflow-hidden group">
-                    
-                    {/* Floating Watermark for DRM protection */}
-                    <div className="absolute inset-0 pointer-events-none opacity-[0.03] select-none flex flex-wrap gap-12 p-8 justify-around items-center text-xs font-mono font-bold text-white uppercase tracking-widest">
-                      {Array.from({ length: 16 }).map((_, i) => (
-                        <span key={i}>{activeDrmMovie.email} | {activeDrmMovie.id}</span>
-                      ))}
-                    </div>
-
-                    {drmViewingProgress < 100 ? (
-                      <div className="space-y-4 z-10 text-center">
-                        <div className="relative w-16 h-16 flex items-center justify-center mx-auto">
-                          <div className="absolute inset-0 rounded-full border-4 border-zinc-800" />
-                          <div className="absolute inset-0 rounded-full border-4 border-red-500 border-t-transparent animate-spin" />
-                          <Film size={20} className="text-red-500" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-mono text-zinc-400 font-bold uppercase tracking-widest">Streaming Premiere Core...</p>
-                          <p className="text-[10px] text-zinc-600 mt-1">Decrypting AES-256 DRM stream chunks</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4 z-10 text-center max-w-sm px-6">
-                        <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto border border-red-500/20">
-                          <Lock size={20} />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-white uppercase tracking-wider">Stream Session Completed</p>
-                          <p className="text-[10px] text-zinc-500 mt-1.5 leading-relaxed">
-                            This secure DRM link has expired. The ticket credentials for **{activeDrmMovie.id}** are now deactivated.
-                          </p>
-                        </div>
-                        <button 
-                          onClick={closeDrmPlayer} 
-                          className="px-6 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-bold text-white hover:border-zinc-700 transition-colors"
-                        >
-                          Exit Player
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Simulated Player Controls overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-red-500 transition-all duration-1000" 
-                          style={{ width: `${drmViewingProgress}%` }}
-                        />
-                      </div>
-                      <div className="flex justify-between items-center text-[10px] font-mono text-zinc-400">
-                        <span>LIVE DECRYPTION STATE</span>
-                        <span>PROGRESS: {drmViewingProgress}%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-[10px] text-zinc-600 italic">
-                    DO NOT close or refresh this tab. Navigating away will immediately terminate and expire your viewing session.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
       {/* Switch Gate Modal */}
       {showSwitchGateModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">

@@ -358,7 +358,7 @@ const App: React.FC = () => {
                 onClick={() => setShowAuth(true)} 
                 className="hidden md:block px-6 py-2.5 bg-yellow-500 text-black font-bold text-xs uppercase tracking-wider rounded-full hover:bg-yellow-400 transition-colors shadow-[0_0_15px_rgba(234,179,8,0.3)]"
               >
-                Launch App
+                Sign Up / Login
               </button>
               <button className="md:hidden p-2 text-slate-300" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle Navigation Menu">
                 {mobileMenuOpen ? <X /> : <Menu />}
@@ -393,7 +393,7 @@ const App: React.FC = () => {
                 onClick={() => { setShowAuth(true); setMobileMenuOpen(false); }} 
                 className="w-full py-4 bg-yellow-500 text-black font-bold rounded-xl shadow-lg mt-4 active:scale-95 transition-all text-center"
               >
-                Launch App
+                Sign Up / Login
               </button>
             </div>
           </div>

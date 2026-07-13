@@ -112,30 +112,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
     }
   };
 
-  const handleQuickSwitch = async () => {
-    if (!user) return;
-    setSwitchingRole(true);
-    try {
-      await updateUserInFirestore(user.id, { role: UserRole.MOVIE_LOVER });
-      alert("Role Switch Success: Your account has been updated to Movie Lover. Reloading...");
-      window.location.reload();
-    } catch (e: any) {
-      console.error(e);
-      alert(`Role switch failed: ${e.message}`);
-    } finally {
-      setSwitchingRole(false);
-    }
-  };
 
-  const handleLogoutAndRegister = () => {
-    if (window.confirm("Are you sure you want to log out to register as a Movie Lover?")) {
-      supabase.auth.signOut().finally(() => {
-        localStorage.clear();
-        window.location.href = '/#/register';
-        window.location.reload();
-      });
-    }
-  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -833,7 +810,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                   </div>
                   <h3 className="text-sm font-bold text-white uppercase tracking-wider">Account Required</h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Only authenticated **Movie Lover** accounts may proceed to pre-book tickets and receive viewing links.
+                    Please log in to pre-book tickets and receive viewing links.
                   </p>
                   <a 
                     href="/#/register" 
@@ -841,24 +818,6 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                   >
                     Register / Sign In
                   </a>
-                </div>
-              ) : (user.activeRole || user.role) !== UserRole.MOVIE_LOVER ? (
-                <div className="text-center p-6 bg-slate-900/60 border border-slate-800 rounded-3xl space-y-4">
-                  <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mx-auto">
-                    <AlertTriangle size={20} />
-                  </div>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Role Switch Required</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Ticket booking is available only while using the Movie Lover role.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleGateSwitchToMovieLover}
-                    disabled={isSwitchingGate}
-                    className="w-full py-3.5 bg-yellow-500 text-black font-black uppercase text-xs tracking-wider rounded-xl hover:bg-yellow-400 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-                  >
-                    {isSwitchingGate ? 'Activating...' : 'Switch to Movie Lover'}
-                  </button>
                 </div>
               ) : (
                 <>

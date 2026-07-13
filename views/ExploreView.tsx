@@ -142,7 +142,7 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onSelectProject, onQuickInves
           <div className="p-8 bg-zinc-950 border border-zinc-900 rounded-[2rem] space-y-6 shadow-xl">
             <div className="flex items-center gap-2">
               <Film className="text-yellow-500" size={16} />
-              <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">Movie Lovers Benefits</h3>
+              <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">BFI Movie Pass &amp; Tickets</h3>
             </div>
             <ul className="space-y-2.5 text-xs text-slate-400">
               <li className="flex items-center gap-2">• Browse upcoming movies and trailers</li>

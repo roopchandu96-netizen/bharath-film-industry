@@ -828,29 +828,41 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                         <td className="p-4 font-mono text-yellow-500 font-bold">{b.utr}</td>
                                         <td className="p-4 font-mono text-zinc-500">{b.createdAt ? new Date(b.createdAt).toLocaleString() : 'N/A'}</td>
                                         <td className="p-4">
-                                            <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-yellow-900/20 text-yellow-500 border border-yellow-500/20">
+                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
+                                                b.status.toUpperCase() === 'CONFIRMED' ? 'bg-green-900/20 text-green-400 border border-green-500/20' :
+                                                b.status.toUpperCase() === 'FAILED' ? 'bg-red-900/20 text-red-400 border border-red-500/20' :
+                                                'bg-yellow-900/20 text-yellow-500 border border-yellow-500/20'
+                                            }`}>
                                                 {b.status}
                                             </span>
                                         </td>
                                         <td className="p-4">
-                                            <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-yellow-900/20 text-yellow-500 border border-yellow-500/20">
+                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
+                                                b.paymentStatus.toUpperCase() === 'VERIFIED' ? 'bg-green-900/20 text-green-400 border border-green-500/20' :
+                                                b.paymentStatus.toUpperCase() === 'FAILED' ? 'bg-red-900/20 text-red-400 border border-red-500/20' :
+                                                'bg-yellow-900/20 text-yellow-500 border border-yellow-500/20'
+                                            }`}>
                                                 {b.paymentStatus}
                                             </span>
                                         </td>
                                         <td className="p-4 text-right">
                                             <div className="flex gap-2 justify-end">
-                                                <button
-                                                    onClick={() => approveTicketPayment(b.id, b.bookingId, b.quantity)}
-                                                    className="px-3 py-1.5 bg-green-950 text-green-500 border border-green-800 rounded-lg hover:bg-green-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider"
-                                                >
-                                                    Approve Payment
-                                                </button>
-                                                <button
-                                                    onClick={() => rejectTicketPayment(b.id, b.bookingId)}
-                                                    className="px-3 py-1.5 bg-red-950 text-red-500 border border-red-800 rounded-lg hover:bg-red-500 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
-                                                >
-                                                    Reject Payment
-                                                </button>
+                                                {b.status.toUpperCase() === 'PENDING' && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => approveTicketPayment(b.id, b.bookingId, b.quantity)}
+                                                            className="px-3 py-1.5 bg-green-950 text-green-400 border border-green-800 rounded-lg hover:bg-green-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider"
+                                                        >
+                                                            Approve Payment
+                                                        </button>
+                                                        <button
+                                                            onClick={() => rejectTicketPayment(b.id, b.bookingId)}
+                                                            className="px-3 py-1.5 bg-red-950 text-red-400 border border-red-800 rounded-lg hover:bg-red-500 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
+                                                        >
+                                                            Reject Payment
+                                                        </button>
+                                                    </>
+                                                )}
                                                 <button
                                                     onClick={() => alert(`Booking Details:\n\nID: ${b.bookingId}\nName: ${b.name}\nEmail: ${b.email}\nPhone: ${b.phone || 'N/A'}\nTickets: ${b.quantity}\nTotal Price: ₹${b.amount}\nUTR ID: ${b.utr}\nStatus: ${b.status}`)}
                                                     className="px-3 py-1.5 bg-zinc-900 text-zinc-400 border border-zinc-800 rounded-lg hover:bg-zinc-800 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"

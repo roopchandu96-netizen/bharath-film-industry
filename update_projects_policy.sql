@@ -116,6 +116,18 @@ $$ LANGUAGE sql SECURITY DEFINER;
 -- ------------------------------------------
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+-- Public profiles are viewable by everyone
+DROP POLICY IF EXISTS "Profiles select policy" ON public.profiles;
+CREATE POLICY "Profiles select policy" ON public.profiles FOR SELECT USING (true);
+
+-- Users can insert their own profiles
+DROP POLICY IF EXISTS "Profiles insert policy" ON public.profiles;
+CREATE POLICY "Profiles insert policy" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Users can update their own profiles
+DROP POLICY IF EXISTS "Profiles update policy" ON public.profiles;
+CREATE POLICY "Profiles update policy" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+
 -- Admins can update all profiles (for approving KYC status)
 DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
 CREATE POLICY "Admins can update all profiles" ON public.profiles FOR UPDATE
@@ -134,7 +146,7 @@ FOR SELECT USING (
   OR
   ((public.get_active_role() = 'DIRECTOR' OR public.get_active_role() = 'WRITER') AND auth.uid() = "directorId")
   OR
-  (public.get_active_role() = 'ADMIN')
+  (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'))
 );
 
 -- Directors can insert screenplays
@@ -143,7 +155,7 @@ CREATE POLICY "Directors can insert projects" ON public.projects FOR INSERT
   WITH CHECK (
     (public.get_active_role() = 'DIRECTOR' and auth.uid() = "directorId")
     or
-    (public.get_active_role() = 'ADMIN')
+    (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'))
   );
 
 -- Directors and Admins can update screenplays
@@ -152,7 +164,7 @@ CREATE POLICY "Directors can update own projects" ON public.projects FOR UPDATE
   USING (
     (public.get_active_role() = 'DIRECTOR' and auth.uid() = "directorId")
     or
-    (public.get_active_role() = 'ADMIN')
+    (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'))
   );
 
 -- Directors and Admins can delete screenplays
@@ -161,7 +173,7 @@ CREATE POLICY "Directors can delete own projects" ON public.projects FOR DELETE
   USING (
     (public.get_active_role() = 'DIRECTOR' and auth.uid() = "directorId")
     or
-    (public.get_active_role() = 'ADMIN')
+    (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'))
   );
 
 -- Admins can update any project status
@@ -172,6 +184,33 @@ CREATE POLICY "Admins can update any project" ON public.projects FOR UPDATE
 -- Admins can delete any project
 DROP POLICY IF EXISTS "Admins can delete any project" ON public.projects;
 CREATE POLICY "Admins can delete any project" ON public.projects FOR DELETE
+  USING (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+-- ------------------------------------------
+-- INVESTMENTS POLICIES
+-- ------------------------------------------
+ALTER TABLE public.investments ENABLE ROW LEVEL SECURITY;
+
+-- Investments viewable by owner
+DROP POLICY IF EXISTS "Investments select policy" ON public.investments;
+CREATE POLICY "Investments select policy" ON public.investments FOR SELECT
+  USING (auth.uid() = "userId");
+
+-- Investors can create investments
+DROP POLICY IF EXISTS "Investors can insert investments" ON public.investments;
+CREATE POLICY "Investors can insert investments" ON public.investments FOR INSERT
+  WITH CHECK (
+    ((public.get_active_role() = 'INVESTOR' or public.get_active_role() = 'ADMIN') and auth.uid() = "userId")
+  );
+
+-- Admins can select all investments
+DROP POLICY IF EXISTS "Admins can select all investments" ON public.investments;
+CREATE POLICY "Admins can select all investments" ON public.investments FOR SELECT
+  USING (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+-- Admins can update all investments (for approving them)
+DROP POLICY IF EXISTS "Admins can update all investments" ON public.investments;
+CREATE POLICY "Admins can update all investments" ON public.investments FOR UPDATE
   USING (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
 
 -- ------------------------------------------

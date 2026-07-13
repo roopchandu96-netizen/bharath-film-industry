@@ -19,7 +19,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   userName,
   onOpenSubmission
 }) => {
-  const tabs = role === UserRole.ADMIN ? [
+  const rawTabs = role === UserRole.ADMIN ? [
     { id: 'home', label: 'Oversight', icon: Home },
     { id: 'booking', label: 'Booking', icon: Film },
     { id: 'discover', label: 'Approval', icon: Compass },
@@ -38,6 +38,13 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'about', label: 'About', icon: Info }
   ];
+
+  const tabs = rawTabs.filter(t => {
+    if (t.id === 'discover' && role !== UserRole.ADMIN && role !== UserRole.INVESTOR && role !== UserRole.DIRECTOR && role !== UserRole.WRITER) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#021f18] via-[#064E3B] to-[#021f18] text-[#FFFBEB] font-sans flex flex-col overflow-x-hidden selection:bg-[#FACC15]/20 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] relative">

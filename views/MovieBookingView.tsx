@@ -74,9 +74,11 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
       }
 
       const { error: authError } = await supabase.auth.updateUser({
-        data: { role: UserRole.MOVIE_LOVER }
+        data: { role: UserRole.MOVIE_LOVER, active_role: UserRole.MOVIE_LOVER }
       });
       if (authError) throw authError;
+
+      localStorage.setItem(`bfi_active_role_${user!.id}`, UserRole.MOVIE_LOVER);
 
       await updateUserInFirestore(user!.id, {
         activeRole: UserRole.MOVIE_LOVER,
@@ -88,6 +90,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
       window.location.reload();
     } catch (err: any) {
       console.error("Gate role switch failed:", err);
+      localStorage.setItem(`bfi_active_role_${user!.id}`, UserRole.MOVIE_LOVER);
       await updateUserInFirestore(user!.id, {
         activeRole: UserRole.MOVIE_LOVER,
         role: UserRole.MOVIE_LOVER,
@@ -160,6 +163,13 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
 
   const handlePaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const activeRole = user?.activeRole || user?.role;
+    if (activeRole !== UserRole.MOVIE_LOVER) {
+      alert('Ticket booking is available only in Movie Lover Mode.');
+      setShowSwitchGateModal(true);
+      return;
+    }
+
     if (!acceptedTerms) {
       alert('Please accept the pre-booking terms & conditions.');
       return;

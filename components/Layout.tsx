@@ -65,7 +65,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
       { id: 'about', label: 'About', icon: Info }
     );
   } else {
-    navItems.push({ id: 'explore', label: role === UserRole.ADMIN ? 'Marketplace' : 'Explore', icon: Home });
+    if (role === UserRole.INVESTOR || role === UserRole.DIRECTOR || role === UserRole.WRITER || role === UserRole.ADMIN) {
+      navItems.push({ id: 'explore', label: role === UserRole.ADMIN ? 'Marketplace' : (role === UserRole.INVESTOR ? 'Marketplace' : 'Production Vault'), icon: Home });
+    }
  
     if (role === UserRole.DIRECTOR) {
       navItems.push({ id: 'portfolio', label: 'My Studio', icon: Briefcase });

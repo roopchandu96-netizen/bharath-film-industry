@@ -40,10 +40,10 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onSelectProject, onQuickInves
   }, [user.id, user.role, user.activeRole]);
 
   const activeRole = user.activeRole || user.role;
-  const isAuthorized = activeRole === UserRole.INVESTOR || activeRole === UserRole.DIRECTOR || activeRole === UserRole.WRITER || activeRole === UserRole.ADMIN;
+  const isAuthorized = activeRole === UserRole.INVESTOR || activeRole === UserRole.DIRECTOR || activeRole === UserRole.WRITER || activeRole === UserRole.ADMIN || activeRole === UserRole.MOVIE_LOVER;
 
   const filteredProjects = useMemo(() => {
-    if (!isAuthorized) {
+    if (!isAuthorized || activeRole === UserRole.MOVIE_LOVER) {
       return [];
     }
 
@@ -86,6 +86,70 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onSelectProject, onQuickInves
           <p className="text-xs text-zinc-400 leading-relaxed">
             Your active role (<strong className="text-white">{activeRole}</strong>) does not have permission to view scripts or projects.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeRole === UserRole.MOVIE_LOVER) {
+    return (
+      <div className="space-y-12 animate-in fade-in duration-700 text-slate-200">
+        {/* Hero banner */}
+        <div className="relative aspect-video rounded-[3rem] overflow-hidden bg-slate-900 border border-yellow-500/10 shadow-2xl flex flex-col justify-end p-8 md:p-12 group">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-40 group-hover:scale-105 transition-transform duration-[2000ms]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+          
+          <div className="relative z-10 max-w-xl space-y-4">
+            <span className="px-3 py-1 bg-yellow-500 text-black text-[9px] font-black uppercase tracking-wider rounded-lg">Featured Premiere</span>
+            <h1 className="text-3xl md:text-5xl font-serif text-white leading-tight tracking-tight">Vishwavikhyatha Nata Sarvabhouma</h1>
+            <p className="text-xs text-slate-300 leading-relaxed font-mono">
+              The monumental biopic celebrating the life, art, and legacy of the Emperor of Indian Cinema.
+            </p>
+            <div className="flex gap-4 pt-2">
+              <button 
+                onClick={() => {
+                  const vnsProj = projects.find(p => p.title.toLowerCase().includes('nata') || p.title.toLowerCase().includes('sarvabhouma')) || projects[0];
+                  if (vnsProj) onSelectProject(vnsProj);
+                }}
+                className="px-6 py-3 bg-yellow-500 text-black font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-yellow-400 active:scale-95 transition-all flex items-center gap-2"
+              >
+                <Film size={12} /> Play Teaser
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* BFI Movie News & Announcements */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="p-8 bg-zinc-950 border border-zinc-900 rounded-[2rem] space-y-6 shadow-xl">
+            <div className="flex items-center gap-2">
+              <Sparkles className="text-yellow-500" size={16} />
+              <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">Upcoming Movies</h3>
+            </div>
+            <div className="space-y-4">
+              <div className="flex gap-4 items-center p-3 hover:bg-zinc-900/50 rounded-xl transition-all border border-transparent hover:border-zinc-800">
+                <div className="w-12 h-16 bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
+                  <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=100&q=80" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">VNS Movie Premiere</h4>
+                  <p className="text-[10px] text-zinc-500">Official Release Coming Soon</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-8 bg-zinc-950 border border-zinc-900 rounded-[2rem] space-y-6 shadow-xl">
+            <div className="flex items-center gap-2">
+              <Film className="text-yellow-500" size={16} />
+              <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">Movie Lovers Benefits</h3>
+            </div>
+            <ul className="space-y-2.5 text-xs text-slate-400">
+              <li className="flex items-center gap-2">• Browse upcoming movies and trailers</li>
+              <li className="flex items-center gap-2">• Secure digital tickets and official GST invoices</li>
+              <li className="flex items-center gap-2">• Receive verified unique viewing links on release</li>
+            </ul>
+          </div>
         </div>
       </div>
     );

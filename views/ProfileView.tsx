@@ -49,9 +49,11 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
     try {
       // 1. Update Supabase Auth User Metadata
       const { error: authError } = await supabase.auth.updateUser({
-        data: { role: targetRole }
+        data: { role: targetRole, active_role: targetRole }
       });
       if (authError) throw authError;
+
+      localStorage.setItem(`bfi_active_role_${user.id}`, targetRole);
 
       // 2. Prepare database updates
       const updates: Partial<User> = {
@@ -72,6 +74,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
       }, 1000);
     } catch (err: any) {
       console.error("Role switch error:", err);
+      localStorage.setItem(`bfi_active_role_${user.id}`, targetRole);
       // Fallback local updates
       const updates: Partial<User> = {
         activeRole: targetRole,
@@ -294,11 +297,12 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
           </div>
 
           {/* Workspace Role Toggle */}
-          <div className="p-10 rounded-[3rem] bg-zinc-950 border border-zinc-900 shadow-2xl space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-white tracking-tight">Switch Role</h3>
-              <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Toggle Workspace Mode</p>
-            </div>
+          {user.primaryRole !== UserRole.MOVIE_LOVER && (
+            <div className="p-10 rounded-[3rem] bg-zinc-950 border border-zinc-900 shadow-2xl space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-white tracking-tight">Switch Role</h3>
+                <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Toggle Workspace Mode</p>
+              </div>
 
             <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 text-xs">
               <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider">Current Active Role:</span>
@@ -339,6 +343,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
               </button>
             </div>
           </div>
+          )}
         </div>
       </div>
 

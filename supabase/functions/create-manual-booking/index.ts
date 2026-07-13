@@ -15,70 +15,42 @@ export default {
     }
 
     try {
-      const { quantity, phone, name } = await req.json();
+      const { quantity, utrId, phone, name } = await req.json();
 
       // Validate ticket quantity
       if (!quantity || quantity < 1 || quantity > 10) {
         return new Response(
-          JSON.stringify({ error: "Invalid ticket quantity. You can book between 1 and 10 tickets." }),
+          JSON.stringify({ error: "Invalid ticket quantity." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const keyId = Deno.env.get('RAZORPAY_KEY_ID');
-      const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
-
-      if (!keyId || !keySecret) {
-        console.error("Razorpay environment variables are missing.");
+      // Validate UTR / Transaction ID presence
+      if (!utrId || !utrId.trim()) {
         return new Response(
-          JSON.stringify({ error: "Server authentication error." }),
-          { status: 501, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: "Missing Transaction Reference ID (UTR)." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Hardcoded verified pricing: ₹59 inclusive of GST per ticket
       const ticketPriceINR = 59;
-      const amountPaise = ticketPriceINR * quantity * 100;
-      const receiptId = `rcpt_booking_${Date.now()}`;
-
-      // Call Razorpay REST API to create secure order ID
-      let razorpayOrder;
-      try {
-        const response = await fetch("https://api.razorpay.com/v1/orders", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Basic " + btoa(keyId + ":" + keySecret)
-          },
-          body: JSON.stringify({
-            amount: amountPaise,
-            currency: "INR",
-            receipt: receiptId
-          })
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Razorpay order API error:", errorText);
-          return new Response(
-            JSON.stringify({ error: "Failed to create order with Razorpay." }),
-            { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-
-        razorpayOrder = await response.json();
-      } catch (err) {
-        console.error("Razorpay API request failed:", err);
-        return new Response(
-          JSON.stringify({ error: "Failed to connect to payment gateway." }),
-          { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Generate human-readable booking reference ID
       const bookingId = 'BFI-VNS-' + Math.floor(100000 + Math.random() * 900000);
 
-      // Insert pending records in public.movie_bookings and public.payments via admin client
+      // Check for duplicate UTR submission
+      const { data: existingPayment } = await supabaseAdmin
+        .from("payments")
+        .select("id")
+        .eq("gateway_order_id", utrId.trim())
+        .maybeSingle();
+
+      if (existingPayment) {
+        return new Response(
+          JSON.stringify({ error: "This UTR / Transaction Reference ID has already been submitted." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Insert pending booking and pending payment records via admin client
       try {
         const { data: mbData, error: mbError } = await supabaseAdmin
           .from("movie_bookings")
@@ -99,7 +71,7 @@ export default {
         if (mbError) {
           console.error("Supabase booking insert failed:", mbError);
           return new Response(
-            JSON.stringify({ error: "Failed to initialize booking record." }),
+            JSON.stringify({ error: "Failed to initialize manual booking record." }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -108,7 +80,7 @@ export default {
           .from("payments")
           .insert({
             booking_id: mbData.id,
-            gateway_order_id: razorpayOrder.id,
+            gateway_order_id: utrId.trim(),
             amount: ticketPriceINR * quantity,
             payment_status: "pending"
           });
@@ -116,7 +88,7 @@ export default {
         if (payError) {
           console.error("Supabase payment record insert failed:", payError);
           return new Response(
-            JSON.stringify({ error: "Failed to initialize payment ledger record." }),
+            JSON.stringify({ error: "Failed to initialize manual payment record." }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -130,17 +102,12 @@ export default {
       }
 
       return new Response(
-        JSON.stringify({
-          order_id: razorpayOrder.id,
-          amount: razorpayOrder.amount,
-          currency: razorpayOrder.currency,
-          booking_id: bookingId
-        }),
+        JSON.stringify({ success: true, booking_id: bookingId }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
     } catch (error) {
-      console.error("Internal create-order exception:", error);
+      console.error("Internal create-manual-booking exception:", error);
       return new Response(
         JSON.stringify({ error: "Internal server error." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

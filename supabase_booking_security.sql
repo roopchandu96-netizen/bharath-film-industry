@@ -87,3 +87,26 @@ create policy "Users can view tickets for their own bookings"
 
 -- STRICTLY BLOCK INSERT/UPDATE/DELETE ON TICKETS BY REGULAR USERS
 -- (No write policies are declared. Only service_role can write/issue tickets).
+
+
+-- 8. Admin Write and Read Policies for Booking Flow Management
+create policy "Admins can select all bookings" on public.movie_bookings for select
+  using (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+create policy "Admins can update all bookings" on public.movie_bookings for update
+  using (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+create policy "Admins can select all payments" on public.payments for select
+  using (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+create policy "Admins can insert all payments" on public.payments for insert
+  with check (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+create policy "Admins can update all payments" on public.payments for update
+  using (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+create policy "Admins can select all tickets" on public.tickets for select
+  using (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+create policy "Admins can insert all tickets" on public.tickets for insert
+  with check (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));

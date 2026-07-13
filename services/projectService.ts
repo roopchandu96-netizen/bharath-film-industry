@@ -19,14 +19,11 @@ export const subscribeToActiveProjects = (
       // 7. Backend & database active role verification
       const activeRole = localStorage.getItem(`bfi_active_role_${session.user.id}`) || session.user.user_metadata?.role || 'MOVIE_LOVER';
 
-      // 8. Database Query Restrictions:
-      // - Movie Lovers, Producers, Actors, Technicians, Distributors have absolutely no access to scripts/projects.
+      // 8. Database Query Restrictions: Only Investors, Directors, and Admins can access projects/scripts.
       if (
-        activeRole === 'MOVIE_LOVER' ||
-        activeRole === 'PRODUCER' ||
-        activeRole === 'ACTOR' ||
-        activeRole === 'TECHNICIAN' ||
-        activeRole === 'DISTRIBUTOR'
+        activeRole !== 'INVESTOR' &&
+        activeRole !== 'DIRECTOR' &&
+        activeRole !== 'ADMIN'
       ) {
         callback([]);
         return;
@@ -34,10 +31,11 @@ export const subscribeToActiveProjects = (
 
       let query = supabase.from('projects').select('*');
 
-      // - Directors / Writers can only see their own uploaded scripts.
-      if (activeRole === 'DIRECTOR' || activeRole === 'WRITER') {
+      // - Directors can only see their own uploaded scripts.
+      // - Investors can only see approved (ACTIVE) scripts available for investment.
+      if (activeRole === 'DIRECTOR') {
         query = query.eq('directorId', session.user.id);
-      } else {
+      } else if (activeRole === 'INVESTOR') {
         query = query.eq('status', 'ACTIVE');
       }
 
@@ -96,11 +94,9 @@ export const getProjectById = async (id: string): Promise<MovieProject | null> =
   const activeRole = localStorage.getItem(`bfi_active_role_${session.user.id}`) || session.user.user_metadata?.role || 'MOVIE_LOVER';
 
   if (
-    activeRole === 'MOVIE_LOVER' ||
-    activeRole === 'PRODUCER' ||
-    activeRole === 'ACTOR' ||
-    activeRole === 'TECHNICIAN' ||
-    activeRole === 'DISTRIBUTOR'
+    activeRole !== 'INVESTOR' &&
+    activeRole !== 'DIRECTOR' &&
+    activeRole !== 'ADMIN'
   ) {
     return null;
   }
@@ -113,8 +109,11 @@ export const getProjectById = async (id: string): Promise<MovieProject | null> =
 
   if (error) return null;
 
-  // Confidentiality Check: Directors/Writers cannot view others' uploaded scripts
-  if ((activeRole === 'DIRECTOR' || activeRole === 'WRITER') && data.directorId !== session.user.id) {
+  // Confidentiality Check: Directors can ONLY view their own uploaded scripts. Investors can only view ACTIVE ones.
+  if (activeRole === 'DIRECTOR' && data.directorId !== session.user.id) {
+    return null;
+  }
+  if (activeRole === 'INVESTOR' && data.status !== 'ACTIVE') {
     return null;
   }
 

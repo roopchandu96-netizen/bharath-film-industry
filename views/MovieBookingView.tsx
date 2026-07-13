@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Film, Sparkles, AlertCircle, CheckCircle, Download, CreditCard, 
-  QrCode, Landmark, ShieldCheck, Mail, Phone, User as UserIcon, Ticket, FileText, ChevronRight, Copy, Printer, Play, Lock, AlertTriangle
+  QrCode, Landmark, ShieldCheck, Mail, Phone, User as UserIcon, Ticket, FileText, ChevronRight, Copy, Printer, Play, Lock, AlertTriangle, Clock, X
 } from 'lucide-react';
 import { db, supabase } from '../services/firebase';
 import { User, UserRole } from '../types';
@@ -20,6 +20,8 @@ interface BookingRecord {
   date: string;
   status: string;
   watched?: boolean;
+  bookingRef?: string;
+  invoiceNumber?: string | null;
 }
 
 interface MovieBookingViewProps {
@@ -31,8 +33,9 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'BANK' | 'CARD'>('CARD');
+  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'BANK'>('UPI');
   const [step, setStep] = useState<'FORM' | 'PAYMENT' | 'PAY_PROCESSING' | 'PAY_PENDING' | 'PAY_FAILED' | 'PAY_CANCELLED' | 'PAY_CONFIRMED'>('FORM');
+  const [utrId, setUtrId] = useState('');
   const [cardNo, setCardNo] = useState('');
   const [cardName, setCardName] = useState(user?.name || '');
   const [cardExpiry, setCardExpiry] = useState('');
@@ -101,14 +104,59 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
     loadBookingHistory();
   }, [user]);
 
-  const loadBookingHistory = () => {
-    const list = db.getCollection('bookings');
-    // Filter bookings relevant to user if logged in
-    if (user) {
-      const userBookings = list.filter((b: BookingRecord) => b.email.toLowerCase() === user.email.toLowerCase());
-      setBookingHistory(userBookings);
-    } else {
-      setBookingHistory(list);
+  const loadBookingHistory = async () => {
+    if (!user) {
+      setBookingHistory([]);
+      return;
+    }
+    try {
+      const { data: bookingsData, error } = await supabase
+        .from('movie_bookings')
+        .select(`
+          id,
+          booking_id,
+          amount,
+          status,
+          payment_status,
+          created_at,
+          confirmed_at,
+          quantity,
+          phone,
+          email,
+          name,
+          payments (
+            gateway_payment_id,
+            payment_status
+          ),
+          tickets (
+            ticket_number,
+            invoice_number
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedBookings: BookingRecord[] = (bookingsData || []).map((b: any) => ({
+        id: b.tickets?.[0]?.ticket_number || b.booking_id,
+        name: b.name || user.name || '',
+        email: b.email || user.email || '',
+        phone: b.phone || '',
+        txnId: b.payments?.[0]?.gateway_payment_id || 'PENDING',
+        paymentMethod: b.payments?.[0]?.gateway_payment_id ? 'Razorpay' : 'Pending',
+        amount: Number(b.amount),
+        quantity: b.quantity || 1,
+        date: b.created_at,
+        status: b.status.toUpperCase(),
+        watched: false,
+        bookingRef: b.booking_id,
+        invoiceNumber: b.tickets?.[0]?.invoice_number || null
+      }));
+
+      setBookingHistory(formattedBookings);
+    } catch (err) {
+      console.error("Failed to load booking history from Supabase:", err);
+      setBookingHistory([]);
     }
   };
 
@@ -132,6 +180,68 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
     return 'BFI-VNS-' + Math.floor(100000 + Math.random() * 900000);
   };
 
+  const handleManualPaymentSubmit = async () => {
+    setStep('PAY_PROCESSING');
+    setGatewayProgress(20);
+    setGatewayStatus('PENDING_HANDSHAKE');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("User session not found. Please log in.");
+      }
+
+      const response = await fetch('https://qpgidlybygavthytsxvl.supabase.co/functions/v1/create-manual-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          quantity,
+          utrId: utrId.trim(),
+          phone,
+          name
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to submit manual payment reference.');
+      }
+
+      const resData = await response.json();
+      const bookingId = resData.booking_id;
+
+      setGatewayProgress(60);
+      setGatewayStatus('AWAITING_CALLBACK');
+
+      const newBooking: BookingRecord = {
+        id: bookingId,
+        name,
+        email: user?.email || '',
+        phone,
+        txnId: utrId.trim(),
+        paymentMethod: paymentMethod === 'UPI' ? 'UPI QR' : 'Bank Transfer',
+        amount: 59 * quantity,
+        quantity,
+        date: new Date().toISOString(),
+        status: 'PENDING',
+        watched: false
+      };
+
+      setGatewayProgress(100);
+      setCurrentBooking(newBooking);
+      await loadBookingHistory();
+      setStep('PAY_PENDING');
+
+    } catch (err: any) {
+      console.error("Manual payment submission error:", err);
+      alert(err.message || "Failed to record manual transfer reference. Please try again.");
+      setStep('PAYMENT');
+    }
+  };
+
   const handlePaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -140,192 +250,11 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
       return;
     }
 
-    if (paymentMethod === 'CARD') {
-      if (!cardNo || !cardName || !cardExpiry || !cardCvv) {
-        alert('Please fill in all credit card details.');
-        return;
-      }
+    if (!utrId.trim()) {
+      alert('Please enter your Transaction Reference ID (UTR / Txn ID) to confirm transfer.');
+      return;
     }
-
-    // Step 1: Open the payment gateway simulator modal
-    setShowGatewayModal(true);
-  };
-
-  const handleGatewayAction = (action: 'SUCCESS' | 'FAILURE' | 'CANCEL') => {
-    setShowGatewayModal(false);
-    
-    // Transition to webhooks/callback loading screen
-    setStep('PAY_PROCESSING');
-    setGatewayProgress(0);
-    setGatewayStatus('PENDING_HANDSHAKE');
-
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 20;
-      setGatewayProgress(progress);
-
-      if (progress >= 40 && progress < 100) {
-        setGatewayStatus('AWAITING_CALLBACK');
-      }
-
-      if (progress >= 100) {
-        clearInterval(interval);
-        
-        if (action === 'SUCCESS') {
-          // SECURE VERIFICATION AND GENERATION AFTER WEBHOOK CONFIRMS SUCCESS
-          const ticketId = generateTicketId();
-          const generatedTxn = 'PAY-' + paymentMethod + '-' + Math.floor(100000 + Math.random() * 900000);
-          
-          const newBooking: BookingRecord = {
-            id: ticketId,
-            name,
-            email,
-            phone,
-            txnId: generatedTxn,
-            paymentMethod,
-            amount: 59 * quantity,
-            quantity,
-            date: new Date().toISOString(),
-            status: 'CONFIRMED',
-            watched: false
-          };
-
-          db.saveToCollection('bookings', newBooking);
-          sendMovieTicketEmail(newBooking);
-          setCurrentBooking(newBooking);
-          loadBookingHistory();
-          setStep('PAY_CONFIRMED');
-        } else if (action === 'CANCEL') {
-          setStep('PAY_CANCELLED');
-        } else {
-          setStep('PAY_FAILED');
-        }
-      }
-    }, 400);
-  };
-  const handleRazorpayPayment = async () => {
-    setShowGatewayModal(false);
-    setStep('PAY_PROCESSING');
-    setGatewayProgress(0);
-    setGatewayStatus('PENDING_HANDSHAKE');
-
-    try {
-      const amountInPaise = 59 * quantity * 100;
-      
-      const orderResponse = await fetch('https://qpgidlybygavthytsxvl.supabase.co/functions/v1/create-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: amountInPaise,
-          currency: 'INR',
-          receipt: `rcpt_booking_${Date.now()}`
-        })
-      });
-
-      if (!orderResponse.ok) {
-        throw new Error('Backend failed to initialize order.');
-      }
-
-      const orderData = await orderResponse.json();
-      const { order_id, amount, currency } = orderData;
-
-      setGatewayProgress(40);
-      setGatewayStatus('AWAITING_CALLBACK');
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TCsWGdvvfsiO1o',
-        amount: amount,
-        currency: currency,
-        name: "Bharat Film Industry",
-        description: "VNS Movie Premiere Ticket",
-        image: "https://www.bfiiy.com/logo.jpg",
-        order_id: order_id,
-        handler: async function (response: any) {
-          try {
-            setGatewayProgress(70);
-            setGatewayStatus('AWAITING_CALLBACK');
-
-            const verifyResponse = await fetch('https://qpgidlybygavthytsxvl.supabase.co/functions/v1/verify-payment', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature
-              })
-            });
-
-            if (!verifyResponse.ok) {
-              throw new Error('Signature verification rejected by treasury.');
-            }
-
-            const verificationResult = await verifyResponse.json();
-
-            if (verificationResult.success) {
-              setGatewayProgress(100);
-              
-              const ticketId = generateTicketId();
-              const newBooking: BookingRecord = {
-                id: ticketId,
-                name,
-                email,
-                phone,
-                txnId: response.razorpay_payment_id,
-                paymentMethod: 'Razorpay',
-                amount: 59 * quantity,
-                quantity,
-                date: new Date().toISOString(),
-                status: 'CONFIRMED',
-                watched: false
-              };
-
-              db.saveToCollection('bookings', newBooking);
-              sendMovieTicketEmail(newBooking);
-              setCurrentBooking(newBooking);
-              loadBookingHistory();
-              setStep('PAY_CONFIRMED');
-            } else {
-              setStep('PAY_FAILED');
-            }
-          } catch (verifyErr) {
-            console.error("Verification error:", verifyErr);
-            setStep('PAY_FAILED');
-          }
-        },
-        prefill: {
-          name: name,
-          email: email,
-          contact: phone
-        },
-        theme: {
-          color: "#eab308"
-        },
-        modal: {
-          ondismiss: function () {
-            console.log("Razorpay checkout dismissed by user.");
-            setStep('PAY_CANCELLED');
-          }
-        }
-      };
-
-      const rzp = new (window as any).Razorpay(options);
-      
-      rzp.on('payment.failed', function (response: any) {
-        console.error("Payment failed event:", response.error);
-        setStep('PAY_FAILED');
-      });
-
-      rzp.open();
-
-    } catch (err) {
-      console.error("Razorpay setup initialization failed:", err);
-      alert("Payment initialization error. Check console log or network connection.");
-      setStep('PAY_FAILED');
-    }
+    handleManualPaymentSubmit();
   };
   const printTicket = (booking: BookingRecord) => {
     const printWindow = window.open('', '_blank', 'width=600,height=800');
@@ -427,7 +356,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Tax Invoice - ${booking.id}</title>
+          <title>Tax Invoice - ${booking.invoiceNumber || booking.id}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
             .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); border-radius: 10px; }
@@ -455,7 +384,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
               <tr>
                 <td>
                   <span class="title">TAX INVOICE</span><br/>
-                  <span style="font-size: 14px; font-weight: bold; color: #c2410c;">BHARAT FILM INDUSTRY</span>
+                  <span style="font-size: 14px; font-weight: bold; color: #c2410c;">BHARAT BFI</span>
                 </td>
                 <td class="company-details">
                   <strong>Bharat Film Industry</strong><br/>
@@ -467,7 +396,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
             </table>
 
             <div class="invoice-details">
-              <strong>Invoice Number:</strong> INV-${booking.id}<br/>
+              <strong>Invoice Number:</strong> ${booking.invoiceNumber || 'INV-' + booking.id}<br/><br/>
               <strong>Date of Issue:</strong> ${new Date(booking.date).toLocaleDateString()}<br/>
               <strong>Payment Status:</strong> ${booking.status === 'CONFIRMED' ? 'PAID' : 'PENDING VERIFICATION'}<br/>
               <strong>Transaction UTR/ID:</strong> ${booking.txnId}
@@ -548,7 +477,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
     setEmail(user?.email || '');
     setPhone('');
     setQuantity(1);
-    setTxnId('');
+    setUtrId('');
     setCardNo('');
     setCardName(user?.name || '');
     setCardExpiry('');
@@ -914,15 +843,6 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                       <div className="flex gap-1 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
                         <button
                           type="button"
-                          onClick={() => setPaymentMethod('CARD')}
-                          className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
-                            paymentMethod === 'CARD' ? 'bg-yellow-500 text-black shadow-md' : 'text-zinc-400 hover:text-white'
-                          }`}
-                        >
-                          <CreditCard size={12} /> Card (Instant)
-                        </button>
-                        <button
-                          type="button"
                           onClick={() => setPaymentMethod('UPI')}
                           className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
                             paymentMethod === 'UPI' ? 'bg-yellow-500 text-black shadow-md' : 'text-zinc-400 hover:text-white'
@@ -959,9 +879,20 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                             </div>
                           </div>
 
-                          <p className="text-[9px] text-zinc-500 leading-relaxed text-center italic">
-                            <Lock size={10} className="inline mr-1" />
-                            Secure gateway webhook will auto-confirm your scan. No receipt or screenshot upload required.
+                          <div className="space-y-1.5 text-left">
+                            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">Transaction UTR / Reference ID</label>
+                            <input
+                              required
+                              type="text"
+                              value={utrId}
+                              onChange={(e) => setUtrId(e.target.value)}
+                              className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-4 text-xs text-white focus:border-yellow-400 outline-none font-mono"
+                              placeholder="Enter 12-digit UTR or transaction ID"
+                            />
+                          </div>
+
+                          <p className="text-[10px] text-yellow-500 font-bold text-center leading-relaxed">
+                            ⚠️ Note: Once payment is verified by admin, you can see the ticket and invoice.
                           </p>
                         </div>
                       )}
@@ -987,58 +918,24 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                             ))}
                           </div>
 
-                          <p className="text-[9px] text-zinc-500 leading-relaxed text-center italic">
-                            <Lock size={10} className="inline mr-1" />
-                            Transfer clearance webhook validates this transfer. No manual UTR entry required.
+                          <div className="space-y-1.5 text-left">
+                            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">Transaction UTR / Reference ID</label>
+                            <input
+                              required
+                              type="text"
+                              value={utrId}
+                              onChange={(e) => setUtrId(e.target.value)}
+                              className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-4 text-xs text-white focus:border-yellow-400 outline-none font-mono"
+                              placeholder="Enter bank transaction reference number"
+                            />
+                          </div>
+
+                          <p className="text-[10px] text-yellow-500 font-bold text-center leading-relaxed">
+                            ⚠️ Note: Once payment is verified by admin, you can see the ticket and invoice.
                           </p>
                         </div>
                       )}
 
-                      {paymentMethod === 'CARD' && (
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-                          <p className="text-[10px] text-zinc-400 uppercase font-black tracking-widest text-center">Simulated Instant Card Checkout</p>
-                          
-                          <div className="space-y-3">
-                            <input 
-                              required 
-                              type="text"
-                              maxLength={19}
-                              value={cardNo} 
-                              onChange={e => setCardNo(e.target.value.replace(/\s?/g, '').replace(/(\d{4})/g, '$1 ').trim())} 
-                              className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-4 text-xs text-white focus:border-yellow-400 outline-none font-mono" 
-                              placeholder="Card Number (e.g. 4111 2222 3333 4444)" 
-                            />
-                            <input 
-                              required 
-                              type="text"
-                              value={cardName} 
-                              onChange={e => setCardName(e.target.value)} 
-                              className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-4 text-xs text-white focus:border-yellow-400 outline-none" 
-                              placeholder="Cardholder Name" 
-                            />
-                            <div className="grid grid-cols-2 gap-3">
-                              <input 
-                                required 
-                                type="text"
-                                maxLength={5}
-                                value={cardExpiry} 
-                                onChange={e => setCardExpiry(e.target.value)} 
-                                className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-4 text-xs text-white focus:border-yellow-400 outline-none font-mono" 
-                                placeholder="MM/YY" 
-                              />
-                              <input 
-                                required 
-                                type="password"
-                                maxLength={3}
-                                value={cardCvv} 
-                                onChange={e => setCardCvv(e.target.value)} 
-                                className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-4 text-xs text-white focus:border-yellow-400 outline-none font-mono" 
-                                placeholder="CVV" 
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
 
                       {/* Terms checkbox */}
                       <div className="flex items-start gap-3 p-3 bg-slate-900/50 border border-slate-800 rounded-2xl">
@@ -1059,7 +956,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         type="submit" 
                         className="w-full py-4 bg-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
                       >
-                        Authorize &amp; Pay via Secure Gateway
+                        Submit Payment Reference
                       </button>
                     </form>
                   )}
@@ -1100,35 +997,51 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                     </div>
                   )}
 
-                  {step === 'PAY_PENDING' && (
+                  {step === 'PAY_PENDING' && currentBooking && (
                     <div className="space-y-6 text-center py-6 animate-in zoom-in duration-500">
                       <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto animate-pulse">
                         <Clock size={32} />
                       </div>
                       
                       <div className="space-y-3">
-                        <h4 className="text-sm font-black text-amber-500 uppercase tracking-widest text-center">Payment Pending</h4>
-                        <p className="text-[10px] text-slate-300 leading-relaxed text-left bg-slate-905/50 border border-slate-800 p-4 rounded-xl">
-                          We are waiting for confirmation from our secure payment gateway.
+                        <h3 className="text-base font-bold text-white uppercase tracking-wider">Awaiting Admin Verification</h3>
+                        <p className="text-[10px] text-yellow-500 font-bold leading-relaxed text-left bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                          ⚠️ Once payment is verified by admin, you can see the ticket and invoice.
+                        </p>
+                        <p className="text-[10px] text-slate-400 leading-relaxed text-left px-2">
+                          Your manual payment reference UTR has been submitted. You can check the verification status under the <strong>My Tickets</strong> dashboard tab at any time.
                         </p>
                       </div>
 
-                      <div className="flex gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setStep('PAYMENT')}
-                          className="flex-1 py-3.5 bg-yellow-500 text-black font-black uppercase text-xs tracking-wider rounded-xl hover:bg-yellow-400 active:scale-95 transition-all"
-                        >
-                          Retry Payment
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setStep('PAY_CANCELLED')}
-                          className="flex-1 py-3.5 bg-zinc-900 border border-zinc-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-zinc-800 transition-all"
-                        >
-                          Cancel Booking
-                        </button>
+                      {/* Digital Ticket Preview (Pending) */}
+                      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-left relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-[9px] font-black uppercase text-yellow-500 tracking-wider">Pre-Booking Reference</span>
+                          <span className="text-[10px] font-mono text-zinc-400 font-bold">{currentBooking.id}</span>
+                        </div>
+
+                        <div className="space-y-2.5 text-xs">
+                          <div className="flex justify-between"><span className="text-zinc-500">Quantity:</span><span className="font-bold text-white">{currentBooking.quantity} Ticket(s)</span></div>
+                          <div className="flex justify-between"><span className="text-zinc-500">Method:</span><span className="font-bold text-white">{currentBooking.paymentMethod}</span></div>
+                          <div className="flex justify-between"><span className="text-zinc-500">Txn ID / UTR:</span><span className="font-bold text-white truncate max-w-[160px]">{currentBooking.txnId}</span></div>
+                          <div className="flex justify-between"><span className="text-zinc-500">Amount:</span><span className="font-bold text-white">₹{currentBooking.amount.toFixed(2)}</span></div>
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Status:</span>
+                            <span className="font-bold text-amber-500">Waiting for Payment Verification</span>
+                          </div>
+                        </div>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStep('FORM');
+                          startNewBooking();
+                        }}
+                        className="w-full py-4 bg-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all"
+                      >
+                        Book Another Ticket
+                      </button>
                     </div>
                   )}
 
@@ -1184,7 +1097,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         <CheckCircle size={32} />
                       </div>
                       <div>
-                        <h3 className="text-base font-bold text-white uppercase tracking-wider">Payment Confirmed</h3>
+                        <h3 className="text-base font-bold text-white uppercase tracking-wider">✅ Payment Successful</h3>
                         <p className="text-xs text-slate-400 mt-1">Your payment has been successfully verified. Your booking is now confirmed.</p>
                       </div>
 
@@ -1199,15 +1112,15 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
 
                         <div className="space-y-2.5 text-xs">
                           <div className="flex justify-between"><span className="text-zinc-500">Movie:</span><span className="font-bold text-white">🎬 VNS</span></div>
+                          <div className="flex justify-between"><span className="text-zinc-500">Booking ID:</span><span className="font-bold text-white font-mono">{currentBooking.bookingRef || currentBooking.id}</span></div>
+                          <div className="flex justify-between"><span className="text-zinc-500">Transaction ID:</span><span className="font-bold text-white font-mono truncate max-w-[150px]">{currentBooking.txnId}</span></div>
+                          <div className="flex justify-between"><span className="text-zinc-500">Payment Date:</span><span className="font-bold text-white">{new Date(currentBooking.date).toLocaleDateString()}</span></div>
                           <div className="flex justify-between"><span className="text-zinc-500">Quantity:</span><span className="font-bold text-white">{currentBooking.quantity} Ticket(s)</span></div>
                           <div className="flex justify-between"><span className="text-zinc-500">Holder:</span><span className="font-bold text-white">{currentBooking.name}</span></div>
-                          <div className="flex justify-between"><span className="text-zinc-500">Email:</span><span className="font-bold text-white max-w-[160px] truncate">{currentBooking.email}</span></div>
                           <div className="flex justify-between"><span className="text-zinc-500">Amount Paid:</span><span className="font-bold text-white">₹{currentBooking.amount.toFixed(2)}</span></div>
                           <div className="flex justify-between">
                             <span className="text-zinc-500">Verification:</span>
-                            <span className="font-bold text-yellow-500">
-                              {currentBooking.status === 'CONFIRMED' ? 'Verified (Paid)' : 'Pending Clearance'}
-                            </span>
+                            <span className="font-bold text-yellow-500">Verified (Paid)</span>
                           </div>
                         </div>
                       </div>
@@ -1305,15 +1218,24 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
                           <span className="px-2 py-0.5 rounded bg-yellow-500 text-black text-[9px] font-black uppercase tracking-wider">VNS Movie Pass</span>
-                          <span className="font-mono text-zinc-500 text-xs">{booking.id}</span>
+                          <span className="font-mono text-zinc-500 text-xs">Booking ID: {booking.bookingRef || booking.id}</span>
                         </div>
                         <h4 className="text-sm font-bold text-white">{booking.name} ({booking.email})</h4>
                         <p className="text-[10px] text-zinc-500">
                           Billed: ₹{booking.amount.toFixed(2)} for {booking.quantity} ticket(s) on {new Date(booking.date).toLocaleDateString()}
                         </p>
-                        {booking.status === 'CONFIRMED' && (
-                          <div className="pt-2 flex items-center gap-1.5 text-[9px] font-bold text-yellow-500 uppercase tracking-wider">
-                            <Lock size={12} /> Viewing link will be emailed on release
+                        {booking.status === 'CONFIRMED' ? (
+                          <div className="space-y-1 pt-1">
+                            <div className="text-[10px] text-yellow-500 font-bold">
+                              🎟️ Ticket Numbers: {booking.id}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
+                              <Lock size={12} /> Viewing link will be emailed on release
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="pt-2 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
+                            ⏳ Waiting for Payment Verification
                           </div>
                         )}
                       </div>
@@ -1322,24 +1244,30 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                           booking.status === 'CONFIRMED' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
                         }`}>
-                          {booking.status === 'CONFIRMED' ? 'Confirmed' : 'Pending Verification'}
+                          {booking.status === 'CONFIRMED' ? 'Confirmed' : 'Waiting for Payment Verification'}
                         </span>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => printTicket(booking)} 
-                            title="Print Ticket"
-                            className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
-                          >
-                            <Printer size={14} />
-                          </button>
-                          <button 
-                            onClick={() => printInvoice(booking)} 
-                            title="Download Tax Invoice"
-                            className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
-                          >
-                            <FileText size={14} />
-                          </button>
-                        </div>
+                        {booking.status === 'CONFIRMED' ? (
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => printTicket(booking)} 
+                              title="Print Ticket"
+                              className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
+                            >
+                              <Printer size={14} />
+                            </button>
+                            <button 
+                              onClick={() => printInvoice(booking)} 
+                              title="Download Tax Invoice"
+                              className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
+                            >
+                              <FileText size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                            Awaiting Verification
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
@@ -1353,83 +1281,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
 
 
 
-      {/* Simulated Gateway Modal */}
-      {showGatewayModal && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
-          <div className="bg-slate-950 border border-yellow-500/20 rounded-[2.5rem] p-8 max-w-md w-full text-center space-y-6 relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl pointer-events-none" />
-            
-            <div className="flex justify-between items-center border-b border-zinc-900 pb-4">
-              <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase font-bold">BFI SECURE PAYMENT GATEWAY</span>
-              <span className="text-xs text-yellow-500 font-extrabold">₹{(59 * quantity).toFixed(2)}</span>
-            </div>
 
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold text-white tracking-tight">Select Payment Action</h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Complete a live payment using Razorpay Standard Checkout or choose a simulated response to verify transaction handling.
-              </p>
-            </div>
-
-            {/* Test Credentials Box */}
-            <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-2xl p-4 text-left space-y-2 leading-relaxed">
-              <span className="text-[9px] font-black text-yellow-500 uppercase tracking-wider block">💳 Razorpay Sandbox Test Credentials</span>
-              <div className="grid grid-cols-2 gap-2 text-[9px] font-mono">
-                <div>
-                  <span className="text-zinc-500 block">CARD NUMBER</span>
-                  <span className="text-white block font-bold">4111 1111 1111 1111</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block">EXPIRY / CVV</span>
-                  <span className="text-white block font-bold">12/26 / 123</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-zinc-500 block">UPI ADDRESS</span>
-                  <span className="text-white block font-bold">test@razorpay</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <button
-                type="button"
-                onClick={handleRazorpayPayment}
-                className="w-full py-4 bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-black uppercase text-xs tracking-wider rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 hover:from-yellow-400 hover:to-amber-400 shadow-[0_0_20px_rgba(234,179,8,0.2)]"
-              >
-                💳 Pay with Razorpay (Live Gateway)
-              </button>
-
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-zinc-800"></div>
-                <span className="flex-shrink mx-4 text-[9px] text-zinc-600 font-black uppercase tracking-wider">Or Simulator</span>
-                <div className="flex-grow border-t border-zinc-800"></div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleGatewayAction('SUCCESS')}
-                className="w-full py-3 bg-green-950/40 border border-green-800 text-green-400 font-bold uppercase text-[10px] tracking-wider rounded-xl transition-all hover:bg-green-900/20"
-              >
-                Simulate Payment Success (Verified)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleGatewayAction('CANCEL')}
-                className="w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 font-bold uppercase text-[10px] tracking-wider rounded-xl transition-all hover:bg-zinc-800"
-              >
-                Simulate Payment Cancelled
-              </button>
-              <button
-                type="button"
-                onClick={() => handleGatewayAction('FAILURE')}
-                className="w-full py-3 bg-red-950/40 border border-red-800 text-red-400 font-bold uppercase text-[10px] tracking-wider rounded-xl transition-all hover:bg-red-900/20"
-              >
-                Simulate Payment Failed
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

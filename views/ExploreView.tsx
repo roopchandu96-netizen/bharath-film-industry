@@ -40,7 +40,7 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onSelectProject, onQuickInves
   }, [user.id, user.role, user.activeRole]);
 
   const activeRole = user.activeRole || user.role;
-  const isAuthorized = activeRole === UserRole.INVESTOR || activeRole === UserRole.DIRECTOR || activeRole === UserRole.WRITER || activeRole === UserRole.ADMIN || activeRole === UserRole.MOVIE_LOVER;
+  const isAuthorized = activeRole === UserRole.INVESTOR || activeRole === UserRole.DIRECTOR || activeRole === UserRole.ADMIN || activeRole === UserRole.MOVIE_LOVER;
 
   const filteredProjects = useMemo(() => {
     if (!isAuthorized || activeRole === UserRole.MOVIE_LOVER) {
@@ -48,8 +48,8 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onSelectProject, onQuickInves
     }
 
     return projects.filter(p => {
-      // Privacy Rule: Directors and Writers can ONLY see their own projects
-      if ((activeRole === UserRole.DIRECTOR || activeRole === UserRole.WRITER) && p.directorId !== user.id && p.director !== user.name) {
+      // Privacy Rule: Directors can ONLY see their own projects
+      if (activeRole === UserRole.DIRECTOR && p.directorId !== user.id && p.director !== user.name) {
         return false;
       }
 

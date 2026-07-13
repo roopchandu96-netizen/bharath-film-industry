@@ -44,7 +44,7 @@ drop policy if exists "Directors can insert projects" on public.projects;
 
 create policy "Access projects based on active role" on public.projects for select
 using (
-  (public.get_active_role() = 'INVESTOR' and status = 'ACTIVE')
+  (public.get_active_role() = 'INVESTOR')
   or
   ((public.get_active_role() = 'DIRECTOR' or public.get_active_role() = 'WRITER') and auth.uid() = "directorId")
   or

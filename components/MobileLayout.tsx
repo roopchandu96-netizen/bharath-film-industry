@@ -41,7 +41,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   ];
 
   const tabs = rawTabs.filter(t => {
-    if (t.id === 'discover' && role !== UserRole.ADMIN && role !== UserRole.INVESTOR && role !== UserRole.DIRECTOR && role !== UserRole.WRITER) {
+    if (t.id === 'discover' && role !== UserRole.ADMIN && role !== UserRole.INVESTOR && role !== UserRole.DIRECTOR) {
       return false;
     }
     return true;

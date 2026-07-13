@@ -10,10 +10,11 @@ interface AdminDashboardProps {
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
-    const [activeAdminTab, setActiveAdminTab] = useState<'projects' | 'investments' | 'users' | 'settings'>('projects');
+    const [activeAdminTab, setActiveAdminTab] = useState<'projects' | 'investments' | 'users' | 'settings' | 'tickets'>('projects');
     const [pendingProjects, setPendingProjects] = useState<MovieProject[]>([]);
     const [pendingInvestments, setPendingInvestments] = useState<any[]>([]);
     const [pendingUsers, setPendingUsers] = useState<User[]>([]);
+    const [pendingBookings, setPendingBookings] = useState<any[]>([]);
     const [notifications, setNotifications] = useState<any[]>([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -47,6 +48,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 if (mounted) fetchDashboardData();
             })
             .on('postgres_changes', { event: '*', table: 'notifications', schema: 'public' }, () => {
+                if (mounted) fetchDashboardData();
+            })
+            .on('postgres_changes', { event: '*', table: 'movie_bookings', schema: 'public' }, () => {
                 if (mounted) fetchDashboardData();
             })
             .subscribe();
@@ -96,6 +100,46 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             if (notifs) {
                 setNotifications(notifs);
+            }
+
+            // Fetch pending movie bookings (awaiting admin UTR verification)
+            const { data: bookings } = await supabase
+                .from('movie_bookings')
+                .select(`
+                    id,
+                    booking_id,
+                    amount,
+                    status,
+                    payment_status,
+                    created_at,
+                    quantity,
+                    phone,
+                    email,
+                    name,
+                    payments (
+                        gateway_order_id,
+                        payment_status
+                    )
+                `)
+                .eq('status', 'pending');
+
+            if (bookings) {
+                const formatted = bookings.map((b: any) => ({
+                    id: b.id,
+                    bookingId: b.booking_id,
+                    amount: b.amount,
+                    status: b.status,
+                    paymentStatus: b.payment_status,
+                    createdAt: b.created_at,
+                    quantity: b.quantity,
+                    phone: b.phone,
+                    email: b.email,
+                    name: b.name,
+                    utr: b.payments?.[0]?.gateway_order_id || 'N/A'
+                }));
+                setPendingBookings(formatted);
+            } else {
+                setPendingBookings([]);
             }
 
             // Real Stats Fetching
@@ -154,6 +198,99 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             alert("Verification failed: " + (e?.message || "Check network configuration."));
         }
     };
+
+    const approveTicketPayment = async (bookingId: string, bookingRef: string, quantity: number) => {
+        if (!confirm(`Are you sure you want to APPROVE payment reference for Booking ${bookingRef}?`)) return;
+        try {
+            await supabase.from('profiles').update({ role: 'ADMIN' }).eq('id', user.id);
+
+            const timestamp = new Date().toISOString();
+
+            // 1. Update movie_bookings status to confirmed
+            const { error: mbError } = await supabase
+                .from('movie_bookings')
+                .update({
+                    status: 'confirmed',
+                    payment_status: 'verified',
+                    confirmed_at: timestamp
+                })
+                .eq('id', bookingId);
+
+            if (mbError) throw mbError;
+
+            // 2. Update payments record to verified
+            const { error: payError } = await supabase
+                .from('payments')
+                .update({
+                    payment_status: 'verified',
+                    verified_at: timestamp
+                })
+                .eq('booking_id', bookingId);
+
+            if (payError) throw payError;
+
+            // 3. Generate comma-separated unique ticket numbers
+            const ticketNumbers: string[] = [];
+            for (let i = 0; i < quantity; i++) {
+                ticketNumbers.push(`TKT-${Math.random().toString(36).substring(2, 10).toUpperCase()}`);
+            }
+            const ticketNumbersStr = ticketNumbers.join(', ');
+            const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+            // 4. Insert ticket record
+            const { error: tktError } = await supabase
+                .from('tickets')
+                .insert({
+                    booking_id: bookingId,
+                    ticket_number: ticketNumbersStr,
+                    invoice_number: invoiceNumber,
+                    email_sent: true
+                });
+
+            if (tktError) throw tktError;
+
+            alert(`Booking ${bookingRef} approved successfully! Generated ticket numbers: ${ticketNumbersStr}`);
+            await fetchDashboardData();
+        } catch (e: any) {
+            console.error("Booking verification failed:", e);
+            alert("Approval failed: " + (e?.message || "Check network/RLS configuration."));
+        }
+    };
+
+    const rejectTicketPayment = async (bookingId: string, bookingRef: string) => {
+        if (!confirm(`Are you sure you want to REJECT payment reference for Booking ${bookingRef}?`)) return;
+        try {
+            await supabase.from('profiles').update({ role: 'ADMIN' }).eq('id', user.id);
+
+            // 1. Update movie_bookings status to failed
+            const { error: mbError } = await supabase
+                .from('movie_bookings')
+                .update({
+                    status: 'failed',
+                    payment_status: 'failed'
+                })
+                .eq('id', bookingId);
+
+            if (mbError) throw mbError;
+
+            // 2. Update payments record to failed
+            const { error: payError } = await supabase
+                .from('payments')
+                .update({
+                    payment_status: 'failed'
+                })
+                .eq('booking_id', bookingId);
+
+            if (payError) throw payError;
+
+            alert(`Booking ${bookingRef} rejected successfully.`);
+            await fetchDashboardData();
+        } catch (e: any) {
+            console.error("Booking rejection failed:", e);
+            alert("Rejection failed: " + (e?.message || "Check network/RLS configuration."));
+        }
+    };
+
     const [processingId, setProcessingId] = useState<string | null>(null);
 
     const handleApprove = async (projectId: string) => {
@@ -334,6 +471,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 >
                     Member Verification
                 </button>
+                <button
+                    onClick={() => setActiveAdminTab('tickets')}
+                    className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'tickets' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                >
+                    Ticket Approvals
+                </button>
             </div>
 
             {/* Content Area */}
@@ -494,6 +637,69 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 {pendingInvestments.length === 0 && (
                                     <tr>
                                         <td colSpan={6} className="p-12 text-center text-zinc-600 border border-dashed border-zinc-800 rounded-3xl mt-4 block w-full">No pending transactions found.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {activeAdminTab === 'tickets' && (
+                <div className="space-y-6">
+                    <h2 className="text-xl font-serif text-white flex items-center gap-3">
+                        <Film className="text-yellow-500" size={20} />
+                        Ticket Approvals (UTR Checks)
+                        <span className="text-sm font-sans font-normal text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full">{pendingBookings.length}</span>
+                    </h2>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-zinc-800 text-zinc-500 text-[10px] uppercase font-bold tracking-widest">
+                                    <th className="p-4">Customer Details</th>
+                                    <th className="p-4">Movie</th>
+                                    <th className="p-4">Quantity</th>
+                                    <th className="p-4">Total Amount</th>
+                                    <th className="p-4">Submitted UTR</th>
+                                    <th className="p-4">Booking Ref</th>
+                                    <th className="p-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-sm text-zinc-300">
+                                {pendingBookings.map(b => (
+                                    <tr key={b.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors">
+                                        <td className="p-4">
+                                            <div className="font-bold text-white">{b.name}</div>
+                                            <div className="text-[10px] text-zinc-500">{b.email}</div>
+                                            <div className="text-[10px] text-zinc-500">{b.phone || 'No Phone'}</div>
+                                        </td>
+                                        <td className="p-4">🎬 Vishwavikhyatha Nata Sarvabhouma</td>
+                                        <td className="p-4 font-mono font-bold text-yellow-500">{b.quantity} Ticket(s)</td>
+                                        <td className="p-4 font-mono text-green-400">₹{b.amount.toLocaleString('en-IN')}.00</td>
+                                        <td className="p-4 font-mono text-yellow-500 font-bold">{b.utr}</td>
+                                        <td className="p-4 font-mono text-zinc-500">{b.bookingId}</td>
+                                        <td className="p-4">
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => approveTicketPayment(b.id, b.bookingId, b.quantity)}
+                                                    className="px-3 py-1.5 bg-green-900/20 text-green-500 border border-green-900/50 rounded-lg hover:bg-green-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider flex items-center gap-1"
+                                                >
+                                                    Approve
+                                                </button>
+                                                <button
+                                                    onClick={() => rejectTicketPayment(b.id, b.bookingId)}
+                                                    className="px-3 py-1.5 bg-red-900/20 text-red-500 border border-red-900/50 rounded-lg hover:bg-red-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider flex items-center gap-1"
+                                                >
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {pendingBookings.length === 0 && (
+                                    <tr>
+                                        <td colSpan={7} className="p-12 text-center text-zinc-600 border border-dashed border-zinc-800 rounded-3xl mt-4 block w-full">No pending ticket bookings.</td>
                                     </tr>
                                 )}
                             </tbody>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { MovieProject, AIProbabilityResult } from '../types.ts';
+import { MovieProject, AIProbabilityResult, Investment } from '../types.ts';
 import { CURRENCY_FORMATTER, TIERS } from '../constants.ts';
+import { supabase } from '../services/firebase.ts';
+import { getUserInvestments } from '../services/investmentService.ts';
 import {
   ChevronLeft, Play, ShieldCheck, Loader2,
   TrendingUp, Award, Zap, FileText,
@@ -22,6 +24,14 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onBack, 
   const [marketPulse, setMarketPulse] = useState<string>("");
   const [loadingAi, setLoadingAi] = useState(false);
   const [userBids, setUserBids] = useState<Investment[]>([]);
+
+  const milestones = [
+    { label: "Synopsis & Character Bible", status: "COMPLETED", pct: 100 },
+    { label: "Pre-Production (Casting/Loc)", status: "IN_PROGRESS", pct: 45 },
+    { label: "Principal Photography", status: "PENDING", pct: 0 },
+    { label: "VFX & Post-Production", status: "PENDING", pct: 0 },
+    { label: "Marketing & Theatrical Release", status: "PENDING", pct: 0 }
+  ];
 
   const handleBFIContact = (personName: string, roleOrProject: string) => {
     const subject = encodeURIComponent(`Connection Request: Inquiry for ${personName} (${roleOrProject})`);

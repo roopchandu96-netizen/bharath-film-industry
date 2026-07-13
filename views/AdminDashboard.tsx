@@ -18,7 +18,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     const [notifications, setNotifications] = useState<any[]>([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({ totalUsers: 0, totalInvestment: 0, activeProjects: 0 });
+    const [stats, setStats] = useState({ 
+        pendingUsers: 0, 
+        pendingProjects: 0, 
+        pendingBookings: 0, 
+        totalUsers: 0, 
+        approvedProjects: 0, 
+        totalBookings: 0, 
+        totalRevenue: 0 
+    });
 
     useEffect(() => {
         let mounted = true;
@@ -64,6 +72,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
+            let pendingProjectsCount = 0;
+            let pendingUsersCount = 0;
+            let pendingBookingsCount = 0;
             
             // 1. Fetch pending projects
             try {
@@ -71,7 +82,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     .from('projects')
                     .select('*')
                     .eq('status', 'PENDING');
-                if (projects) setPendingProjects(projects as MovieProject[]);
+                if (projects) {
+                    setPendingProjects(projects as MovieProject[]);
+                    pendingProjectsCount = projects.length;
+                }
             } catch (err) {
                 console.error("Error fetching projects:", err);
             }
@@ -82,7 +96,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     .from('profiles')
                     .select('*')
                     .eq('kycStatus', 'PENDING');
-                if (users) setPendingUsers(users as User[]);
+                if (users) {
+                    setPendingUsers(users as User[]);
+                    pendingUsersCount = users.length;
+                }
             } catch (err) {
                 console.error("Error fetching pending users:", err);
             }
@@ -151,6 +168,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         utr: b.payments?.[0]?.gateway_order_id || 'N/A'
                     }));
                     setPendingBookings(formatted);
+                    pendingBookingsCount = bookings.length;
                 } else {
                     setPendingBookings([]);
                 }
@@ -161,18 +179,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             // 6. Fetch stats
             try {
                 const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
-                const { count: activeCount } = await supabase.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE');
-
-                let totalRaised = 0;
-                const { data: allInvestments } = await supabase.from('investments').select('amount').eq('status', 'VERIFIED');
-                if (allInvestments) {
-                    totalRaised = allInvestments.reduce((sum, item) => sum + (item.amount || 0), 0);
+                const { count: activeProjectsCount } = await supabase.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE');
+                const { count: bookingsCount } = await supabase.from('movie_bookings').select('*', { count: 'exact', head: true });
+                
+                const { data: confirmedBookings } = await supabase
+                    .from('movie_bookings')
+                    .select('amount')
+                    .eq('status', 'CONFIRMED');
+                let totalRevenue = 0;
+                if (confirmedBookings) {
+                    totalRevenue = confirmedBookings.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
                 }
 
                 setStats({
+                    pendingUsers: pendingUsersCount,
+                    pendingProjects: pendingProjectsCount,
+                    pendingBookings: pendingBookingsCount,
                     totalUsers: userCount || 0,
-                    totalInvestment: totalRaised,
-                    activeProjects: activeCount || 0
+                    approvedProjects: activeProjectsCount || 0,
+                    totalBookings: bookingsCount || 0,
+                    totalRevenue: totalRevenue
                 });
             } catch (err) {
                 console.error("Error fetching stats:", err);
@@ -185,15 +211,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         }
     };
 
-    const verifyUser = async (userId: string) => {
+    const verifyUser = async (userId: string, status: 'VERIFIED' | 'REJECTED') => {
         try {
-            const { error } = await supabase.from('profiles').update({ kycStatus: 'VERIFIED' }).eq('id', userId);
+            const { error } = await supabase.from('profiles').update({ kycStatus: status }).eq('id', userId);
             if (error) throw error;
             setPendingUsers(prev => prev.filter(u => u.id !== userId));
-            alert("User Account Verified & Activated.");
-        } catch (e) {
-            console.error("Verification failed", e);
-            alert("Verification failed");
+            alert(status === 'VERIFIED' ? "User Account Verified & Activated." : "User Account Rejected.");
+        } catch (e: any) {
+            console.error("Action failed", e);
+            alert("Action failed: " + (e?.message || "Check network/RLS configuration."));
         }
     };
 
@@ -281,6 +307,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         try {
             await supabase.from('profiles').update({ role: 'ADMIN' }).eq('id', user.id);
 
+            // Fetch booking email for notification
+            const { data: bookingData } = await supabase
+                .from('movie_bookings')
+                .select('email, name')
+                .eq('id', bookingId)
+                .maybeSingle();
+
             // 1. Update movie_bookings status to failed
             const { error: mbError } = await supabase
                 .from('movie_bookings')
@@ -301,6 +334,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 .eq('booking_id', bookingId);
 
             if (payError) throw payError;
+
+            // 3. Notify user of rejection
+            if (bookingData?.email) {
+                await supabase.from('notifications').insert([{
+                    recipient: bookingData.email,
+                    subject: 'Ticket Payment Verification Failed',
+                    message: `Hi ${bookingData.name || 'Customer'},\n\nYour manual payment reference for Booking ${bookingRef} could not be verified by BFI Admin. Please check your transaction details and submit a new UTR ID if required.`,
+                    read: false,
+                    type: 'SYSTEM'
+                }]);
+            }
 
             alert(`Booking ${bookingRef} rejected successfully.`);
             await fetchDashboardData();
@@ -446,27 +490,56 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-3xl">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-yellow-500/10 rounded-xl text-yellow-500"><Users size={20} /></div>
-                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Total Network</span>
+                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Total Registered Users</span>
                     </div>
                     <p className="text-3xl font-serif text-white">{stats.totalUsers}</p>
                 </div>
                 <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-3xl">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-green-500/10 rounded-xl text-green-500"><DollarSign size={20} /></div>
-                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Escrow Balance</span>
+                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Total Revenue</span>
                     </div>
-                    <p className="text-3xl font-serif text-white">₹{stats.totalInvestment.toLocaleString('en-IN')}</p>
+                    <p className="text-3xl font-serif text-white">₹{stats.totalRevenue.toLocaleString('en-IN')}</p>
                 </div>
                 <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-3xl">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500"><Film size={20} /></div>
-                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Active Productions</span>
+                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Total Approved Scripts</span>
                     </div>
-                    <p className="text-3xl font-serif text-white">{stats.activeProjects}</p>
+                    <p className="text-3xl font-serif text-white">{stats.approvedProjects}</p>
+                </div>
+                <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-3xl">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-red-500/10 rounded-xl text-red-500"><CheckCircle size={20} /></div>
+                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Total Bookings</span>
+                    </div>
+                    <p className="text-3xl font-serif text-white">{stats.totalBookings}</p>
+                </div>
+            </div>
+
+            {/* Pending Verifications Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="p-5 bg-zinc-900/30 border border-zinc-800 rounded-3xl flex justify-between items-center">
+                    <div>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Pending User Approvals</p>
+                        <p className="text-2xl font-serif text-yellow-500 mt-1">{stats.pendingUsers}</p>
+                    </div>
+                </div>
+                <div className="p-5 bg-zinc-900/30 border border-zinc-800 rounded-3xl flex justify-between items-center">
+                    <div>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Pending Script Approvals</p>
+                        <p className="text-2xl font-serif text-yellow-500 mt-1">{stats.pendingProjects}</p>
+                    </div>
+                </div>
+                <div className="p-5 bg-zinc-900/30 border border-zinc-800 rounded-3xl flex justify-between items-center">
+                    <div>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Pending Ticket Payments</p>
+                        <p className="text-2xl font-serif text-yellow-500 mt-1">{stats.pendingBookings}</p>
+                    </div>
                 </div>
             </div>
 
@@ -476,25 +549,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     onClick={() => setActiveAdminTab('projects')}
                     className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'projects' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
                 >
-                    Project Approvals
+                    Script Approvals ({stats.pendingProjects})
                 </button>
                 <button
                     onClick={() => setActiveAdminTab('investments')}
                     className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'investments' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
                 >
-                    Investment Gateway
+                    Investment Gateway ({pendingInvestments.length})
                 </button>
                 <button
                     onClick={() => setActiveAdminTab('users')}
                     className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'users' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
                 >
-                    Member Verification
+                    User Approvals ({stats.pendingUsers})
                 </button>
                 <button
                     onClick={() => setActiveAdminTab('tickets')}
                     className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'tickets' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
                 >
-                    Ticket Approvals
+                    Ticket Payment Verification ({stats.pendingBookings})
                 </button>
             </div>
 
@@ -502,69 +575,80 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             {activeAdminTab === 'projects' && (
                 <div className="space-y-6">
                     <h2 className="text-xl font-serif text-white flex items-center gap-3">
-                        <AlertTriangle className="text-yellow-500" size={20} />
-                        Pending Approvals
+                        <Film className="text-yellow-500" size={20} />
+                        Script Approval Dashboard
                         <span className="text-sm font-sans font-normal text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full">{pendingProjects.length}</span>
                     </h2>
 
-                    {pendingProjects.length === 0 ? (
-                        <div className="p-12 text-center border border-dashed border-zinc-800 rounded-3xl text-zinc-600">
-                            No pending submissions requiring review.
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-4">
-                            {pendingProjects.map(project => (
-                                <div key={project.id} className="p-6 bg-zinc-950 border border-zinc-800 hover:border-yellow-500/30 transition-all rounded-3xl flex flex-col md:flex-row gap-6 items-start">
-                                    <div className="w-full md:w-48 aspect-video bg-zinc-900 rounded-xl overflow-hidden shrink-0">
-                                        <img src={project.posterUrl || "https://source.unsplash.com/random/800x600/?cinema"} className="w-full h-full object-cover" />
-                                    </div>
-                                    <div className="flex-1 space-y-2">
-                                        <div className="flex justify-between items-start">
-                                            <h3 className="text-xl font-bold text-white">{project.title}</h3>
-                                            <div className="flex gap-2">
-                                                <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[10px] font-bold uppercase rounded-full tracking-widest">{project.genre}</span>
-                                                <span className="px-3 py-1 bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase rounded-full tracking-widest">{project.director}</span>
+                    <div className="overflow-x-auto bg-zinc-950 border border-zinc-900 rounded-[2rem] p-4">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-zinc-800 text-zinc-500 text-[10px] uppercase font-bold tracking-widest">
+                                    <th className="p-4">Script Title</th>
+                                    <th className="p-4">Director / Owner</th>
+                                    <th className="p-4">Genre</th>
+                                    <th className="p-4">Language</th>
+                                    <th className="p-4">Budget</th>
+                                    <th className="p-4">Submission Date</th>
+                                    <th className="p-4">Current Status</th>
+                                    <th className="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-sm text-zinc-300">
+                                {pendingProjects.map(project => (
+                                    <tr key={project.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors">
+                                        <td className="p-4">
+                                            <div className="font-bold text-white">{project.title}</div>
+                                            <div className="text-[10px] text-zinc-500 italic mt-0.5">"{project.tagline}"</div>
+                                        </td>
+                                        <td className="p-4 font-bold text-white">{project.director}</td>
+                                        <td className="p-4">
+                                            <span className="px-2.5 py-1 bg-yellow-500/10 text-yellow-500 text-[9px] font-bold uppercase rounded-full tracking-wider border border-yellow-500/10">{project.genre}</span>
+                                        </td>
+                                        <td className="p-4">English</td>
+                                        <td className="p-4 font-mono text-zinc-400">₹{project.budget.toLocaleString('en-IN')}</td>
+                                        <td className="p-4 font-mono text-zinc-500">{project.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}</td>
+                                        <td className="p-4">
+                                            <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-yellow-900/20 text-yellow-500 border border-yellow-500/20">
+                                                {project.status || 'PENDING'}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <div className="flex gap-2 justify-end">
+                                                <button
+                                                    onClick={() => alert(`Script Details:\n\nTitle: ${project.title}\nDirector: ${project.director}\nGenre: ${project.genre}\nBudget: ₹${project.budget.toLocaleString('en-IN')}\n\nSynopsis:\n${project.description}`)}
+                                                    className="px-3 py-1.5 bg-zinc-900 text-zinc-400 border border-zinc-800 rounded-lg hover:bg-zinc-800 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
+                                                >
+                                                    View Script
+                                                </button>
+                                                <button
+                                                    disabled={!!processingId}
+                                                    onClick={() => handleApprove(project.id)}
+                                                    className="px-3 py-1.5 bg-green-950 text-green-400 border border-green-800 rounded-lg hover:bg-green-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider flex items-center gap-1"
+                                                >
+                                                    Approve
+                                                </button>
+                                                <button
+                                                    disabled={!!processingId}
+                                                    onClick={() => handleReject(project.id)}
+                                                    className="px-3 py-1.5 bg-red-950 text-red-400 border border-red-800 rounded-lg hover:bg-red-500 hover:text-white transition-all text-xs font-bold uppercase tracking-wider flex items-center gap-1"
+                                                >
+                                                    Reject
+                                                </button>
                                             </div>
-                                        </div>
-                                        <p className="text-sm text-zinc-400 font-serif italic">"{project.tagline}"</p>
-                                        <div className="p-3 bg-zinc-900 rounded-xl border border-zinc-800 text-[10px] text-zinc-400 font-mono leading-relaxed max-h-32 overflow-y-auto">
-                                            <strong className="block text-yellow-500/50 mb-1">OFFICIAL SYNOPSIS:</strong>
-                                            {project.description}
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4 mt-4 py-4 border-t border-zinc-900">
-                                            <div>
-                                                <p className="text-[10px] text-zinc-600 uppercase font-black">Budget</p>
-                                                <p className="text-white">₹{project.budget.toLocaleString('en-IN')}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-zinc-600 uppercase font-black">Funding Goal</p>
-                                                <p className="text-white">₹{project.fundingGoal.toLocaleString('en-IN')}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-3 pt-2">
-                                            <button
-                                                disabled={processingId === project.id}
-                                                onClick={() => handleApprove(project.id)}
-                                                className="flex-1 py-3 bg-yellow-500 text-black font-bold text-xs uppercase rounded-xl hover:bg-yellow-400 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-                                            >
-                                                {processingId === project.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />} 
-                                                Approve & List
-                                            </button>
-                                            <button
-                                                disabled={processingId === project.id}
-                                                onClick={() => handleReject(project.id)}
-                                                className="flex-1 py-3 bg-zinc-900 text-red-500 border border-zinc-800 font-bold text-xs uppercase disabled:opacity-50 rounded-xl hover:bg-red-950/30 transition-colors flex items-center justify-center gap-2"
-                                            >
-                                                <XCircle size={16} /> Reject
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                        </td>
+                                    </tr>
+                                ))}
+                                {pendingProjects.length === 0 && (
+                                    <tr>
+                                        <td colSpan={8} className="p-12 text-center text-zinc-600">
+                                            No scripts awaiting approval.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
@@ -572,46 +656,87 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 <div className="space-y-6">
                     <h2 className="text-xl font-serif text-white flex items-center gap-3">
                         <Users className="text-yellow-500" size={20} />
-                        New Member Verification
+                        User Approvals
                         <span className="text-sm font-sans font-normal text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full">{pendingUsers.length}</span>
                     </h2>
 
-                    {pendingUsers.length === 0 ? (
-                        <div className="p-12 text-center border border-dashed border-zinc-800 rounded-3xl text-zinc-600">
-                            All members verified. No pending KYC requests.
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {pendingUsers.map(u => (
-                                <div key={u.id} className="p-6 bg-zinc-950 border border-zinc-800 rounded-[2rem] space-y-4 hover:border-yellow-500/20 transition-all">
-                                    <div className="flex items-center gap-4">
-                                        <img src={u.photoURL} className="w-12 h-12 rounded-full bg-zinc-900" />
-                                        <div>
-                                            <h3 className="text-white font-bold">{u.name}</h3>
-                                            <p className="text-xs text-zinc-500">{u.email}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${u.role === 'DIRECTOR' ? 'bg-purple-900/20 text-purple-400 border border-purple-500/20' :
-                                            u.role === 'INVESTOR' ? 'bg-blue-900/20 text-blue-400 border border-blue-500/20' :
+                    <div className="overflow-x-auto bg-zinc-950 border border-zinc-900 rounded-[2rem] p-4">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-zinc-800 text-zinc-500 text-[10px] uppercase font-bold tracking-widest">
+                                    <th className="p-4">User</th>
+                                    <th className="p-4">Email</th>
+                                    <th className="p-4">Phone Number</th>
+                                    <th className="p-4">Registered Role</th>
+                                    <th className="p-4">Registration Date</th>
+                                    <th className="p-4">Verification Status</th>
+                                    <th className="p-4">Approval Status</th>
+                                    <th className="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-sm text-zinc-300">
+                                {pendingUsers.map(u => (
+                                    <tr key={u.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors">
+                                        <td className="p-4 flex items-center gap-3">
+                                            <img src={u.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`} className="w-10 h-10 rounded-full bg-zinc-900" />
+                                            <span className="font-bold text-white">{u.name}</span>
+                                        </td>
+                                        <td className="p-4">{u.email}</td>
+                                        <td className="p-4">{u.phone || 'N/A'}</td>
+                                        <td className="p-4">
+                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
+                                                u.role === 'DIRECTOR' ? 'bg-purple-900/20 text-purple-400 border border-purple-500/20' :
+                                                u.role === 'INVESTOR' ? 'bg-blue-900/20 text-blue-400 border border-blue-500/20' :
                                                 'bg-zinc-800 text-zinc-500'
                                             }`}>
-                                            {u.role}
-                                        </span>
-                                        <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-yellow-900/20 text-yellow-500 border border-yellow-500/20">
-                                            KYC Pending
-                                        </span>
-                                    </div>
-                                    <button
-                                        onClick={() => verifyUser(u.id)}
-                                        className="w-full py-3 bg-zinc-900 border border-zinc-800 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-green-600 hover:border-green-500 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <CheckCircle size={14} /> Verify Identity
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                                {u.role}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 font-mono text-zinc-500">{u.created_at ? new Date(u.created_at).toLocaleString() : 'N/A'}</td>
+                                        <td className="p-4">
+                                            <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-yellow-900/20 text-yellow-500 border border-yellow-500/20">
+                                                {u.kycStatus || 'PENDING'}
+                                            </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800">
+                                                Awaiting Review
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <div className="flex gap-2 justify-end">
+                                                <button
+                                                    onClick={() => verifyUser(u.id, 'VERIFIED')}
+                                                    className="px-3 py-1.5 bg-green-950 text-green-500 border border-green-800 rounded-lg hover:bg-green-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider"
+                                                >
+                                                    Approve
+                                                </button>
+                                                <button
+                                                    onClick={() => verifyUser(u.id, 'REJECTED')}
+                                                    className="px-3 py-1.5 bg-red-950 text-red-500 border border-red-800 rounded-lg hover:bg-red-500 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
+                                                >
+                                                    Reject
+                                                </button>
+                                                <button
+                                                    onClick={() => alert(`User Profile:\n\nName: ${u.name}\nEmail: ${u.email}\nPhone: ${u.phone || 'N/A'}\nRole: ${u.role}\nKYC Status: ${u.kycStatus}`)}
+                                                    className="px-3 py-1.5 bg-zinc-900 text-zinc-400 border border-zinc-800 rounded-lg hover:bg-zinc-800 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
+                                                >
+                                                    View Profile
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {pendingUsers.length === 0 && (
+                                    <tr>
+                                        <td colSpan={8} className="p-12 text-center text-zinc-600">
+                                            No pending user approvals.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
@@ -623,7 +748,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         <span className="text-sm font-sans font-normal text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full">{pendingInvestments.length}</span>
                     </h2>
 
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto bg-zinc-950 border border-zinc-900 rounded-[2rem] p-4">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-zinc-800 text-zinc-500 text-[10px] uppercase font-bold tracking-widest">
@@ -632,7 +757,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                     <th className="p-4">Project</th>
                                     <th className="p-4">Txn Ref ID</th>
                                     <th className="p-4">Amount</th>
-                                    <th className="p-4">Action</th>
+                                    <th className="p-4 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="text-sm text-zinc-300">
@@ -643,10 +768,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                         <td className="p-4">{inv.project}</td>
                                         <td className="p-4 font-mono text-yellow-500">{inv.txnId}</td>
                                         <td className="p-4 font-mono text-green-400">₹{inv.amount.toLocaleString('en-IN')}</td>
-                                        <td className="p-4">
+                                        <td className="p-4 text-right">
                                             <button
                                                 onClick={() => verifyInvestment(inv.id)}
-                                                className="px-4 py-2 bg-green-900/20 text-green-500 border border-green-900/50 rounded-lg hover:bg-green-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider"
+                                                className="px-4 py-2 bg-green-950 text-green-400 border border-green-800 rounded-lg hover:bg-green-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider"
                                             >
                                                 Verify Receipt
                                             </button>
@@ -655,7 +780,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 ))}
                                 {pendingInvestments.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="p-12 text-center text-zinc-600 border border-dashed border-zinc-800 rounded-3xl mt-4 block w-full">No pending transactions found.</td>
+                                        <td colSpan={6} className="p-12 text-center text-zinc-600">No pending transactions found.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -668,49 +793,69 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 <div className="space-y-6">
                     <h2 className="text-xl font-serif text-white flex items-center gap-3">
                         <Film className="text-yellow-500" size={20} />
-                        Ticket Approvals (UTR Checks)
+                        Ticket Payment Verification
                         <span className="text-sm font-sans font-normal text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full">{pendingBookings.length}</span>
                     </h2>
 
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto bg-zinc-950 border border-zinc-900 rounded-[2rem] p-4">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-zinc-800 text-zinc-500 text-[10px] uppercase font-bold tracking-widest">
-                                    <th className="p-4">Customer Details</th>
-                                    <th className="p-4">Movie</th>
-                                    <th className="p-4">Quantity</th>
+                                    <th className="p-4">Booking ID</th>
+                                    <th className="p-4">Movie Name</th>
+                                    <th className="p-4">Customer Name</th>
+                                    <th className="p-4">Customer Email</th>
+                                    <th className="p-4">Phone Number</th>
+                                    <th className="p-4">Number of Tickets</th>
                                     <th className="p-4">Total Amount</th>
-                                    <th className="p-4">Submitted UTR</th>
-                                    <th className="p-4">Booking Ref</th>
-                                    <th className="p-4">Actions</th>
+                                    <th className="p-4">UTR / Ref Number</th>
+                                    <th className="p-4">Payment Date & Time</th>
+                                    <th className="p-4">Booking Status</th>
+                                    <th className="p-4">Payment Status</th>
+                                    <th className="p-4 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="text-sm text-zinc-300">
                                 {pendingBookings.map(b => (
                                     <tr key={b.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors">
-                                        <td className="p-4">
-                                            <div className="font-bold text-white">{b.name}</div>
-                                            <div className="text-[10px] text-zinc-500">{b.email}</div>
-                                            <div className="text-[10px] text-zinc-500">{b.phone || 'No Phone'}</div>
-                                        </td>
+                                        <td className="p-4 font-mono font-bold text-white">{b.bookingId}</td>
                                         <td className="p-4">🎬 Vishwavikhyatha Nata Sarvabhouma</td>
-                                        <td className="p-4 font-mono font-bold text-yellow-500">{b.quantity} Ticket(s)</td>
+                                        <td className="p-4 font-bold text-white">{b.name}</td>
+                                        <td className="p-4">{b.email}</td>
+                                        <td className="p-4">{b.phone || 'N/A'}</td>
+                                        <td className="p-4 font-mono text-yellow-500 font-bold">{b.quantity} Ticket(s)</td>
                                         <td className="p-4 font-mono text-green-400">₹{b.amount.toLocaleString('en-IN')}.00</td>
                                         <td className="p-4 font-mono text-yellow-500 font-bold">{b.utr}</td>
-                                        <td className="p-4 font-mono text-zinc-500">{b.bookingId}</td>
+                                        <td className="p-4 font-mono text-zinc-500">{b.createdAt ? new Date(b.createdAt).toLocaleString() : 'N/A'}</td>
                                         <td className="p-4">
-                                            <div className="flex gap-2">
+                                            <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-yellow-900/20 text-yellow-500 border border-yellow-500/20">
+                                                {b.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-yellow-900/20 text-yellow-500 border border-yellow-500/20">
+                                                {b.paymentStatus}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <div className="flex gap-2 justify-end">
                                                 <button
                                                     onClick={() => approveTicketPayment(b.id, b.bookingId, b.quantity)}
-                                                    className="px-3 py-1.5 bg-green-900/20 text-green-500 border border-green-900/50 rounded-lg hover:bg-green-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider flex items-center gap-1"
+                                                    className="px-3 py-1.5 bg-green-950 text-green-500 border border-green-800 rounded-lg hover:bg-green-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider"
                                                 >
-                                                    Approve
+                                                    Approve Payment
                                                 </button>
                                                 <button
                                                     onClick={() => rejectTicketPayment(b.id, b.bookingId)}
-                                                    className="px-3 py-1.5 bg-red-900/20 text-red-500 border border-red-900/50 rounded-lg hover:bg-red-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider flex items-center gap-1"
+                                                    className="px-3 py-1.5 bg-red-950 text-red-500 border border-red-800 rounded-lg hover:bg-red-500 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
                                                 >
-                                                    Reject
+                                                    Reject Payment
+                                                </button>
+                                                <button
+                                                    onClick={() => alert(`Booking Details:\n\nID: ${b.bookingId}\nName: ${b.name}\nEmail: ${b.email}\nPhone: ${b.phone || 'N/A'}\nTickets: ${b.quantity}\nTotal Price: ₹${b.amount}\nUTR ID: ${b.utr}\nStatus: ${b.status}`)}
+                                                    className="px-3 py-1.5 bg-zinc-900 text-zinc-400 border border-zinc-800 rounded-lg hover:bg-zinc-800 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
+                                                >
+                                                    View Booking Details
                                                 </button>
                                             </div>
                                         </td>
@@ -718,7 +863,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 ))}
                                 {pendingBookings.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="p-12 text-center text-zinc-600 border border-dashed border-zinc-800 rounded-3xl mt-4 block w-full">No pending ticket bookings.</td>
+                                        <td colSpan={12} className="p-12 text-center text-zinc-600">
+                                            No pending payment verifications.
+                                        </td>
                                     </tr>
                                 )}
                             </tbody>

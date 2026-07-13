@@ -172,3 +172,8 @@ CREATE POLICY "Admins can select all tickets" ON public.tickets FOR SELECT
 DROP POLICY IF EXISTS "Admins can insert all tickets" ON public.tickets;
 CREATE POLICY "Admins can insert all tickets" ON public.tickets FOR INSERT
   WITH CHECK (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+-- ==========================================
+-- 5. RELOAD SCHEMA CACHE
+-- ==========================================
+NOTIFY pgrst, 'reload schema';

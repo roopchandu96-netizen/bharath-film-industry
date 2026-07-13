@@ -22,6 +22,7 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
   const [activeView, setActiveView] = useState(initialView);
   const [investments, setInvestments] = useState<(Investment & { project?: MovieProject })[]>([]);
   const [allProjects, setAllProjects] = useState<MovieProject[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
@@ -48,6 +49,18 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
           .eq('status', 'ACTIVE');
         if (projects) setAllProjects(projects as MovieProject[]);
 
+        // Fetch Real Notifications for User
+        const { data: notifs } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('recipient', user.email)
+          .order('created_at', { ascending: false });
+        if (notifs) {
+          setNotifications(notifs);
+        } else {
+          setNotifications([]);
+        }
+
       } catch (err) {
         console.error("Data fetch error:", err);
       } finally {
@@ -55,7 +68,7 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
       }
     };
     fetchData();
-  }, [user.id]);
+  }, [user.id, user.email]);
 
   const handleDownloadAgreement = async (inv: Investment, project?: MovieProject) => {
     if (!project) return;
@@ -122,6 +135,51 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
                 </div>
                 <p className="text-4xl font-black text-white tracking-tighter">{activeCount}</p>
               </div>
+            </div>
+
+            {/* Bidding Scripts (Active Projects) Available for Investment */}
+            <div className="space-y-6 pt-8 border-t border-zinc-900">
+              <div>
+                <h3 className="text-xl font-serif text-white mb-1">Active Bidding Scripts</h3>
+                <p className="text-zinc-500 text-xs uppercase tracking-widest font-bold">Select a synopsis to evaluate and deploy capital</p>
+              </div>
+
+              {allProjects.length === 0 ? (
+                <div className="p-8 text-center border border-dashed border-zinc-800 rounded-3xl text-zinc-600">
+                  No scripts are currently available for investment.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {allProjects.map(project => (
+                    <div key={project.id} className="group relative bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-800 hover:border-yellow-400/50 transition-all cursor-pointer flex flex-col justify-between" onClick={() => onProjectSelect?.(project)}>
+                      <div className="aspect-video relative">
+                        <img src={project.posterUrl || "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80"} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <h4 className="text-lg font-bold text-white leading-tight">{project.title}</h4>
+                          <p className="text-[10px] text-zinc-400 italic">Directed by {project.director}</p>
+                        </div>
+                      </div>
+                      <div className="p-5 space-y-3">
+                        <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">{project.description}</p>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-[9px] uppercase font-black tracking-widest text-zinc-500">
+                            <span>Funding Status</span>
+                            <span className="text-yellow-400">{Math.round((project.currentFunding / project.fundingGoal) * 100)}%</span>
+                          </div>
+                          <div className="h-1.5 bg-zinc-950 rounded-full overflow-hidden">
+                            <div className="h-full bg-yellow-400" style={{ width: `${(project.currentFunding / project.fundingGoal) * 100}%` }} />
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center pt-1.5">
+                          <span className="text-[10px] text-zinc-400 font-mono">Goal: {CURRENCY_FORMATTER.format(project.fundingGoal)}</span>
+                          <span className="px-3 py-1 bg-yellow-400 text-black text-[9px] font-black uppercase tracking-widest rounded-full group-hover:bg-yellow-300 transition-all">Evaluate</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -274,20 +332,29 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
 
         {/* Notifications */}
         {activeView === 'notifications' && (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-in fade-in duration-300">
             <div>
               <h2 className="text-2xl font-serif text-white mb-1">Notifications</h2>
               <p className="text-zinc-500 text-xs uppercase tracking-widest">System Alerts</p>
             </div>
             <div className="space-y-4">
-              <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl flex gap-4">
-                <div className="mt-1 w-2 h-2 bg-green-500 rounded-full shrink-0" />
-                <div>
-                  <h4 className="text-sm font-bold text-white">Investment Verified</h4>
-                  <p className="text-xs text-zinc-400 mt-1">Your investment of {CURRENCY_FORMATTER.format(totalInvested)} has been verified by BFI Admin.</p>
-                  <p className="text-[10px] text-zinc-600 mt-2 uppercase">Just now</p>
+              {notifications.map((n) => (
+                <div key={n.id} className="p-5 bg-zinc-900/40 border border-zinc-800 rounded-3xl flex gap-4 items-start">
+                  <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-zinc-700' : 'bg-yellow-500 animate-pulse'}`} />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-white leading-snug">{n.subject}</h4>
+                    <p className="text-xs text-zinc-400 mt-1 whitespace-pre-wrap leading-relaxed">{n.message}</p>
+                    <p className="text-[9px] text-zinc-600 mt-2.5 font-mono uppercase">
+                      {new Date(n.created_at || n.createdAt).toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ))}
+              {notifications.length === 0 && (
+                <div className="p-12 text-center border border-dashed border-zinc-800 rounded-3xl text-zinc-600">
+                  No alerts or notifications at this time.
+                </div>
+              )}
             </div>
           </div>
         )}

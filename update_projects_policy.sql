@@ -42,3 +42,16 @@ CREATE POLICY "Admins can select all tickets" ON public.tickets FOR SELECT
 DROP POLICY IF EXISTS "Admins can insert all tickets" ON public.tickets;
 CREATE POLICY "Admins can insert all tickets" ON public.tickets FOR INSERT
   WITH CHECK (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+-- 5. User Policies for Payments (Allows client-side inserts of pending payments)
+DROP POLICY IF EXISTS "Users can insert payments for their pending bookings" ON public.payments;
+CREATE POLICY "Users can insert payments for their pending bookings" 
+  ON public.payments FOR INSERT 
+  WITH CHECK (
+    exists (
+      select 1 from public.movie_bookings 
+      where public.movie_bookings.id = payments.booking_id 
+      and public.movie_bookings.user_id = auth.uid()
+      and public.movie_bookings.status = 'pending'
+    )
+  );

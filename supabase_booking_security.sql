@@ -110,3 +110,14 @@ create policy "Admins can select all tickets" on public.tickets for select
 
 create policy "Admins can insert all tickets" on public.tickets for insert
   with check (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+create policy "Users can insert payments for their pending bookings" 
+  on public.payments for insert 
+  with check (
+    exists (
+      select 1 from public.movie_bookings 
+      where public.movie_bookings.id = payments.booking_id 
+      and public.movie_bookings.user_id = auth.uid()
+      and public.movie_bookings.status = 'pending'
+    )
+  );

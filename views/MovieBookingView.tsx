@@ -191,33 +191,62 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
         throw new Error("User session not found. Please log in.");
       }
 
-      const response = await fetch('https://qpgidlybygavthytsxvl.supabase.co/functions/v1/create-manual-booking', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          quantity,
-          utrId: utrId.trim(),
-          phone,
-          name
-        })
-      });
+      // 1. Check for duplicate UTR IDs
+      const { data: existingPayment } = await supabase
+        .from('payments')
+        .select('id')
+        .eq('gateway_order_id', utrId.trim())
+        .maybeSingle();
 
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to submit manual payment reference.');
+      if (existingPayment) {
+        throw new Error("This UTR / Transaction Reference ID has already been submitted.");
       }
 
-      const resData = await response.json();
-      const bookingId = resData.booking_id;
+      setGatewayProgress(40);
 
-      setGatewayProgress(60);
-      setGatewayStatus('AWAITING_CALLBACK');
+      // 2. Generate Booking Reference ID
+      const bookingRef = generateBookingRef();
+
+      // 3. Insert movie_bookings record
+      const { data: bookingData, error: bookingErr } = await supabase
+        .from('movie_bookings')
+        .insert([{
+          user_id: session.user.id,
+          booking_id: bookingRef,
+          amount: 59 * quantity,
+          status: 'pending',
+          payment_status: 'pending',
+          quantity,
+          phone,
+          email: session.user.email || '',
+          name
+        }])
+        .select()
+        .single();
+
+      if (bookingErr) throw bookingErr;
+
+      setGatewayProgress(70);
+
+      // 4. Insert payments record
+      const { error: paymentErr } = await supabase
+        .from('payments')
+        .insert([{
+          booking_id: bookingData.id,
+          gateway_order_id: utrId.trim(),
+          amount: 59 * quantity,
+          payment_status: 'pending'
+        }]);
+
+      if (paymentErr) {
+        // Rollback booking if payment insert fails
+        await supabase.from('movie_bookings').delete().eq('id', bookingData.id);
+        throw paymentErr;
+      }
 
       const newBooking: BookingRecord = {
-        id: bookingId,
+        id: bookingData.id,
+        bookingRef: bookingRef,
         name,
         email: user?.email || '',
         phone,

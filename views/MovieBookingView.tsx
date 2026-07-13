@@ -228,7 +228,130 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
       }
     }, 400);
   };
+  const handleRazorpayPayment = async () => {
+    setShowGatewayModal(false);
+    setStep('PAY_PROCESSING');
+    setGatewayProgress(0);
+    setGatewayStatus('PENDING_HANDSHAKE');
 
+    try {
+      const amountInPaise = 59 * quantity * 100;
+      
+      const orderResponse = await fetch('https://qpgidlybygavthytsxvl.supabase.co/functions/v1/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: amountInPaise,
+          currency: 'INR',
+          receipt: `rcpt_booking_${Date.now()}`
+        })
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error('Backend failed to initialize order.');
+      }
+
+      const orderData = await orderResponse.json();
+      const { order_id, amount, currency } = orderData;
+
+      setGatewayProgress(40);
+      setGatewayStatus('AWAITING_CALLBACK');
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TCsWGdvvfsiO1o',
+        amount: amount,
+        currency: currency,
+        name: "Bharat Film Industry",
+        description: "VNS Movie Premiere Ticket",
+        image: "https://www.bfiiy.com/logo.jpg",
+        order_id: order_id,
+        handler: async function (response: any) {
+          try {
+            setGatewayProgress(70);
+            setGatewayStatus('AWAITING_CALLBACK');
+
+            const verifyResponse = await fetch('https://qpgidlybygavthytsxvl.supabase.co/functions/v1/verify-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+
+            if (!verifyResponse.ok) {
+              throw new Error('Signature verification rejected by treasury.');
+            }
+
+            const verificationResult = await verifyResponse.json();
+
+            if (verificationResult.success) {
+              setGatewayProgress(100);
+              
+              const ticketId = generateTicketId();
+              const newBooking: BookingRecord = {
+                id: ticketId,
+                name,
+                email,
+                phone,
+                txnId: response.razorpay_payment_id,
+                paymentMethod: 'Razorpay',
+                amount: 59 * quantity,
+                quantity,
+                date: new Date().toISOString(),
+                status: 'CONFIRMED',
+                watched: false
+              };
+
+              db.saveToCollection('bookings', newBooking);
+              sendMovieTicketEmail(newBooking);
+              setCurrentBooking(newBooking);
+              loadBookingHistory();
+              setStep('PAY_CONFIRMED');
+            } else {
+              setStep('PAY_FAILED');
+            }
+          } catch (verifyErr) {
+            console.error("Verification error:", verifyErr);
+            setStep('PAY_FAILED');
+          }
+        },
+        prefill: {
+          name: name,
+          email: email,
+          contact: phone
+        },
+        theme: {
+          color: "#eab308"
+        },
+        modal: {
+          ondismiss: function () {
+            console.log("Razorpay checkout dismissed by user.");
+            setStep('PAY_CANCELLED');
+          }
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      
+      rzp.on('payment.failed', function (response: any) {
+        console.error("Payment failed event:", response.error);
+        setStep('PAY_FAILED');
+      });
+
+      rzp.open();
+
+    } catch (err) {
+      console.error("Razorpay setup initialization failed:", err);
+      alert("Payment initialization error. Check console log or network connection.");
+      setStep('PAY_FAILED');
+    }
+  };
   const printTicket = (booking: BookingRecord) => {
     const printWindow = window.open('', '_blank', 'width=600,height=800');
     if (!printWindow) return;
@@ -1321,31 +1444,45 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-white tracking-tight">Select Simulator Action</h3>
+              <h3 className="text-lg font-bold text-white tracking-tight">Select Payment Action</h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Choose the payment status returned by the secure gateway webhook to verify transaction state safety.
+                Complete a live payment using Razorpay Standard Checkout or choose a simulated response to verify transaction handling.
               </p>
             </div>
 
             <div className="space-y-3 pt-2">
               <button
                 type="button"
+                onClick={handleRazorpayPayment}
+                className="w-full py-4 bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-black uppercase text-xs tracking-wider rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 hover:from-yellow-400 hover:to-amber-400 shadow-[0_0_20px_rgba(234,179,8,0.2)]"
+              >
+                💳 Pay with Razorpay (Live Gateway)
+              </button>
+
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-zinc-800"></div>
+                <span className="flex-shrink mx-4 text-[9px] text-zinc-600 font-black uppercase tracking-wider">Or Simulator</span>
+                <div className="flex-grow border-t border-zinc-800"></div>
+              </div>
+
+              <button
+                type="button"
                 onClick={() => handleGatewayAction('SUCCESS')}
-                className="w-full py-3.5 bg-green-600 hover:bg-green-500 text-white font-black uppercase text-xs tracking-wider rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-green-950/40 border border-green-800 text-green-400 font-bold uppercase text-[10px] tracking-wider rounded-xl transition-all hover:bg-green-900/20"
               >
                 Simulate Payment Success (Verified)
               </button>
               <button
                 type="button"
                 onClick={() => handleGatewayAction('CANCEL')}
-                className="w-full py-3.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 font-bold uppercase text-xs tracking-wider rounded-xl transition-all"
+                className="w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 font-bold uppercase text-[10px] tracking-wider rounded-xl transition-all hover:bg-zinc-800"
               >
                 Simulate Payment Cancelled
               </button>
               <button
                 type="button"
                 onClick={() => handleGatewayAction('FAILURE')}
-                className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white font-bold uppercase text-xs tracking-wider rounded-xl transition-all"
+                className="w-full py-3 bg-red-950/40 border border-red-800 text-red-400 font-bold uppercase text-[10px] tracking-wider rounded-xl transition-all hover:bg-red-900/20"
               >
                 Simulate Payment Failed
               </button>

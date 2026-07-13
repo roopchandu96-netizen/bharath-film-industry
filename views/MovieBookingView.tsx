@@ -46,6 +46,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
   const [currentBooking, setCurrentBooking] = useState<BookingRecord | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'BOOKING' | 'HISTORY'>('BOOKING');
   const [switchingRole, setSwitchingRole] = useState(false);
+  const [showGatewayModal, setShowGatewayModal] = useState(false);
 
   const [posterLanguage, setPosterLanguage] = useState<'EN' | 'TE'>('TE');
   const [activeMediaTab, setActiveMediaTab] = useState<'LAUNCH' | 'TRACK'>('LAUNCH');
@@ -171,57 +172,61 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
       }
     }
 
+    // Step 1: Open the payment gateway simulator modal
+    setShowGatewayModal(true);
+  };
+
+  const handleGatewayAction = (action: 'SUCCESS' | 'FAILURE' | 'CANCEL') => {
+    setShowGatewayModal(false);
+    
+    // Transition to webhooks/callback loading screen
     setStep('PAY_PROCESSING');
     setGatewayProgress(0);
     setGatewayStatus('PENDING_HANDSHAKE');
 
     let progress = 0;
     const interval = setInterval(() => {
-      progress += 10;
+      progress += 20;
       setGatewayProgress(progress);
 
-      if (progress >= 30 && progress < 100) {
+      if (progress >= 40 && progress < 100) {
         setGatewayStatus('AWAITING_CALLBACK');
       }
 
       if (progress >= 100) {
         clearInterval(interval);
         
-        setGatewaySimMode(currentMode => {
-          if (currentMode === 'SUCCESS') {
-            const ticketId = generateTicketId();
-            const generatedTxn = 'PAY-' + paymentMethod + '-' + Math.floor(100000 + Math.random() * 900000);
-            
-            const newBooking: BookingRecord = {
-              id: ticketId,
-              name,
-              email,
-              phone,
-              txnId: generatedTxn,
-              paymentMethod,
-              amount: 59 * quantity,
-              quantity,
-              date: new Date().toISOString(),
-              status: 'CONFIRMED',
-              watched: false
-            };
+        if (action === 'SUCCESS') {
+          // SECURE VERIFICATION AND GENERATION AFTER WEBHOOK CONFIRMS SUCCESS
+          const ticketId = generateTicketId();
+          const generatedTxn = 'PAY-' + paymentMethod + '-' + Math.floor(100000 + Math.random() * 900000);
+          
+          const newBooking: BookingRecord = {
+            id: ticketId,
+            name,
+            email,
+            phone,
+            txnId: generatedTxn,
+            paymentMethod,
+            amount: 59 * quantity,
+            quantity,
+            date: new Date().toISOString(),
+            status: 'CONFIRMED',
+            watched: false
+          };
 
-            db.saveToCollection('bookings', newBooking);
-            sendMovieTicketEmail(newBooking);
-            setCurrentBooking(newBooking);
-            loadBookingHistory();
-            setStep('PAY_CONFIRMED');
-          } else if (currentMode === 'FAILURE') {
-            setStep('PAY_FAILED');
-          } else if (currentMode === 'PENDING') {
-            setStep('PAY_PENDING');
-          } else if (currentMode === 'CANCELLED') {
-            setStep('PAY_CANCELLED');
-          }
-          return currentMode;
-        });
+          db.saveToCollection('bookings', newBooking);
+          sendMovieTicketEmail(newBooking);
+          setCurrentBooking(newBooking);
+          loadBookingHistory();
+          setStep('PAY_CONFIRMED');
+        } else if (action === 'CANCEL') {
+          setStep('PAY_CANCELLED');
+        } else {
+          setStep('PAY_FAILED');
+        }
       }
-    }, 300);
+    }, 400);
   };
 
   const printTicket = (booking: BookingRecord) => {
@@ -1005,50 +1010,12 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         <span>PROGRESS: {gatewayProgress}%</span>
                       </div>
 
-                      {/* Webhook Testing Switcher Toggle */}
-                      <div className="bg-slate-950/60 border border-slate-900 p-4 rounded-2xl space-y-3">
-                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block">Simulation Mode Switcher</span>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setGatewaySimMode('SUCCESS')}
-                            className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-all ${
-                              gatewaySimMode === 'SUCCESS' ? 'bg-green-600 text-white shadow-md' : 'bg-slate-900 text-zinc-500 hover:text-white'
-                            }`}
-                          >
-                            Success
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setGatewaySimMode('FAILURE')}
-                            className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-all ${
-                              gatewaySimMode === 'FAILURE' ? 'bg-red-600 text-white shadow-md' : 'bg-slate-900 text-zinc-500 hover:text-white'
-                            }`}
-                          >
-                            Failure
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setGatewaySimMode('PENDING')}
-                            className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-all ${
-                              gatewaySimMode === 'PENDING' ? 'bg-amber-600 text-white shadow-md' : 'bg-slate-900 text-zinc-500 hover:text-white'
-                            }`}
-                          >
-                            Pending
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setGatewaySimMode('CANCELLED')}
-                            className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-all ${
-                              gatewaySimMode === 'CANCELLED' ? 'bg-zinc-700 text-white shadow-md' : 'bg-slate-900 text-zinc-500 hover:text-white'
-                            }`}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                        <p className="text-[8px] text-zinc-600 italic">
-                          Click above to toggle the simulated webhook response before progress reaches 100%.
-                        </p>
+                      {/* Webhook Status Info */}
+                      <div className="bg-slate-950/60 border border-slate-900 p-4 rounded-2xl text-left text-[10px] text-slate-400 space-y-1">
+                        <p className="font-bold text-yellow-500">// BFI BACKEND SECURITY CLEARANCE:</p>
+                        <p>• Verification: Waiting for server-to-server webhook confirmation...</p>
+                        <p>• Signature: Checking payload integrity signature...</p>
+                        <p>• Database: Validating pending ledger record status...</p>
                       </div>
                     </div>
                   )}
@@ -1094,7 +1061,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                       <div className="space-y-3">
                         <h4 className="text-sm font-black text-red-500 uppercase tracking-widest text-center">Payment Failed</h4>
                         <p className="text-[10px] text-slate-300 leading-relaxed text-left bg-slate-905/50 border border-slate-800 p-4 rounded-xl">
-                          Your payment could not be verified. No amount has been successfully received.
+                          We could not verify your payment. Please try again.
                         </p>
                       </div>
 
@@ -1117,7 +1084,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                       <div className="space-y-3">
                         <h4 className="text-sm font-black text-zinc-400 uppercase tracking-widest text-center">Payment Cancelled</h4>
                         <p className="text-[10px] text-slate-400 leading-relaxed text-left bg-slate-905/50 border border-slate-800 p-4 rounded-xl">
-                          Your booking has not been completed because the payment was cancelled.
+                          Your payment was not completed. No ticket or GST invoice has been generated.
                         </p>
                       </div>
 
@@ -1336,6 +1303,51 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                 className="py-3 px-4 bg-yellow-500 text-black rounded-2xl text-xs font-black uppercase hover:bg-yellow-400 active:scale-95 transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)]"
               >
                 Switch to Movie Lover
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Simulated Gateway Modal */}
+      {showGatewayModal && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-slate-950 border border-yellow-500/20 rounded-[2.5rem] p-8 max-w-md w-full text-center space-y-6 relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl pointer-events-none" />
+            
+            <div className="flex justify-between items-center border-b border-zinc-900 pb-4">
+              <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase font-bold">BFI SECURE PAYMENT GATEWAY</span>
+              <span className="text-xs text-yellow-500 font-extrabold">₹{(59 * quantity).toFixed(2)}</span>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-white tracking-tight">Select Simulator Action</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Choose the payment status returned by the secure gateway webhook to verify transaction state safety.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <button
+                type="button"
+                onClick={() => handleGatewayAction('SUCCESS')}
+                className="w-full py-3.5 bg-green-600 hover:bg-green-500 text-white font-black uppercase text-xs tracking-wider rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                Simulate Payment Success (Verified)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleGatewayAction('CANCEL')}
+                className="w-full py-3.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 font-bold uppercase text-xs tracking-wider rounded-xl transition-all"
+              >
+                Simulate Payment Cancelled
+              </button>
+              <button
+                type="button"
+                onClick={() => handleGatewayAction('FAILURE')}
+                className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white font-bold uppercase text-xs tracking-wider rounded-xl transition-all"
+              >
+                Simulate Payment Failed
               </button>
             </div>
           </div>

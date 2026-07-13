@@ -64,100 +64,119 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            // Fetch pending projects
-            const { data: projects } = await supabase
-                .from('projects')
-                .select('*')
-                .eq('status', 'PENDING');
-
-            if (projects) setPendingProjects(projects as MovieProject[]);
-
-            // Fetch pending users
-            const { data: users } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('kycStatus', 'PENDING');
-
-            if (users) setPendingUsers(users as User[]);
-
-            // Real Investments Data: Fetch from DB (initially empty if no table)
-            const { data: investments } = await supabase
-                .from('investments')
-                .select('*')
-                .eq('status', 'PENDING');
-
-            if (investments) {
-                setPendingInvestments(investments);
-            } else {
-                setPendingInvestments([]);
+            
+            // 1. Fetch pending projects
+            try {
+                const { data: projects } = await supabase
+                    .from('projects')
+                    .select('*')
+                    .eq('status', 'PENDING');
+                if (projects) setPendingProjects(projects as MovieProject[]);
+            } catch (err) {
+                console.error("Error fetching projects:", err);
             }
 
-            const { data: notifs } = await supabase
-                .from('notifications')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(10);
-
-            if (notifs) {
-                setNotifications(notifs);
+            // 2. Fetch pending users
+            try {
+                const { data: users } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('kycStatus', 'PENDING');
+                if (users) setPendingUsers(users as User[]);
+            } catch (err) {
+                console.error("Error fetching pending users:", err);
             }
 
-            // Fetch pending movie bookings (awaiting admin UTR verification)
-            const { data: bookings } = await supabase
-                .from('movie_bookings')
-                .select(`
-                    id,
-                    booking_id,
-                    amount,
-                    status,
-                    payment_status,
-                    created_at,
-                    quantity,
-                    phone,
-                    email,
-                    name,
-                    payments (
-                        gateway_order_id,
-                        payment_status
-                    )
-                `)
-                .eq('status', 'PENDING');
-
-            if (bookings) {
-                const formatted = bookings.map((b: any) => ({
-                    id: b.id,
-                    bookingId: b.booking_id,
-                    amount: b.amount,
-                    status: b.status,
-                    paymentStatus: b.payment_status,
-                    createdAt: b.created_at,
-                    quantity: b.quantity,
-                    phone: b.phone,
-                    email: b.email,
-                    name: b.name,
-                    utr: b.payments?.[0]?.gateway_order_id || 'N/A'
-                }));
-                setPendingBookings(formatted);
-            } else {
-                setPendingBookings([]);
+            // 3. Fetch pending investments
+            try {
+                const { data: investments } = await supabase
+                    .from('investments')
+                    .select('*')
+                    .eq('status', 'PENDING');
+                if (investments) {
+                    setPendingInvestments(investments);
+                } else {
+                    setPendingInvestments([]);
+                }
+            } catch (err) {
+                console.error("Error fetching pending investments:", err);
             }
 
-            // Real Stats Fetching
-            const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
-            const { count: activeCount } = await supabase.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE');
-
-            // Calculate Total Investment (Real Aggregation)
-            let totalRaised = 0;
-            const { data: allInvestments } = await supabase.from('investments').select('amount').eq('status', 'VERIFIED');
-            if (allInvestments) {
-                totalRaised = allInvestments.reduce((sum, item) => sum + (item.amount || 0), 0);
+            // 4. Fetch notifications
+            try {
+                const { data: notifs } = await supabase
+                    .from('notifications')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                if (notifs) setNotifications(notifs);
+            } catch (err) {
+                console.error("Error fetching notifications:", err);
             }
 
-            setStats({
-                totalUsers: userCount || 0,
-                totalInvestment: totalRaised,
-                activeProjects: activeCount || 0
-            });
+            // 5. Fetch pending movie bookings (awaiting admin UTR verification)
+            try {
+                const { data: bookings } = await supabase
+                    .from('movie_bookings')
+                    .select(`
+                        id,
+                        booking_id,
+                        amount,
+                        status,
+                        payment_status,
+                        created_at,
+                        quantity,
+                        phone,
+                        email,
+                        name,
+                        payments (
+                            gateway_order_id,
+                            payment_status
+                        )
+                    `)
+                    .eq('status', 'PENDING');
+
+                if (bookings) {
+                    const formatted = bookings.map((b: any) => ({
+                        id: b.id,
+                        bookingId: b.booking_id,
+                        amount: b.amount,
+                        status: b.status,
+                        paymentStatus: b.payment_status,
+                        createdAt: b.created_at,
+                        quantity: b.quantity,
+                        phone: b.phone,
+                        email: b.email,
+                        name: b.name,
+                        utr: b.payments?.[0]?.gateway_order_id || 'N/A'
+                    }));
+                    setPendingBookings(formatted);
+                } else {
+                    setPendingBookings([]);
+                }
+            } catch (err) {
+                console.error("Error fetching bookings:", err);
+            }
+
+            // 6. Fetch stats
+            try {
+                const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+                const { count: activeCount } = await supabase.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE');
+
+                let totalRaised = 0;
+                const { data: allInvestments } = await supabase.from('investments').select('amount').eq('status', 'VERIFIED');
+                if (allInvestments) {
+                    totalRaised = allInvestments.reduce((sum, item) => sum + (item.amount || 0), 0);
+                }
+
+                setStats({
+                    totalUsers: userCount || 0,
+                    totalInvestment: totalRaised,
+                    activeProjects: activeCount || 0
+                });
+            } catch (err) {
+                console.error("Error fetching stats:", err);
+            }
 
         } catch (error) {
             console.error('Error fetching admin data:', error);

@@ -1450,6 +1450,25 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
               </p>
             </div>
 
+            {/* Test Credentials Box */}
+            <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-2xl p-4 text-left space-y-2 leading-relaxed">
+              <span className="text-[9px] font-black text-yellow-500 uppercase tracking-wider block">💳 Razorpay Sandbox Test Credentials</span>
+              <div className="grid grid-cols-2 gap-2 text-[9px] font-mono">
+                <div>
+                  <span className="text-zinc-500 block">CARD NUMBER</span>
+                  <span className="text-white block font-bold">4111 1111 1111 1111</span>
+                </div>
+                <div>
+                  <span className="text-zinc-500 block">EXPIRY / CVV</span>
+                  <span className="text-white block font-bold">12/26 / 123</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-zinc-500 block">UPI ADDRESS</span>
+                  <span className="text-white block font-bold">test@razorpay</span>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-3 pt-2">
               <button
                 type="button"

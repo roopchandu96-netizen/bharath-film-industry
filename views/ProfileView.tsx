@@ -38,6 +38,21 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
     }
   });
 
+  const resolvedPrimaryRole = (() => {
+    if (!user) return 'INVESTOR';
+    const storedActual = localStorage.getItem(`bfi_actual_role_${user.id}`);
+    if (storedActual && storedActual !== 'MOVIE_LOVER') {
+      return storedActual;
+    }
+    if (user.primaryRole && user.primaryRole !== UserRole.MOVIE_LOVER) {
+      return user.primaryRole;
+    }
+    if (user.role && user.role !== UserRole.MOVIE_LOVER) {
+      return user.role;
+    }
+    return 'INVESTOR';
+  })();
+
   const handleSwitchRole = async (targetRole: UserRole, checkFirstTime = false) => {
     if (checkFirstTime && targetRole === UserRole.MOVIE_LOVER && !user.movieLoverActivated) {
       setShowActivationModal(true);
@@ -47,6 +62,12 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
     setIsSwitchingRole(true);
     setMessage(null);
     try {
+      // Cache original role before switching to Movie Lover
+      const currentActive = user.activeRole || user.role;
+      if (targetRole === UserRole.MOVIE_LOVER && currentActive !== UserRole.MOVIE_LOVER) {
+        localStorage.setItem(`bfi_actual_role_${user.id}`, currentActive);
+      }
+
       // 1. Update Supabase Auth User Metadata
       const { error: authError } = await supabase.auth.updateUser({
         data: { role: targetRole, active_role: targetRole }
@@ -331,14 +352,14 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
 
               <button
                 type="button"
-                onClick={() => handleSwitchRole((user.primaryRole || user.role) as UserRole, false)}
+                onClick={() => handleSwitchRole(resolvedPrimaryRole as UserRole, false)}
                 disabled={isSwitchingRole || (user.activeRole || user.role) !== UserRole.MOVIE_LOVER}
                 className="w-full py-4 rounded-2xl bg-zinc-900 border border-yellow-500/20 hover:border-yellow-500/40 text-yellow-500 font-extrabold text-xs uppercase tracking-wider disabled:opacity-20 disabled:border-zinc-950 disabled:text-zinc-600 active:scale-95 disabled:scale-100 disabled:pointer-events-none transition-all flex items-center justify-center gap-2"
               >
                 {isSwitchingRole && (user.activeRole || user.role) === UserRole.MOVIE_LOVER ? (
                   <Loader2 className="animate-spin" size={14} />
                 ) : (
-                  <span>Switch Back to {user.primaryRole || user.role}</span>
+                  <span>Switch Back to {resolvedPrimaryRole}</span>
                 )}
               </button>
             </div>

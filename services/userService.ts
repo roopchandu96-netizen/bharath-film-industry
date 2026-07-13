@@ -18,6 +18,17 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
       profile.active_role = UserRole.ADMIN;
     }
     
+    // Auto-migrate primary_role if it is missing or is set to MOVIE_LOVER but auth metadata has their actual role
+    let resolvedPrimary = profile.primary_role;
+    if (!resolvedPrimary || resolvedPrimary === UserRole.MOVIE_LOVER) {
+      const metaRole = supabaseUser.user_metadata?.role;
+      if (metaRole && metaRole !== UserRole.MOVIE_LOVER) {
+        resolvedPrimary = metaRole;
+        await supabase.from('profiles').update({ primary_role: metaRole }).eq('id', supabaseUser.id);
+        profile.primary_role = metaRole;
+      }
+    }
+    
     return {
       id: profile.id,
       name: profile.name,

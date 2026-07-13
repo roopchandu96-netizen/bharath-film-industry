@@ -11,7 +11,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
 
   if (profile) {
     // Force ADMIN role for this email if not already set
-    if (supabaseUser.email === 'bharatfilmindustry@gmail.com' && profile.role !== UserRole.ADMIN) {
+    if (supabaseUser.email === 'bharathfilmindustry@gmail.com' && profile.role !== UserRole.ADMIN) {
       await supabase.from('profiles').update({ role: UserRole.ADMIN, primary_role: UserRole.ADMIN, active_role: UserRole.ADMIN }).eq('id', supabaseUser.id);
       profile.role = UserRole.ADMIN;
       profile.primary_role = UserRole.ADMIN;
@@ -69,7 +69,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     finalRole = UserRole.INVESTOR;
   }
 
-  if (supabaseUser.email === 'bharatfilmindustry@gmail.com') {
+  if (supabaseUser.email === 'bharathfilmindustry@gmail.com') {
     finalRole = UserRole.ADMIN;
   }
 

@@ -5,7 +5,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_IfneTTGO7RqW4vjlMJ8HQw_xRq83L6o';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function run() {
-    const email = 'bharatfilmindustry@gmail.com';
+    const email = 'bharathfilmindustry@gmail.com';
 
     const { data: { session }, error: authError } = await supabase.auth.signInWithPassword({
         email,

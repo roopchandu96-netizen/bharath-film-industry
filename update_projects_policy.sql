@@ -18,11 +18,14 @@ CREATE TABLE IF NOT EXISTS public.movie_bookings (
   confirmed_at timestamptz
 );
 
--- Add booking fields if not exist
+-- Ensure all booking fields exist in movie_bookings
+ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS quantity INTEGER DEFAULT 1;
 ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS phone TEXT;
 ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS email TEXT;
 ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE public.movie_bookings ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMPTZ;
 
 -- Create Payments Table if not exists
 CREATE TABLE IF NOT EXISTS public.payments (
@@ -35,6 +38,14 @@ CREATE TABLE IF NOT EXISTS public.payments (
   payment_status text not null check (payment_status in ('pending', 'verified', 'failed')) default 'pending',
   verified_at timestamptz
 );
+
+-- Ensure all payments fields exist in payments
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS gateway_order_id TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS gateway_payment_id TEXT;
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS gateway_signature TEXT;
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS amount NUMERIC NOT NULL DEFAULT 0;
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS verified_at TIMESTAMPTZ;
 
 -- Create Tickets Table if not exists
 CREATE TABLE IF NOT EXISTS public.tickets (
@@ -52,8 +63,11 @@ ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
 
 -- ==========================================
--- 2. USER PROFILE SCHEMA UPDATES
+-- 2. USER PROFILE & PROJECTS SCHEMA UPDATES
 -- ==========================================
+
+-- Ensure status column exists in projects table
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PENDING';
 
 -- Add multi-role columns to profiles table if they don't exist
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS primary_role TEXT;

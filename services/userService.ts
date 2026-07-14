@@ -11,12 +11,12 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
       .from('profiles')
       .select('*')
       .eq('id', supabaseUser.id)
-      .single();
+      .limit(1);
     
     if (error) {
-      console.warn("SYNC_USER: Select query returned error (e.g. user not created yet):", error);
-    } else {
-      profile = data;
+      console.warn("SYNC_USER: Select query returned error:", error);
+    } else if (data && data.length > 0) {
+      profile = data[0];
     }
   } catch (err) {
     console.error("SYNC_USER: Select query exception thrown:", err);

@@ -166,7 +166,17 @@ const App: React.FC = () => {
         console.error("CRITICAL: Failed to fetch user profile or Timeout:", err);
         // Fallback to prevent blank screen
         if (session?.user) {
-          const fallbackRole = session.user.user_metadata?.role || UserRole.INVESTOR;
+          const ADMIN_EMAILS = [
+            'bharathfilmindustry@gmail.com',
+            'shubhamghodageri@gmail.com',
+            'thechittoortimes@gmail.com',
+            'chanduchowdary324@gmail.com',
+            'prathapaneniroopchandu@gmail.com',
+            'siriprathapaneni@gmail.com',
+            'roopchandu96@gmail.com'
+          ];
+          const isDevAdmin = session.user.email && ADMIN_EMAILS.includes(session.user.email);
+          const fallbackRole = isDevAdmin ? UserRole.ADMIN : (session.user.user_metadata?.role || UserRole.INVESTOR);
           console.warn("Using Fallback Role due to error:", fallbackRole);
 
           setUser({

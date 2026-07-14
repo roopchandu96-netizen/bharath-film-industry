@@ -1,5 +1,21 @@
--- BFI COMPLETE RLS SECURITY POLICIES RESET
--- Run this entire script in your Supabase SQL Editor to authorize Admin approvals/rejections, screenplays, bookings, and payments.
+-- BFI COMPLETE DATABASE MIGRATION & RLS SECURITY POLICIES RESET
+-- Run this entire script in your Supabase SQL Editor to verify columns and authorize Admin approvals/rejections.
+
+-- ==========================================
+-- 0. SCHEMA MIGRATION: ENSURE ALL COLUMNS EXIST
+-- ==========================================
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS primary_role TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS active_role TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS movie_lover_activated BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS "photoURL" TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS "photoFileName" TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS "kycStatus" TEXT DEFAULT 'NOT_STARTED';
+
+-- Initialize role columns for existing users
+UPDATE public.profiles SET primary_role = role WHERE primary_role IS NULL;
+UPDATE public.profiles SET active_role = role WHERE active_role IS NULL;
+UPDATE public.profiles SET movie_lover_activated = TRUE WHERE role = 'MOVIE_LOVER' AND movie_lover_activated IS NULL;
+UPDATE public.profiles SET movie_lover_activated = FALSE WHERE movie_lover_activated IS NULL;
 
 -- ==========================================
 -- 1. PROFILES TABLE POLICIES

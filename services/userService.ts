@@ -2,14 +2,28 @@ import { supabase } from "./firebase";
 import { User, UserRole } from "../types";
 
 export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, name?: string): Promise<User> => {
-  // Check if profile exists
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', supabaseUser.id)
-    .single();
+  console.log("SYNC_USER: starting sync for ID:", supabaseUser?.id, "Email:", supabaseUser?.email);
+  
+  let profile: any = null;
+  try {
+    console.log("SYNC_USER: executing select profiles query...");
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', supabaseUser.id)
+      .single();
+    
+    if (error) {
+      console.warn("SYNC_USER: Select query returned error (e.g. user not created yet):", error);
+    } else {
+      profile = data;
+    }
+  } catch (err) {
+    console.error("SYNC_USER: Select query exception thrown:", err);
+  }
 
   if (profile) {
+    console.log("SYNC_USER: Profile found in database:", profile);
     // Force ADMIN role for developer/admin emails if not already set
     const ADMIN_EMAILS = [
       'bharathfilmindustry@gmail.com',
@@ -21,7 +35,13 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
       'roopchandu96@gmail.com'
     ];
     if (supabaseUser.email && ADMIN_EMAILS.includes(supabaseUser.email) && profile.role !== UserRole.ADMIN) {
-      await supabase.from('profiles').update({ role: UserRole.ADMIN, primary_role: UserRole.ADMIN, active_role: UserRole.ADMIN }).eq('id', supabaseUser.id);
+      try {
+        console.log("SYNC_USER: Overriding role to ADMIN in database...");
+        const { error: updErr } = await supabase.from('profiles').update({ role: UserRole.ADMIN, primary_role: UserRole.ADMIN, active_role: UserRole.ADMIN }).eq('id', supabaseUser.id);
+        if (updErr) console.error("SYNC_USER: Failed to update role to ADMIN:", updErr);
+      } catch (e) {
+        console.error("SYNC_USER: Update admin role exception:", e);
+      }
       profile.role = UserRole.ADMIN;
       profile.primary_role = UserRole.ADMIN;
       profile.active_role = UserRole.ADMIN;
@@ -33,7 +53,12 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
       const metaRole = supabaseUser.user_metadata?.role;
       if (metaRole && metaRole !== UserRole.MOVIE_LOVER) {
         resolvedPrimary = metaRole;
-        await supabase.from('profiles').update({ primary_role: metaRole }).eq('id', supabaseUser.id);
+        try {
+          const { error: updErr } = await supabase.from('profiles').update({ primary_role: metaRole }).eq('id', supabaseUser.id);
+          if (updErr) console.error("SYNC_USER: Failed to update primary_role:", updErr);
+        } catch (e) {
+          console.error("SYNC_USER: Update primary_role exception:", e);
+        }
         profile.primary_role = metaRole;
       }
     }
@@ -41,7 +66,12 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     // Completely migrate and eradicate MOVIE_LOVER role from database for all users
     if (profile.role === 'MOVIE_LOVER' || profile.active_role === 'MOVIE_LOVER' || profile.primary_role === 'MOVIE_LOVER') {
       const targetRole = UserRole.INVESTOR;
-      await supabase.from('profiles').update({ role: targetRole, active_role: targetRole, primary_role: targetRole }).eq('id', supabaseUser.id);
+      try {
+        const { error: updErr } = await supabase.from('profiles').update({ role: targetRole, active_role: targetRole, primary_role: targetRole }).eq('id', supabaseUser.id);
+        if (updErr) console.error("SYNC_USER: Failed to migrate MOVIE_LOVER role:", updErr);
+      } catch (e) {
+        console.error("SYNC_USER: Migrate MOVIE_LOVER exception:", e);
+      }
       profile.role = targetRole;
       profile.active_role = targetRole;
       profile.primary_role = targetRole;
@@ -49,7 +79,12 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     
     // Enforce actual registered role: Reset active_role and role back to primary_role if they switch-toggled earlier.
     if (profile.primary_role && profile.primary_role !== UserRole.MOVIE_LOVER && (profile.active_role === UserRole.MOVIE_LOVER || profile.role === UserRole.MOVIE_LOVER)) {
-      await supabase.from('profiles').update({ role: profile.primary_role, active_role: profile.primary_role }).eq('id', supabaseUser.id);
+      try {
+        const { error: updErr } = await supabase.from('profiles').update({ role: profile.primary_role, active_role: profile.primary_role }).eq('id', supabaseUser.id);
+        if (updErr) console.error("SYNC_USER: Failed to reset active_role:", updErr);
+      } catch (e) {
+        console.error("SYNC_USER: Reset active_role exception:", e);
+      }
       profile.role = profile.primary_role;
       profile.active_role = profile.primary_role;
     }
@@ -71,6 +106,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
   }
 
   // Metadata from Supabase Auth options or inputs
+  console.log("SYNC_USER: Profile not found. Preparing new profile registration...");
   const finalName = name || supabaseUser.user_metadata?.full_name || "BFI Member";
   let finalRole = role || supabaseUser.user_metadata?.role || UserRole.INVESTOR;
 
@@ -105,12 +141,17 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     photoURL: `https://api.dicebear.com/7.x/avataaars/svg?seed=${finalName}`
   };
 
-  const { error: insertError } = await supabase
-    .from('profiles')
-    .insert([newUserDb]);
+  try {
+    console.log("SYNC_USER: Inserting new profile record into database...", newUserDb);
+    const { error: insertError } = await supabase
+      .from('profiles')
+      .insert([newUserDb]);
 
-  if (insertError) {
-    console.error("Profile sync insert error:", insertError);
+    if (insertError) {
+      console.error("SYNC_USER: Profile sync insert error:", insertError);
+    }
+  } catch (err) {
+    console.error("SYNC_USER: Profile sync insert exception:", err);
   }
 
   return {

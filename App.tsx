@@ -127,15 +127,16 @@ const App: React.FC = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("Auth State Changed. User Email:", session?.user?.email);
 
-      // Race Condition Handler: Ensure loading stops
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("Auth Timeout"), 10000));
+      // Race Condition Handler: Ensure loading stops (increase to 45s for slower connections)
+      const startTime = Date.now();
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(`Auth Timeout after ${((Date.now() - startTime) / 1000).toFixed(1)}s`), 45000));
 
       try {
         if (session?.user) {
           setSession(session);
           console.log("Fetching user profile from database...");
 
-          // Race the profile sync against a 10s timeout
+          // Race the profile sync against a 45s timeout
           const userData = await Promise.race([
             syncUserToFirestore(session.user),
             timeoutPromise

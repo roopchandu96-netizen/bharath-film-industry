@@ -24,70 +24,61 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
 
   if (profile) {
     console.log("SYNC_USER: Profile found in database:", profile);
-    // Force ADMIN role for developer/admin emails if not already set
-    const ADMIN_EMAILS = [
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    ];
     const userEmail = (supabaseUser.email || "").toLowerCase();
-    if (userEmail && ADMIN_EMAILS.includes(userEmail) && profile.role !== UserRole.ADMIN) {
-      try {
-        console.log("SYNC_USER: Overriding role to ADMIN in database...");
-        const { error: updErr } = await supabase.from('profiles').update({ role: UserRole.ADMIN, primary_role: UserRole.ADMIN, active_role: UserRole.ADMIN }).eq('id', supabaseUser.id);
-        if (updErr) console.error("SYNC_USER: Failed to update role to ADMIN:", updErr);
-      } catch (e) {
-        console.error("SYNC_USER: Update admin role exception:", e);
-      }
-      profile.role = UserRole.ADMIN;
-      profile.primary_role = UserRole.ADMIN;
-      profile.active_role = UserRole.ADMIN;
-    }
-    
-    // Auto-migrate primary_role if it is missing or is set to MOVIE_LOVER but auth metadata has their actual role
-    let resolvedPrimary = profile.primary_role;
-    if (!resolvedPrimary || resolvedPrimary === UserRole.MOVIE_LOVER) {
-      const metaRole = supabaseUser.user_metadata?.role;
-      if (metaRole && metaRole !== UserRole.MOVIE_LOVER) {
-        resolvedPrimary = metaRole;
+    const isAdminEmail = userEmail === 'bharathfilmindustry@gmail.com';
+
+    if (isAdminEmail) {
+      if (profile.role !== UserRole.ADMIN || profile.primary_role !== UserRole.ADMIN || profile.active_role !== UserRole.ADMIN) {
         try {
-          const { error: updErr } = await supabase.from('profiles').update({ primary_role: metaRole }).eq('id', supabaseUser.id);
-          if (updErr) console.error("SYNC_USER: Failed to update primary_role:", updErr);
+          console.log("SYNC_USER: Overriding role to ADMIN in database for primary administrator...");
+          const { error: updErr } = await supabase.from('profiles').update({ role: UserRole.ADMIN, primary_role: UserRole.ADMIN, active_role: UserRole.ADMIN }).eq('id', supabaseUser.id);
+          if (updErr) console.error("SYNC_USER: Failed to update role to ADMIN:", updErr);
         } catch (e) {
-          console.error("SYNC_USER: Update primary_role exception:", e);
+          console.error("SYNC_USER: Update admin role exception:", e);
         }
-        profile.primary_role = metaRole;
+        profile.role = UserRole.ADMIN;
+        profile.primary_role = UserRole.ADMIN;
+        profile.active_role = UserRole.ADMIN;
       }
-    }
-    
-    // Completely migrate and eradicate MOVIE_LOVER role from database for all users
-    if (profile.role === 'MOVIE_LOVER' || profile.active_role === 'MOVIE_LOVER' || profile.primary_role === 'MOVIE_LOVER') {
-      const targetRole = UserRole.INVESTOR;
-      try {
-        const { error: updErr } = await supabase.from('profiles').update({ role: targetRole, active_role: targetRole, primary_role: targetRole }).eq('id', supabaseUser.id);
-        if (updErr) console.error("SYNC_USER: Failed to migrate MOVIE_LOVER role:", updErr);
-      } catch (e) {
-        console.error("SYNC_USER: Migrate MOVIE_LOVER exception:", e);
+    } else {
+      // Non-admin email: Ensure they do NOT have the ADMIN role in any field!
+      let changed = false;
+      let resolvedPrimary = profile.primary_role;
+      let resolvedActive = profile.active_role;
+      let resolvedRole = profile.role;
+
+      if (resolvedPrimary === UserRole.ADMIN || !resolvedPrimary || resolvedPrimary === UserRole.MOVIE_LOVER) {
+        resolvedPrimary = supabaseUser.user_metadata?.role || UserRole.INVESTOR;
+        if (resolvedPrimary === UserRole.ADMIN || resolvedPrimary === UserRole.MOVIE_LOVER) {
+          resolvedPrimary = UserRole.INVESTOR; // Hard fallback
+        }
+        changed = true;
       }
-      profile.role = targetRole;
-      profile.active_role = targetRole;
-      profile.primary_role = targetRole;
-    }
-    
-    // Enforce actual registered role: Reset active_role and role back to primary_role if they switch-toggled earlier.
-    if (profile.primary_role && profile.primary_role !== UserRole.MOVIE_LOVER && (profile.active_role === UserRole.MOVIE_LOVER || profile.role === UserRole.MOVIE_LOVER)) {
-      try {
-        const { error: updErr } = await supabase.from('profiles').update({ role: profile.primary_role, active_role: profile.primary_role }).eq('id', supabaseUser.id);
-        if (updErr) console.error("SYNC_USER: Failed to reset active_role:", updErr);
-      } catch (e) {
-        console.error("SYNC_USER: Reset active_role exception:", e);
+      if (resolvedActive === UserRole.ADMIN) {
+        resolvedActive = resolvedPrimary;
+        changed = true;
       }
-      profile.role = profile.primary_role;
-      profile.active_role = profile.primary_role;
+      if (resolvedRole === UserRole.ADMIN) {
+        resolvedRole = resolvedActive;
+        changed = true;
+      }
+
+      if (changed) {
+        try {
+          console.log("SYNC_USER: Demoting non-admin user back to standard role:", resolvedPrimary);
+          const { error: updErr } = await supabase.from('profiles').update({ 
+            role: resolvedRole, 
+            primary_role: resolvedPrimary, 
+            active_role: resolvedActive 
+          }).eq('id', supabaseUser.id);
+          if (updErr) console.error("SYNC_USER: Failed to demote user:", updErr);
+        } catch (e) {
+          console.error("SYNC_USER: Demote user role exception:", e);
+        }
+        profile.role = resolvedRole;
+        profile.primary_role = resolvedPrimary;
+        profile.active_role = resolvedActive;
+      }
     }
     
     return {
@@ -115,18 +106,13 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     finalRole = UserRole.INVESTOR;
   }
 
-  const ADMIN_EMAILS = [
-    'bharathfilmindustry@gmail.com',
-    'shubhamghodageri@gmail.com',
-    'thechittoortimes@gmail.com',
-    'chanduchowdary324@gmail.com',
-    'prathapaneniroopchandu@gmail.com',
-    'siriprathapaneni@gmail.com',
-    'roopchandu96@gmail.com'
-  ];
-    const userEmail = (supabaseUser.email || "").toLowerCase();
-  if (userEmail && ADMIN_EMAILS.includes(userEmail)) {
+  const userEmail = (supabaseUser.email || "").toLowerCase();
+  const isAdminEmail = userEmail === 'bharathfilmindustry@gmail.com';
+
+  if (isAdminEmail) {
     finalRole = UserRole.ADMIN;
+  } else if (finalRole === UserRole.ADMIN) {
+    finalRole = UserRole.INVESTOR; // Hard fallback for non-admin email
   }
 
   const newUserDb = {

@@ -32,19 +32,7 @@ DROP POLICY IF EXISTS "Profiles update policy" ON public.profiles;
 CREATE POLICY "Profiles update policy" ON public.profiles FOR UPDATE
   USING (
     auth.uid() = id 
-    OR LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    OR LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 -- ==========================================
@@ -62,38 +50,14 @@ DROP POLICY IF EXISTS "Directors can update own projects" ON public.projects;
 CREATE POLICY "Directors can update own projects" ON public.projects FOR UPDATE
   USING (
     auth.uid() = "directorId" 
-    OR LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    OR LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 DROP POLICY IF EXISTS "Directors can delete own projects" ON public.projects;
 CREATE POLICY "Directors can delete own projects" ON public.projects FOR DELETE
   USING (
     auth.uid() = "directorId" 
-    OR LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    OR LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 -- ==========================================
@@ -105,19 +69,7 @@ DROP POLICY IF EXISTS "Users can select own bookings" ON public.movie_bookings;
 CREATE POLICY "Users can select own bookings" ON public.movie_bookings FOR SELECT
   USING (
     auth.uid() = user_id 
-    OR LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    OR LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 DROP POLICY IF EXISTS "Users can insert own bookings" ON public.movie_bookings;
@@ -126,37 +78,13 @@ CREATE POLICY "Users can insert own bookings" ON public.movie_bookings FOR INSER
 DROP POLICY IF EXISTS "Only admin can update bookings" ON public.movie_bookings;
 CREATE POLICY "Only admin can update bookings" ON public.movie_bookings FOR UPDATE
   USING (
-    LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 DROP POLICY IF EXISTS "Only admin can delete bookings" ON public.movie_bookings;
 CREATE POLICY "Only admin can delete bookings" ON public.movie_bookings FOR DELETE
   USING (
-    LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 -- ==========================================
@@ -172,19 +100,7 @@ CREATE POLICY "Users can select own payments" ON public.payments FOR SELECT
       WHERE public.movie_bookings.id = payments.booking_id
         AND public.movie_bookings.user_id = auth.uid()
     )
-    OR LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    OR LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 DROP POLICY IF EXISTS "Users can insert own payments" ON public.payments;
@@ -193,19 +109,7 @@ CREATE POLICY "Users can insert own payments" ON public.payments FOR INSERT WITH
 DROP POLICY IF EXISTS "Only admin can update payments" ON public.payments;
 CREATE POLICY "Only admin can update payments" ON public.payments FOR UPDATE
   USING (
-    LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 -- ==========================================
@@ -219,37 +123,13 @@ CREATE POLICY "Users can select own tickets" ON public.tickets FOR SELECT USING 
 DROP POLICY IF EXISTS "Only admin can insert tickets" ON public.tickets;
 CREATE POLICY "Only admin can insert tickets" ON public.tickets FOR INSERT
   WITH CHECK (
-    LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 DROP POLICY IF EXISTS "Only admin can update tickets" ON public.tickets;
 CREATE POLICY "Only admin can update tickets" ON public.tickets FOR UPDATE
   USING (
-    LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 -- ==========================================
@@ -261,19 +141,7 @@ DROP POLICY IF EXISTS "Investments select policy" ON public.investments;
 CREATE POLICY "Investments select policy" ON public.investments FOR SELECT
   USING (
     auth.uid() = "userId"
-    OR LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    OR LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 DROP POLICY IF EXISTS "Investors can create investments" ON public.investments;
@@ -282,19 +150,7 @@ CREATE POLICY "Investors can create investments" ON public.investments FOR INSER
 DROP POLICY IF EXISTS "Only admin can update investments" ON public.investments;
 CREATE POLICY "Only admin can update investments" ON public.investments FOR UPDATE
   USING (
-    LOWER(auth.jwt() ->> 'email') IN (
-      'bharathfilmindustry@gmail.com',
-      'shubhamghodageri@gmail.com',
-      'thechittoortimes@gmail.com',
-      'chanduchowdary324@gmail.com',
-      'prathapaneniroopchandu@gmail.com',
-      'siriprathapaneni@gmail.com',
-      'roopchandu96@gmail.com'
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE public.profiles.id = auth.uid() AND public.profiles.role = 'ADMIN'
-    )
+    LOWER(auth.jwt() ->> 'email') = 'bharathfilmindustry@gmail.com'
   );
 
 -- ==========================================

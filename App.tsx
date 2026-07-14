@@ -105,7 +105,9 @@ const App: React.FC = () => {
 
     if (legacySession && legacySession.user) {
       setSession(legacySession);
-      const fallbackRole = legacySession.user.user_metadata?.role || UserRole.INVESTOR;
+      const userEmail = (legacySession.user.email || "").toLowerCase();
+      const isAdminEmail = userEmail === 'bharathfilmindustry@gmail.com';
+      const fallbackRole = isAdminEmail ? UserRole.ADMIN : (legacySession.user.user_metadata?.role || UserRole.INVESTOR);
       setUser({
         id: legacySession.user.id,
         email: legacySession.user.email,
@@ -166,16 +168,8 @@ const App: React.FC = () => {
         console.error("CRITICAL: Failed to fetch user profile or Timeout:", err);
         // Fallback to prevent blank screen
         if (session?.user) {
-          const ADMIN_EMAILS = [
-            'bharathfilmindustry@gmail.com',
-            'shubhamghodageri@gmail.com',
-            'thechittoortimes@gmail.com',
-            'chanduchowdary324@gmail.com',
-            'prathapaneniroopchandu@gmail.com',
-            'siriprathapaneni@gmail.com',
-            'roopchandu96@gmail.com'
-          ];
-          const isDevAdmin = session.user.email && ADMIN_EMAILS.includes(session.user.email);
+          const userEmail = (session.user.email || "").toLowerCase();
+          const isDevAdmin = userEmail === 'bharathfilmindustry@gmail.com';
           const fallbackRole = isDevAdmin ? UserRole.ADMIN : (session.user.user_metadata?.role || UserRole.INVESTOR);
           console.warn("Using Fallback Role due to error:", fallbackRole);
 
@@ -591,9 +585,7 @@ const App: React.FC = () => {
     );
   }
 
-  // Logic: Only show AdminDashboard if explicitly select 'admin' tab (and user is admin)
-  // This allows Directors (or Admins acting as Directors) to see the normal Layout.
-  if (activeTab === 'admin' && (user.activeRole || user.role) === UserRole.ADMIN) {
+  if (activeTab === 'admin' && (user.activeRole || user.role) === UserRole.ADMIN && user.email === 'bharathfilmindustry@gmail.com') {
     return <AdminDashboard user={user} />;
   }
 

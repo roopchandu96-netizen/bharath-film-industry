@@ -209,6 +209,24 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
               <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Modify production identity</p>
             </div>
 
+            {user.role === UserRole.MOVIE_LOVER && (
+              <div className="p-6 rounded-2xl bg-yellow-500/5 border border-yellow-500/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="space-y-1 text-center sm:text-left">
+                  <span className="text-[10px] font-black text-yellow-500 uppercase tracking-widest block">Movie Lover Mode Active</span>
+                  <p className="text-xs text-slate-400">You are temporarily acting in Movie Lover Mode.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchRole(user.primaryRole || UserRole.INVESTOR)}
+                  disabled={isSwitchingRole}
+                  className="px-5 py-2.5 rounded-xl bg-yellow-500 text-black hover:bg-yellow-400 font-extrabold text-[9px] uppercase tracking-wider disabled:opacity-50 transition-all flex items-center gap-1.5 shrink-0"
+                >
+                  {isSwitchingRole && <Loader2 size={10} className="animate-spin" />}
+                  Switch back to {user.primaryRole || 'Investor'}
+                </button>
+              </div>
+            )}
+
             <form onSubmit={handleUpdateProfile} className="space-y-8">
               <div className="space-y-6">
                 <div className="space-y-2">

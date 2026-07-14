@@ -22,6 +22,8 @@ interface BookingRecord {
   watched?: boolean;
   bookingRef?: string;
   invoiceNumber?: string | null;
+  ticketNumbers?: string;
+  paymentStatus?: string;
 }
 
 interface MovieBookingViewProps {
@@ -137,21 +139,28 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
 
       if (error) throw error;
 
-      const formattedBookings: BookingRecord[] = (bookingsData || []).map((b: any) => ({
-        id: b.tickets?.[0]?.ticket_number || b.booking_id,
-        name: b.name || user.name || '',
-        email: b.email || user.email || '',
-        phone: b.phone || '',
-        txnId: b.payments?.[0]?.gateway_payment_id || 'PENDING',
-        paymentMethod: b.payments?.[0]?.gateway_payment_id ? 'Razorpay' : 'Pending',
-        amount: Number(b.amount),
-        quantity: b.quantity || 1,
-        date: b.created_at,
-        status: b.status.toUpperCase(),
-        watched: false,
-        bookingRef: b.booking_id,
-        invoiceNumber: b.tickets?.[0]?.invoice_number || null
-      }));
+      const formattedBookings: BookingRecord[] = (bookingsData || []).map((b: any) => {
+        const ticketNumbers = b.tickets && b.tickets.length > 0 
+          ? b.tickets.map((t: any) => t.ticket_number).join(', ') 
+          : '';
+        return {
+          id: b.id,
+          name: b.name || user?.name || '',
+          email: b.email || user?.email || '',
+          phone: b.phone || '',
+          txnId: b.payments?.[0]?.gateway_order_id || 'PENDING',
+          paymentMethod: b.payments?.[0]?.gateway_order_id ? 'UPI QR/Bank' : 'Pending',
+          amount: Number(b.amount),
+          quantity: b.quantity || 1,
+          date: b.created_at,
+          status: b.status,
+          paymentStatus: b.payment_status,
+          watched: false,
+          bookingRef: b.booking_id,
+          invoiceNumber: b.tickets?.[0]?.invoice_number || null,
+          ticketNumbers: ticketNumbers
+        };
+      });
 
       setBookingHistory(formattedBookings);
     } catch (err) {
@@ -214,8 +223,8 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
           user_id: session.user.id,
           booking_id: bookingRef,
           amount: 59 * quantity,
-          status: 'PENDING',
-          payment_status: 'PENDING',
+          status: 'Pending Admin Approval',
+          payment_status: 'Pending Verification',
           quantity,
           phone,
           email: session.user.email || '',
@@ -235,7 +244,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
           booking_id: bookingData.id,
           gateway_order_id: utrId.trim(),
           amount: 59 * quantity,
-          payment_status: 'PENDING'
+          payment_status: 'Pending Verification'
         }]);
 
       if (paymentErr) {
@@ -255,7 +264,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
         amount: 59 * quantity,
         quantity,
         date: new Date().toISOString(),
-        status: 'PENDING',
+        status: 'Pending Admin Approval',
         watched: false
       };
 
@@ -1253,29 +1262,35 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         <p className="text-[10px] text-zinc-500">
                           Billed: ₹{booking.amount.toFixed(2)} for {booking.quantity} ticket(s) on {new Date(booking.date).toLocaleDateString()}
                         </p>
-                        {booking.status === 'CONFIRMED' ? (
+                        {(booking.status || '').toUpperCase() === 'CONFIRMED' ? (
                           <div className="space-y-1 pt-1">
                             <div className="text-[10px] text-yellow-500 font-bold">
-                              🎟️ Ticket Numbers: {booking.id}
+                              🎟️ Ticket Numbers: {booking.ticketNumbers || booking.id}
                             </div>
                             <div className="flex items-center gap-1.5 text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
                               <Lock size={12} /> Viewing link will be emailed on release
                             </div>
                           </div>
+                        ) : (booking.status || '').toUpperCase() === 'PAYMENT REJECTED' || (booking.status || '').toUpperCase() === 'FAILED' ? (
+                          <div className="pt-2 text-[9px] font-bold text-red-500 uppercase tracking-wider">
+                            ❌ Payment Rejected - UTR Verification Failed
+                          </div>
                         ) : (
                           <div className="pt-2 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
-                            ⏳ Waiting for Payment Verification
+                            ⏳ Waiting for Payment Verification (Payment Status: {booking.paymentStatus})
                           </div>
                         )}
                       </div>
 
                       <div className="flex items-center gap-4">
                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                          booking.status === 'CONFIRMED' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
+                          (booking.status || '').toUpperCase() === 'CONFIRMED' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
+                          (booking.status || '').toUpperCase() === 'PAYMENT REJECTED' || (booking.status || '').toUpperCase() === 'FAILED' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                          'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
                         }`}>
-                          {booking.status === 'CONFIRMED' ? 'Confirmed' : 'Waiting for Payment Verification'}
+                          {booking.status}
                         </span>
-                        {booking.status === 'CONFIRMED' ? (
+                        {(booking.status || '').toUpperCase() === 'CONFIRMED' ? (
                           <div className="flex gap-2">
                             <button 
                               onClick={() => printTicket(booking)} 
@@ -1294,7 +1309,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                           </div>
                         ) : (
                           <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-                            Awaiting Verification
+                            {(booking.status || '').toUpperCase() === 'PAYMENT REJECTED' ? 'Rejected' : 'Awaiting Verification'}
                           </span>
                         )}
                       </div>

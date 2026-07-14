@@ -11,6 +11,11 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS "photoURL" TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS "photoFileName" TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS "kycStatus" TEXT DEFAULT 'NOT_STARTED';
 
+-- Drop legacy status check constraints to allow custom status strings
+ALTER TABLE public.movie_bookings DROP CONSTRAINT IF EXISTS movie_bookings_status_check;
+ALTER TABLE public.movie_bookings DROP CONSTRAINT IF EXISTS movie_bookings_payment_status_check;
+ALTER TABLE public.payments DROP CONSTRAINT IF EXISTS payments_payment_status_check;
+
 -- Initialize role columns for existing users
 UPDATE public.profiles SET primary_role = role WHERE primary_role IS NULL;
 UPDATE public.profiles SET active_role = role WHERE active_role IS NULL;

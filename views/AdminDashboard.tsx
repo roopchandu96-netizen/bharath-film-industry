@@ -196,7 +196,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 }
 
                 if (bookings) {
-                    const formatted = bookings.map((b: any) => ({
+                    // Filter bookings to display only those awaiting admin approval with submitted UTRs
+                    const filteredBookings = bookings.filter((b: any) => {
+                        const utrVal = b.payments?.[0]?.gateway_order_id;
+                        const paymentStatus = b.payment_status;
+                        const bookingStatus = b.status;
+                        
+                        return utrVal && utrVal.trim() !== '' && 
+                               (paymentStatus || '').toLowerCase() === 'pending verification' &&
+                               (bookingStatus || '').toLowerCase() === 'pending admin approval';
+                    });
+
+                    const formatted = filteredBookings.map((b: any) => ({
                         id: b.id,
                         bookingId: b.booking_id,
                         amount: b.amount,
@@ -209,15 +220,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         name: b.name,
                         utr: b.payments?.[0]?.gateway_order_id || 'N/A'
                     }));
-                    const sortedBookings = [...formatted].sort((a, b) => {
-                        const aPending = (a.status || '').toUpperCase() === 'PENDING';
-                        const bPending = (b.status || '').toUpperCase() === 'PENDING';
-                        if (aPending && !bPending) return -1;
-                        if (!aPending && bPending) return 1;
-                        return 0;
-                    });
-                    setPendingBookings(sortedBookings);
-                    pendingBookingsCount = bookings.filter(b => (b.status || '').toUpperCase() === 'PENDING').length;
+
+                    setPendingBookings(formatted);
+                    pendingBookingsCount = filteredBookings.length;
                 } else {
                     setPendingBookings([]);
                 }
@@ -298,50 +303,52 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         try {
             const timestamp = new Date().toISOString();
 
-            // 1. Update movie_bookings status to confirmed
+            // 1. Update movie_bookings status to Confirmed
             const { error: mbError } = await supabase
                 .from('movie_bookings')
                 .update({
-                    status: 'CONFIRMED',
-                    payment_status: 'VERIFIED',
+                    status: 'Confirmed',
+                    payment_status: 'Verified',
                     confirmed_at: timestamp
                 })
                 .eq('id', bookingId);
 
             if (mbError) throw mbError;
 
-            // 2. Update payments record to verified
+            // 2. Update payments record to Verified
             const { error: payError } = await supabase
                 .from('payments')
                 .update({
-                    payment_status: 'VERIFIED',
+                    payment_status: 'Verified',
                     verified_at: timestamp
                 })
                 .eq('booking_id', bookingId);
 
             if (payError) throw payError;
 
-            // 3. Generate comma-separated unique ticket numbers
-            const ticketNumbers: string[] = [];
-            for (let i = 0; i < quantity; i++) {
-                ticketNumbers.push(`TKT-${Math.random().toString(36).substring(2, 10).toUpperCase()}`);
-            }
-            const ticketNumbersStr = ticketNumbers.join(', ');
+            // 3. Generate individual tickets for the booking (one row per ticket)
             const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-            // 4. Insert ticket record
-            const { error: tktError } = await supabase
-                .from('tickets')
-                .insert({
+            const ticketRows = [];
+            const ticketNumbersList: string[] = [];
+            for (let i = 0; i < quantity; i++) {
+                const uniqueTicketNum = `TKT-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+                ticketNumbersList.push(uniqueTicketNum);
+                ticketRows.push({
                     booking_id: bookingId,
-                    ticket_number: ticketNumbersStr,
+                    ticket_number: uniqueTicketNum,
                     invoice_number: invoiceNumber,
                     email_sent: true
                 });
+            }
+
+            // 4. Insert ticket records
+            const { error: tktError } = await supabase
+                .from('tickets')
+                .insert(ticketRows);
 
             if (tktError) throw tktError;
 
-            alert(`Booking ${bookingRef} approved successfully! Generated ticket numbers: ${ticketNumbersStr}`);
+            alert(`Booking ${bookingRef} approved successfully! Generated ${quantity} ticket(s): ${ticketNumbersList.join(', ')}`);
             await fetchDashboardData();
         } catch (e: any) {
             console.error("Booking verification failed:", e);
@@ -359,22 +366,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 .eq('id', bookingId)
                 .maybeSingle();
 
-            // 1. Update movie_bookings status to failed
+            // 1. Update movie_bookings status to Payment Rejected
             const { error: mbError } = await supabase
                 .from('movie_bookings')
                 .update({
-                    status: 'FAILED',
-                    payment_status: 'FAILED'
+                    status: 'Payment Rejected',
+                    payment_status: 'Rejected'
                 })
                 .eq('id', bookingId);
 
             if (mbError) throw mbError;
 
-            // 2. Update payments record to failed
+            // 2. Update payments record to Rejected
             const { error: payError } = await supabase
                 .from('payments')
                 .update({
-                    payment_status: 'FAILED'
+                    payment_status: 'Rejected'
                 })
                 .eq('booking_id', bookingId);
 
@@ -870,8 +877,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                         <td className="p-4 font-mono text-zinc-500">{b.createdAt ? new Date(b.createdAt).toLocaleString() : 'N/A'}</td>
                                         <td className="p-4">
                                             <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
-                                                b.status.toUpperCase() === 'CONFIRMED' ? 'bg-green-900/20 text-green-400 border border-green-500/20' :
-                                                b.status.toUpperCase() === 'FAILED' ? 'bg-red-900/20 text-red-400 border border-red-500/20' :
+                                                (b.status || '').toUpperCase() === 'CONFIRMED' ? 'bg-green-900/20 text-green-400 border border-green-500/20' :
+                                                (b.status || '').toUpperCase() === 'PAYMENT REJECTED' || (b.status || '').toUpperCase() === 'FAILED' ? 'bg-red-900/20 text-red-400 border border-red-500/20' :
                                                 'bg-yellow-900/20 text-yellow-500 border border-yellow-500/20'
                                             }`}>
                                                 {b.status}
@@ -879,8 +886,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                         </td>
                                         <td className="p-4">
                                             <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
-                                                b.paymentStatus.toUpperCase() === 'VERIFIED' ? 'bg-green-900/20 text-green-400 border border-green-500/20' :
-                                                b.paymentStatus.toUpperCase() === 'FAILED' ? 'bg-red-900/20 text-red-400 border border-red-500/20' :
+                                                (b.paymentStatus || '').toUpperCase() === 'VERIFIED' ? 'bg-green-900/20 text-green-400 border border-green-500/20' :
+                                                (b.paymentStatus || '').toUpperCase() === 'REJECTED' || (b.paymentStatus || '').toUpperCase() === 'FAILED' ? 'bg-red-900/20 text-red-400 border border-red-500/20' :
                                                 'bg-yellow-900/20 text-yellow-500 border border-yellow-500/20'
                                             }`}>
                                                 {b.paymentStatus}
@@ -888,7 +895,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                         </td>
                                         <td className="p-4 text-right">
                                             <div className="flex gap-2 justify-end">
-                                                {b.status.toUpperCase() === 'PENDING' && (
+                                                {((b.status || '').toUpperCase() === 'PENDING' || (b.status || '').toLowerCase() === 'pending admin approval') && (
                                                     <>
                                                         <button
                                                             onClick={() => approveTicketPayment(b.id, b.bookingId, b.quantity)}

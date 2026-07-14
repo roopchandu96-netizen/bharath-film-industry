@@ -34,7 +34,8 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
       'siriprathapaneni@gmail.com',
       'roopchandu96@gmail.com'
     ];
-    if (supabaseUser.email && ADMIN_EMAILS.includes(supabaseUser.email) && profile.role !== UserRole.ADMIN) {
+    const userEmail = (supabaseUser.email || "").toLowerCase();
+    if (userEmail && ADMIN_EMAILS.includes(userEmail) && profile.role !== UserRole.ADMIN) {
       try {
         console.log("SYNC_USER: Overriding role to ADMIN in database...");
         const { error: updErr } = await supabase.from('profiles').update({ role: UserRole.ADMIN, primary_role: UserRole.ADMIN, active_role: UserRole.ADMIN }).eq('id', supabaseUser.id);
@@ -123,7 +124,8 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     'siriprathapaneni@gmail.com',
     'roopchandu96@gmail.com'
   ];
-  if (supabaseUser.email && ADMIN_EMAILS.includes(supabaseUser.email)) {
+    const userEmail = (supabaseUser.email || "").toLowerCase();
+  if (userEmail && ADMIN_EMAILS.includes(userEmail)) {
     finalRole = UserRole.ADMIN;
   }
 

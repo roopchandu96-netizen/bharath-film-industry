@@ -68,6 +68,9 @@ export interface Investment {
   txnId?: string;
   investor?: string;
   project?: string;
+  screenshot?: string;
+  paymentMethod?: string;
+  email?: string;
 }
 
 export interface AIProbabilityResult {

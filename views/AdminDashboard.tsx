@@ -27,6 +27,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         totalBookings: 0, 
         totalRevenue: 0 
     });
+    const [investmentSearch, setInvestmentSearch] = useState('');
+    const [previewScreenshot, setPreviewScreenshot] = useState<string | null>(null);
 
     useEffect(() => {
         let mounted = true;
@@ -277,21 +279,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         }
     };
 
-    const verifyInvestment = async (id: string) => {
+    const verifyInvestment = async (id: string, approve: boolean) => {
+        const statusVal = approve ? 'VERIFIED' : 'REJECTED';
         const inv = pendingInvestments.find(i => i.id === id);
-        if (inv) {
-            notifyInvestmentReceived(inv.txnId || 'TXN-UNKNOWN', inv.amount, inv.investor);
-        }
         try {
             const { error } = await supabase
                 .from('investments')
-                .update({ status: 'VERIFIED' })
+                .update({ status: statusVal })
                 .eq('id', id);
 
             if (error) throw error;
 
+            if (approve && inv) {
+                notifyInvestmentReceived(inv.txnId || 'TXN-UNKNOWN', inv.amount, inv.investor);
+            }
+
             setPendingInvestments(prev => prev.filter(inv => inv.id !== id));
-            alert(`Investment ${id} Verified & Funds Released to Escrow.`);
+            alert(approve ? `Investment ${id} Verified & Funds Released to Escrow.` : `Investment ${id} Rejected.`);
         } catch (e: any) {
             console.error("Investment verification failed:", e);
             alert("Verification failed: " + (e?.message || "Check network configuration."));
@@ -790,11 +794,24 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             {activeAdminTab === 'investments' && (
                 <div className="space-y-6">
-                    <h2 className="text-xl font-serif text-white flex items-center gap-3">
-                        <DollarSign className="text-green-500" size={20} />
-                        Inbound Capital Verification
-                        <span className="text-sm font-sans font-normal text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full">{pendingInvestments.length}</span>
-                    </h2>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <h2 className="text-xl font-serif text-white flex items-center gap-3">
+                            <DollarSign className="text-green-500" size={20} />
+                            Inbound Capital Verification
+                            <span className="text-sm font-sans font-normal text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full">{pendingInvestments.length}</span>
+                        </h2>
+
+                        {/* Search input */}
+                        <div className="w-full md:w-72">
+                            <input
+                                type="text"
+                                value={investmentSearch}
+                                onChange={(e) => setInvestmentSearch(e.target.value)}
+                                placeholder="Search UTR, name, email, amount..."
+                                className="w-full bg-zinc-950 border border-zinc-900 rounded-xl py-2 px-4 text-xs text-white outline-none focus:border-yellow-500/50 transition-all"
+                            />
+                        </div>
+                    </div>
 
                     <div className="overflow-x-auto bg-zinc-950 border border-zinc-900 rounded-[2rem] p-4">
                         <table className="w-full text-left border-collapse">
@@ -802,33 +819,74 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 <tr className="border-b border-zinc-800 text-zinc-500 text-[10px] uppercase font-bold tracking-widest">
                                     <th className="p-4">Date</th>
                                     <th className="p-4">Investor</th>
+                                    <th className="p-4">Email</th>
                                     <th className="p-4">Project</th>
-                                    <th className="p-4">Txn Ref ID</th>
+                                    <th className="p-4">Method</th>
+                                    <th className="p-4">Txn Ref / UTR</th>
+                                    <th className="p-4">Screenshot</th>
                                     <th className="p-4">Amount</th>
-                                    <th className="p-4 text-right">Action</th>
+                                    <th className="p-4 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="text-sm text-zinc-300">
-                                {pendingInvestments.map(inv => (
-                                    <tr key={inv.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors">
-                                        <td className="p-4 font-mono text-zinc-500">{inv.date}</td>
-                                        <td className="p-4 font-bold text-white">{inv.investor}</td>
-                                        <td className="p-4">{inv.project}</td>
-                                        <td className="p-4 font-mono text-yellow-500">{inv.txnId}</td>
-                                        <td className="p-4 font-mono text-green-400">₹{inv.amount.toLocaleString('en-IN')}</td>
-                                        <td className="p-4 text-right">
-                                            <button
-                                                onClick={() => verifyInvestment(inv.id)}
-                                                className="px-4 py-2 bg-green-950 text-green-400 border border-green-800 rounded-lg hover:bg-green-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider"
-                                            >
-                                                Verify Receipt
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {pendingInvestments
+                                    .filter(inv => {
+                                        const q = investmentSearch.toLowerCase().trim();
+                                        if (!q) return true;
+                                        return (inv.txnId || '').toLowerCase().includes(q) ||
+                                               (inv.investor || '').toLowerCase().includes(q) ||
+                                               (inv.email || '').toLowerCase().includes(q) ||
+                                               (inv.project || '').toLowerCase().includes(q) ||
+                                               (inv.id || '').toLowerCase().includes(q) ||
+                                               (inv.paymentMethod || '').toLowerCase().includes(q) ||
+                                               (inv.amount || 0).toString().includes(q);
+                                    })
+                                    .map(inv => (
+                                        <tr key={inv.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors">
+                                            <td className="p-4 font-mono text-zinc-500 text-xs">{inv.date ? new Date(inv.date).toLocaleDateString() : 'N/A'}</td>
+                                            <td className="p-4 font-bold text-white">{inv.investor}</td>
+                                            <td className="p-4 text-xs font-mono">{inv.email || 'N/A'}</td>
+                                            <td className="p-4">{inv.project}</td>
+                                            <td className="p-4 text-xs">
+                                                <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-850 text-zinc-400 font-bold uppercase tracking-wider text-[9px]">
+                                                    {inv.paymentMethod || 'Manual'}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 font-mono text-yellow-500 font-bold">{inv.txnId}</td>
+                                            <td className="p-4">
+                                                {inv.screenshot ? (
+                                                    <button
+                                                        onClick={() => setPreviewScreenshot(inv.screenshot)}
+                                                        className="px-2.5 py-1 bg-yellow-500/10 hover:bg-yellow-500 text-yellow-500 hover:text-black border border-yellow-500/20 rounded-lg transition-all text-[10px] font-black uppercase tracking-wider"
+                                                    >
+                                                        View Proof
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-zinc-600 text-xs italic">No Proof</span>
+                                                )}
+                                            </td>
+                                            <td className="p-4 font-mono text-green-400">₹{inv.amount.toLocaleString('en-IN')}.00</td>
+                                            <td className="p-4 text-right">
+                                                <div className="flex gap-2 justify-end">
+                                                    <button
+                                                        onClick={() => verifyInvestment(inv.id, true)}
+                                                        className="px-3 py-1.5 bg-green-950 text-green-400 border border-green-800 rounded-lg hover:bg-green-500 hover:text-black transition-all text-[10px] font-black uppercase tracking-wider"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button
+                                                        onClick={() => verifyInvestment(inv.id, false)}
+                                                        className="px-3 py-1.5 bg-red-950 text-red-400 border border-red-800 rounded-lg hover:bg-red-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-wider"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
                                 {pendingInvestments.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="p-12 text-center text-zinc-600">No pending transactions found.</td>
+                                        <td colSpan={9} className="p-12 text-center text-zinc-600">No pending transactions found.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -930,6 +988,24 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 )}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Inbound payment screenshot preview modal */}
+            {previewScreenshot && (
+                <div className="fixed inset-0 z-[250] bg-black/90 backdrop-blur-md flex items-center justify-center p-6">
+                    <div className="w-full max-w-2xl bg-zinc-950 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl relative p-6 space-y-4">
+                        <button
+                            onClick={() => setPreviewScreenshot(null)}
+                            className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider">Payment Verification Screenshot Proof</h3>
+                        <div className="w-full max-h-[70vh] overflow-auto rounded-xl border border-zinc-900 bg-black flex items-center justify-center">
+                            <img src={previewScreenshot} alt="Payment Proof" className="max-w-full max-h-full object-contain" />
+                        </div>
                     </div>
                 </div>
             )}

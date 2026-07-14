@@ -16,6 +16,11 @@ ALTER TABLE public.movie_bookings DROP CONSTRAINT IF EXISTS movie_bookings_statu
 ALTER TABLE public.movie_bookings DROP CONSTRAINT IF EXISTS movie_bookings_payment_status_check;
 ALTER TABLE public.payments DROP CONSTRAINT IF EXISTS payments_payment_status_check;
 
+-- Ensure screenshot and payment_method exist on investments
+ALTER TABLE public.investments ADD COLUMN IF NOT EXISTS screenshot TEXT;
+ALTER TABLE public.investments ADD COLUMN IF NOT EXISTS payment_method TEXT;
+ALTER TABLE public.investments ADD COLUMN IF NOT EXISTS email TEXT;
+
 -- Initialize role columns for existing users
 UPDATE public.profiles SET primary_role = role WHERE primary_role IS NULL;
 UPDATE public.profiles SET active_role = role WHERE active_role IS NULL;

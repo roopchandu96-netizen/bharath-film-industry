@@ -75,12 +75,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             let pendingProjectsCount = 0;
             let pendingUsersCount = 0;
             let pendingBookingsCount = 0;
+
+            // Temp debug logging
+            try {
+                const { data: { user: authUser } } = await supabase.auth.getUser();
+                console.log("DEBUG [AdminDashboard]: Authenticated User ID:", authUser?.id);
+                console.log("DEBUG [AdminDashboard]: Authenticated User Email:", authUser?.email);
+                console.log("DEBUG [AdminDashboard]: AdminDashboard Prop User:", user);
+            } catch (err) {
+                console.error("DEBUG [AdminDashboard] failed to get auth user:", err);
+            }
             
             // 1. Fetch pending projects
             try {
-                const { data: projects } = await supabase
+                const { data: projects, error } = await supabase
                     .from('projects')
                     .select('*');
+                if (error) {
+                    console.error("SUPABASE ERROR [projects query]:", error);
+                }
                 if (projects) {
                     const sortedProjects = [...projects].sort((a, b) => {
                         const aPending = (a.status || '').toUpperCase() === 'PENDING';
@@ -98,9 +111,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             // 2. Fetch pending users
             try {
-                const { data: users } = await supabase
+                const { data: users, error } = await supabase
                     .from('profiles')
                     .select('*');
+                if (error) {
+                    console.error("SUPABASE ERROR [profiles query]:", error);
+                }
                 if (users) {
                     const sortedUsers = [...users].sort((a, b) => {
                         const aPending = (a.kycStatus || '').toUpperCase() === 'PENDING';
@@ -118,9 +134,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             // 3. Fetch pending investments
             try {
-                const { data: investments } = await supabase
+                const { data: investments, error } = await supabase
                     .from('investments')
                     .select('*');
+                if (error) {
+                    console.error("SUPABASE ERROR [investments query]:", error);
+                }
                 if (investments) {
                     const sortedInvestments = [...investments].sort((a, b) => {
                         const aPending = (a.status || '').toUpperCase() === 'PENDING';
@@ -139,11 +158,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             // 4. Fetch notifications
             try {
-                const { data: notifs } = await supabase
+                const { data: notifs, error } = await supabase
                     .from('notifications')
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(10);
+                if (error) {
+                    console.error("SUPABASE ERROR [notifications query]:", error);
+                }
                 if (notifs) setNotifications(notifs);
             } catch (err) {
                 console.error("Error fetching notifications:", err);
@@ -151,7 +173,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             // 5. Fetch pending movie bookings (awaiting admin UTR verification)
             try {
-                const { data: bookings } = await supabase
+                const { data: bookings, error } = await supabase
                     .from('movie_bookings')
                     .select(`
                         id,
@@ -169,6 +191,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             payment_status
                         )
                     `);
+                if (error) {
+                    console.error("SUPABASE ERROR [bookings query]:", error);
+                }
 
                 if (bookings) {
                     const formatted = bookings.map((b: any) => ({

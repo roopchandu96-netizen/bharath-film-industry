@@ -296,8 +296,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     const approveTicketPayment = async (bookingId: string, bookingRef: string, quantity: number) => {
         if (!confirm(`Are you sure you want to APPROVE payment reference for Booking ${bookingRef}?`)) return;
         try {
-            await supabase.from('profiles').update({ role: 'ADMIN' }).eq('id', user.id);
-
             const timestamp = new Date().toISOString();
 
             // 1. Update movie_bookings status to confirmed
@@ -354,8 +352,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     const rejectTicketPayment = async (bookingId: string, bookingRef: string) => {
         if (!confirm(`Are you sure you want to REJECT payment reference for Booking ${bookingRef}?`)) return;
         try {
-            await supabase.from('profiles').update({ role: 'ADMIN' }).eq('id', user.id);
-
             // Fetch booking email for notification
             const { data: bookingData } = await supabase
                 .from('movie_bookings')
@@ -409,9 +405,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         if (processingId) return;
         setProcessingId(projectId);
         try {
-            // FORCE giving this user the ADMIN role in the database before updating (fixes missing DB role)
-            await supabase.from('profiles').update({ role: 'ADMIN' }).eq('id', user.id);
-
             const project = pendingProjects.find(p => p.id === projectId);
             const { data, error } = await supabase
                 .from('projects')
@@ -449,7 +442,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         if (processingId) return;
         setProcessingId(projectId);
         try {
-            await supabase.from('profiles').update({ role: 'ADMIN' }).eq('id', user.id);
             const { data, error } = await supabase
                 .from('projects')
                 .update({ status: 'REJECTED' }) 

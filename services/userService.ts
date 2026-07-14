@@ -10,8 +10,17 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     .single();
 
   if (profile) {
-    // Force ADMIN role for this email if not already set
-    if (supabaseUser.email === 'bharathfilmindustry@gmail.com' && profile.role !== UserRole.ADMIN) {
+    // Force ADMIN role for developer/admin emails if not already set
+    const ADMIN_EMAILS = [
+      'bharathfilmindustry@gmail.com',
+      'shubhamghodageri@gmail.com',
+      'thechittoortimes@gmail.com',
+      'chanduchowdary324@gmail.com',
+      'prathapaneniroopchandu@gmail.com',
+      'siriprathapaneni@gmail.com',
+      'roopchandu96@gmail.com'
+    ];
+    if (supabaseUser.email && ADMIN_EMAILS.includes(supabaseUser.email) && profile.role !== UserRole.ADMIN) {
       await supabase.from('profiles').update({ role: UserRole.ADMIN, primary_role: UserRole.ADMIN, active_role: UserRole.ADMIN }).eq('id', supabaseUser.id);
       profile.role = UserRole.ADMIN;
       profile.primary_role = UserRole.ADMIN;
@@ -69,7 +78,16 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     finalRole = UserRole.INVESTOR;
   }
 
-  if (supabaseUser.email === 'bharathfilmindustry@gmail.com') {
+  const ADMIN_EMAILS = [
+    'bharathfilmindustry@gmail.com',
+    'shubhamghodageri@gmail.com',
+    'thechittoortimes@gmail.com',
+    'chanduchowdary324@gmail.com',
+    'prathapaneniroopchandu@gmail.com',
+    'siriprathapaneni@gmail.com',
+    'roopchandu96@gmail.com'
+  ];
+  if (supabaseUser.email && ADMIN_EMAILS.includes(supabaseUser.email)) {
     finalRole = UserRole.ADMIN;
   }
 

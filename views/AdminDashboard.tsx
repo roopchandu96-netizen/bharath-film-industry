@@ -80,11 +80,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             try {
                 const { data: projects } = await supabase
                     .from('projects')
-                    .select('*')
-                    .eq('status', 'PENDING');
+                    .select('*');
                 if (projects) {
-                    setPendingProjects(projects as MovieProject[]);
-                    pendingProjectsCount = projects.length;
+                    const sortedProjects = [...projects].sort((a, b) => {
+                        const aPending = (a.status || '').toUpperCase() === 'PENDING';
+                        const bPending = (b.status || '').toUpperCase() === 'PENDING';
+                        if (aPending && !bPending) return -1;
+                        if (!aPending && bPending) return 1;
+                        return 0;
+                    });
+                    setPendingProjects(sortedProjects as MovieProject[]);
+                    pendingProjectsCount = projects.filter(p => (p.status || '').toUpperCase() === 'PENDING').length;
                 }
             } catch (err) {
                 console.error("Error fetching projects:", err);
@@ -94,11 +100,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             try {
                 const { data: users } = await supabase
                     .from('profiles')
-                    .select('*')
-                    .eq('kycStatus', 'PENDING');
+                    .select('*');
                 if (users) {
-                    setPendingUsers(users as User[]);
-                    pendingUsersCount = users.length;
+                    const sortedUsers = [...users].sort((a, b) => {
+                        const aPending = (a.kycStatus || '').toUpperCase() === 'PENDING';
+                        const bPending = (b.kycStatus || '').toUpperCase() === 'PENDING';
+                        if (aPending && !bPending) return -1;
+                        if (!aPending && bPending) return 1;
+                        return 0;
+                    });
+                    setPendingUsers(sortedUsers as User[]);
+                    pendingUsersCount = users.filter(u => (u.kycStatus || '').toUpperCase() === 'PENDING').length;
                 }
             } catch (err) {
                 console.error("Error fetching pending users:", err);
@@ -108,10 +120,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             try {
                 const { data: investments } = await supabase
                     .from('investments')
-                    .select('*')
-                    .eq('status', 'PENDING');
+                    .select('*');
                 if (investments) {
-                    setPendingInvestments(investments);
+                    const sortedInvestments = [...investments].sort((a, b) => {
+                        const aPending = (a.status || '').toUpperCase() === 'PENDING';
+                        const bPending = (b.status || '').toUpperCase() === 'PENDING';
+                        if (aPending && !bPending) return -1;
+                        if (!aPending && bPending) return 1;
+                        return 0;
+                    });
+                    setPendingInvestments(sortedInvestments);
                 } else {
                     setPendingInvestments([]);
                 }
@@ -150,8 +168,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             gateway_order_id,
                             payment_status
                         )
-                    `)
-                    .eq('status', 'PENDING');
+                    `);
 
                 if (bookings) {
                     const formatted = bookings.map((b: any) => ({
@@ -167,8 +184,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         name: b.name,
                         utr: b.payments?.[0]?.gateway_order_id || 'N/A'
                     }));
-                    setPendingBookings(formatted);
-                    pendingBookingsCount = bookings.length;
+                    const sortedBookings = [...formatted].sort((a, b) => {
+                        const aPending = (a.status || '').toUpperCase() === 'PENDING';
+                        const bPending = (b.status || '').toUpperCase() === 'PENDING';
+                        if (aPending && !bPending) return -1;
+                        if (!aPending && bPending) return 1;
+                        return 0;
+                    });
+                    setPendingBookings(sortedBookings);
+                    pendingBookingsCount = bookings.filter(b => (b.status || '').toUpperCase() === 'PENDING').length;
                 } else {
                     setPendingBookings([]);
                 }

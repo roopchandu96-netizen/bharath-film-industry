@@ -291,6 +291,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             if (error) throw error;
 
             if (approve && inv) {
+                // Fetch the corresponding project details to increment funding stats
+                const { data: project } = await supabase
+                    .from('projects')
+                    .select('current_funding, investor_count')
+                    .eq('id', inv.projectId)
+                    .single();
+                
+                if (project) {
+                    await supabase.from('projects').update({
+                        current_funding: (project.current_funding || 0) + inv.amount,
+                        investor_count: (project.investor_count || 0) + 1
+                    }).eq('id', inv.projectId);
+                }
+
                 notifyInvestmentReceived(inv.txnId || 'TXN-UNKNOWN', inv.amount, inv.investor);
             }
 

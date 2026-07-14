@@ -11,13 +11,15 @@ export const recordInvestment = async (uid: string, investment: Omit<Investment,
 
   if (error) throw error;
 
-  // Update project counters (usually done via Supabase RPC or Triggers)
-  const { data: project } = await supabase.from('projects').select('current_funding, investor_count').eq('id', investment.projectId).single();
-  if (project) {
-    await supabase.from('projects').update({
-      current_funding: project.current_funding + investment.amount,
-      investor_count: project.investor_count + 1
-    }).eq('id', investment.projectId);
+  // Only update project counters immediately if the investment is auto-verified (e.g. Razorpay)
+  if (investment.status === 'VERIFIED') {
+    const { data: project } = await supabase.from('projects').select('current_funding, investor_count').eq('id', investment.projectId).single();
+    if (project) {
+      await supabase.from('projects').update({
+        current_funding: project.current_funding + investment.amount,
+        investor_count: project.investor_count + 1
+      }).eq('id', investment.projectId);
+    }
   }
 
   return data.id;

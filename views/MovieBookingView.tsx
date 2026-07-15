@@ -95,6 +95,8 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
     }
   };
 
+  const [isClaiming, setIsClaiming] = useState(false);
+
   useEffect(() => {
     loadBookingHistory();
   }, [user]);
@@ -133,7 +135,6 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
       if (error) throw error;
 
       const formattedBookings: BookingRecord[] = (bookingsData || [])
-        .filter((b: any) => b.status === 'CONFIRMED' && b.payment_status === 'Verified')
         .map((b: any) => {
           const ticketNumbers = b.tickets && b.tickets.length > 0 
             ? b.tickets.map((t: any) => t.ticket_number).join(', ') 
@@ -161,6 +162,37 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
     } catch (err) {
       console.error("Failed to load booking history from Supabase:", err);
       setBookingHistory([]);
+    }
+  };
+
+  const handleClaimPayment = async (bookingRef: string) => {
+    const paymentId = prompt("Please enter the Razorpay Payment ID (starts with pay_...) from your receipt:");
+    if (!paymentId) return;
+    
+    if (!paymentId.trim().startsWith('pay_')) {
+      alert("Invalid format. Razorpay Payment IDs must start with 'pay_'.");
+      return;
+    }
+    
+    setIsClaiming(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-payment', {
+        body: {
+          razorpay_payment_id: paymentId.trim(),
+          booking_ref: bookingRef,
+          razorpay_signature: 'manual_recovery'
+        }
+      });
+      
+      if (error) throw error;
+      
+      alert("Success! Your payment was verified and your ticket has been generated.");
+      await loadBookingHistory();
+    } catch (err: any) {
+      console.error("Claim failed:", err);
+      alert("Verification failed: " + (err.message || "Please make sure the Payment ID matches this booking's amount and reference."));
+    } finally {
+      setIsClaiming(false);
     }
   };
 
@@ -1075,36 +1107,64 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         <p className="text-[10px] text-zinc-500">
                           Billed: ₹{booking.amount.toFixed(2)} for {booking.quantity} ticket(s) on {new Date(booking.date).toLocaleDateString()}
                         </p>
-                        <div className="space-y-1 pt-1">
-                          <div className="text-[10px] text-yellow-500 font-bold">
-                            🎟️ Ticket Numbers: {booking.ticketNumbers || booking.id}
+                        {booking.status.toUpperCase() === 'CONFIRMED' ? (
+                          <div className="space-y-1 pt-1">
+                            <div className="text-[10px] text-yellow-500 font-bold">
+                              🎟️ Ticket Numbers: {booking.ticketNumbers || booking.id}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
+                              <Lock size={12} /> Viewing link will be emailed on release
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1.5 text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
-                            <Lock size={12} /> Viewing link will be emailed on release
+                        ) : (
+                          <div className="space-y-1 pt-1">
+                            <div className="text-[10px] text-zinc-500 font-medium italic">
+                              Payment status: {booking.paymentStatus || 'Pending Verification'}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
+                              <Clock size={12} /> Awaiting manual payment verification
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-4">
-                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-green-500/10 text-green-500 border border-green-500/20">
-                          {booking.status}
-                        </span>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => printTicket(booking)} 
-                            title="Print Ticket"
-                            className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
-                          >
-                            <Printer size={14} />
-                          </button>
-                          <button 
-                            onClick={() => printInvoice(booking)} 
-                            title="Download Tax Invoice"
-                            className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
-                          >
-                            <FileText size={14} />
-                          </button>
-                        </div>
+                        {booking.status.toUpperCase() === 'CONFIRMED' ? (
+                          <>
+                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-green-500/10 text-green-500 border border-green-500/20">
+                              {booking.status}
+                            </span>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => printTicket(booking)} 
+                                title="Print Ticket"
+                                className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
+                              >
+                                <Printer size={14} />
+                              </button>
+                              <button 
+                                onClick={() => printInvoice(booking)} 
+                                title="Download Tax Invoice"
+                                className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
+                              >
+                                <FileText size={14} />
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 animate-pulse">
+                              {booking.status}
+                            </span>
+                            <button
+                              disabled={isClaiming}
+                              onClick={() => handleClaimPayment(booking.bookingRef || '')}
+                              className="px-4 py-2 bg-yellow-500 text-black font-extrabold text-[9px] uppercase tracking-wider rounded-xl hover:bg-yellow-400 disabled:opacity-50 transition-all"
+                            >
+                              Verify Payment
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   );

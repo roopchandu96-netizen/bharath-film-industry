@@ -142,12 +142,46 @@ export default {
       }
 
       // Authenticate details retrieved from API
-      if (razorpayPayment.status !== "captured") {
-        console.error(`Payment status is ${razorpayPayment.status}, expected captured.`);
+      if (razorpayPayment.status !== "captured" && razorpayPayment.status !== "authorized") {
+        console.error(`Payment status is ${razorpayPayment.status}, expected captured or authorized.`);
         return new Response(
-          JSON.stringify({ error: "Payment has not been captured yet." }),
+          JSON.stringify({ error: "Payment is in an invalid state: " + razorpayPayment.status }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      }
+
+      // Automatically capture payment if it is in authorized state
+      if (razorpayPayment.status === "authorized") {
+        try {
+          console.log(`Payment ${razorpay_payment_id} is authorized. Capturing payment now...`);
+          const captureResponse = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}/capture`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Basic " + btoa(keyId + ":" + keySecret)
+            },
+            body: JSON.stringify({
+              amount: razorpayPayment.amount,
+              currency: "INR"
+            })
+          });
+
+          if (!captureResponse.ok) {
+            const captureErrorText = await captureResponse.text();
+            console.error("Failed to capture authorized payment:", captureErrorText);
+            return new Response(
+              JSON.stringify({ error: "Failed to capture authorized payment." }),
+              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          console.log(`Payment ${razorpay_payment_id} captured successfully.`);
+        } catch (captureErr) {
+          console.error("Exception during payment capture:", captureErr);
+          return new Response(
+            JSON.stringify({ error: "Payment capture process failed." }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
       }
 
       if (razorpayPayment.currency !== "INR") {
@@ -197,7 +231,18 @@ export default {
         );
       }
 
-      const booking = paymentRecord.movie_bookings;
+      let booking = paymentRecord.movie_bookings;
+      if (Array.isArray(booking)) {
+        booking = booking[0];
+      }
+
+      if (!booking) {
+        console.error("Booking relation object is empty on payment record.");
+        return new Response(
+          JSON.stringify({ error: "Failed to retrieve associated booking details." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       const amountINR = razorpayPayment.amount / 100;
 
       // Validate payment amount match

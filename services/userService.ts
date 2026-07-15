@@ -125,7 +125,6 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     movie_lover_activated: finalRole === UserRole.MOVIE_LOVER,
     kycStatus: finalRole === UserRole.ADMIN ? 'VERIFIED' : 'PENDING',
     totalInvested: 0,
-    projects: [],
     photoURL: `https://api.dicebear.com/7.x/avataaars/svg?seed=${finalName}`
   };
 

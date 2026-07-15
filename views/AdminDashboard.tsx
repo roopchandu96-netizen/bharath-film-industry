@@ -10,7 +10,7 @@ interface AdminDashboardProps {
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
-    const [activeAdminTab, setActiveAdminTab] = useState<'projects' | 'investments' | 'users' | 'settings' | 'tickets'>('projects');
+    const [activeAdminTab, setActiveAdminTab] = useState<'projects' | 'investments' | 'users' | 'settings'>('projects');
     const [pendingProjects, setPendingProjects] = useState<MovieProject[]>([]);
     const [pendingInvestments, setPendingInvestments] = useState<any[]>([]);
     const [pendingUsers, setPendingUsers] = useState<User[]>([]);
@@ -173,64 +173,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 console.error("Error fetching notifications:", err);
             }
 
-            // 5. Fetch pending movie bookings (awaiting admin UTR verification)
-            try {
-                const { data: bookings, error } = await supabase
-                    .from('movie_bookings')
-                    .select(`
-                        id,
-                        booking_id,
-                        amount,
-                        status,
-                        payment_status,
-                        created_at,
-                        quantity,
-                        phone,
-                        email,
-                        name,
-                        payments (
-                            gateway_order_id,
-                            payment_status
-                        )
-                    `);
-                if (error) {
-                    console.error("SUPABASE ERROR [bookings query]:", error);
-                }
-
-                if (bookings) {
-                    // Filter bookings to display only those awaiting admin approval with submitted UTRs
-                    const filteredBookings = bookings.filter((b: any) => {
-                        const utrVal = b.payments?.[0]?.gateway_order_id;
-                        const paymentStatus = b.payment_status;
-                        const bookingStatus = b.status;
-                        
-                        return utrVal && utrVal.trim() !== '' && 
-                               (paymentStatus || '').toLowerCase() === 'pending verification' &&
-                               (bookingStatus || '').toLowerCase() === 'pending admin approval';
-                    });
-
-                    const formatted = filteredBookings.map((b: any) => ({
-                        id: b.id,
-                        bookingId: b.booking_id,
-                        amount: b.amount,
-                        status: b.status,
-                        paymentStatus: b.payment_status,
-                        createdAt: b.created_at,
-                        quantity: b.quantity,
-                        phone: b.phone,
-                        email: b.email,
-                        name: b.name,
-                        utr: b.payments?.[0]?.gateway_order_id || 'N/A'
-                    }));
-
-                    setPendingBookings(formatted);
-                    pendingBookingsCount = filteredBookings.length;
-                } else {
-                    setPendingBookings([]);
-                }
-            } catch (err) {
-                console.error("Error fetching bookings:", err);
-            }
+            // 5. Fetch pending movie bookings (awaiting admin UTR verification) - Removed manual flow
 
             // 6. Fetch stats
             try {
@@ -316,113 +259,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         }
     };
 
-    const approveTicketPayment = async (bookingId: string, bookingRef: string, quantity: number) => {
-        if (!confirm(`Are you sure you want to APPROVE payment reference for Booking ${bookingRef}?`)) return;
-        try {
-            const timestamp = new Date().toISOString();
 
-            // 1. Update movie_bookings status to Confirmed
-            const { error: mbError } = await supabase
-                .from('movie_bookings')
-                .update({
-                    status: 'Confirmed',
-                    payment_status: 'Verified',
-                    confirmed_at: timestamp
-                })
-                .eq('id', bookingId);
-
-            if (mbError) throw mbError;
-
-            // 2. Update payments record to Verified
-            const { error: payError } = await supabase
-                .from('payments')
-                .update({
-                    payment_status: 'Verified',
-                    verified_at: timestamp
-                })
-                .eq('booking_id', bookingId);
-
-            if (payError) throw payError;
-
-            // 3. Generate individual tickets for the booking (one row per ticket)
-            const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-            const ticketRows = [];
-            const ticketNumbersList: string[] = [];
-            for (let i = 0; i < quantity; i++) {
-                const uniqueTicketNum = `TKT-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-                ticketNumbersList.push(uniqueTicketNum);
-                ticketRows.push({
-                    booking_id: bookingId,
-                    ticket_number: uniqueTicketNum,
-                    invoice_number: invoiceNumber,
-                    email_sent: true
-                });
-            }
-
-            // 4. Insert ticket records
-            const { error: tktError } = await supabase
-                .from('tickets')
-                .insert(ticketRows);
-
-            if (tktError) throw tktError;
-
-            alert(`Booking ${bookingRef} approved successfully! Generated ${quantity} ticket(s): ${ticketNumbersList.join(', ')}`);
-            await fetchDashboardData();
-        } catch (e: any) {
-            console.error("Booking verification failed:", e);
-            alert("Approval failed: " + (e?.message || "Check network/RLS configuration."));
-        }
-    };
-
-    const rejectTicketPayment = async (bookingId: string, bookingRef: string) => {
-        if (!confirm(`Are you sure you want to REJECT payment reference for Booking ${bookingRef}?`)) return;
-        try {
-            // Fetch booking email for notification
-            const { data: bookingData } = await supabase
-                .from('movie_bookings')
-                .select('email, name')
-                .eq('id', bookingId)
-                .maybeSingle();
-
-            // 1. Update movie_bookings status to Payment Rejected
-            const { error: mbError } = await supabase
-                .from('movie_bookings')
-                .update({
-                    status: 'Payment Rejected',
-                    payment_status: 'Rejected'
-                })
-                .eq('id', bookingId);
-
-            if (mbError) throw mbError;
-
-            // 2. Update payments record to Rejected
-            const { error: payError } = await supabase
-                .from('payments')
-                .update({
-                    payment_status: 'Rejected'
-                })
-                .eq('booking_id', bookingId);
-
-            if (payError) throw payError;
-
-            // 3. Notify user of rejection
-            if (bookingData?.email) {
-                await supabase.from('notifications').insert([{
-                    recipient: bookingData.email,
-                    subject: 'Ticket Payment Verification Failed',
-                    message: `Hi ${bookingData.name || 'Customer'},\n\nYour manual payment reference for Booking ${bookingRef} could not be verified by BFI Admin. Please check your transaction details and submit a new UTR ID if required.`,
-                    read: false,
-                    type: 'SYSTEM'
-                }]);
-            }
-
-            alert(`Booking ${bookingRef} rejected successfully.`);
-            await fetchDashboardData();
-        } catch (e: any) {
-            console.error("Booking rejection failed:", e);
-            alert("Rejection failed: " + (e?.message || "Check network/RLS configuration."));
-        }
-    };
 
     const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -494,11 +331,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         }
     };
 
-    if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <Loader2 className="animate-spin text-yellow-500" size={48} />
-        </div>
-    );
+
 
     return (
         <div className="min-h-screen bg-black text-white p-8 space-y-8 animate-in fade-in duration-500 font-sans">
@@ -562,28 +395,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         <div className="p-3 bg-yellow-500/10 rounded-xl text-yellow-500"><Users size={20} /></div>
                         <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Total Registered Users</span>
                     </div>
-                    <p className="text-3xl font-serif text-white">{stats.totalUsers}</p>
+                    <p className="text-3xl font-serif text-white">{loading ? '...' : stats.totalUsers}</p>
                 </div>
                 <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-3xl">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-green-500/10 rounded-xl text-green-500"><DollarSign size={20} /></div>
                         <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Total Revenue</span>
                     </div>
-                    <p className="text-3xl font-serif text-white">₹{stats.totalRevenue.toLocaleString('en-IN')}</p>
+                    <p className="text-3xl font-serif text-white">{loading ? '...' : `₹${stats.totalRevenue.toLocaleString('en-IN')}`}</p>
                 </div>
                 <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-3xl">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500"><Film size={20} /></div>
                         <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Total Approved Scripts</span>
                     </div>
-                    <p className="text-3xl font-serif text-white">{stats.approvedProjects}</p>
+                    <p className="text-3xl font-serif text-white">{loading ? '...' : stats.approvedProjects}</p>
                 </div>
                 <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-3xl">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-red-500/10 rounded-xl text-red-500"><CheckCircle size={20} /></div>
                         <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Total Bookings</span>
                     </div>
-                    <p className="text-3xl font-serif text-white">{stats.totalBookings}</p>
+                    <p className="text-3xl font-serif text-white">{loading ? '...' : stats.totalBookings}</p>
                 </div>
             </div>
 
@@ -592,19 +425,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 <div className="p-5 bg-zinc-900/30 border border-zinc-800 rounded-3xl flex justify-between items-center">
                     <div>
                         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Pending User Approvals</p>
-                        <p className="text-2xl font-serif text-yellow-500 mt-1">{stats.pendingUsers}</p>
+                        <p className="text-2xl font-serif text-yellow-500 mt-1">{loading ? '...' : stats.pendingUsers}</p>
                     </div>
                 </div>
                 <div className="p-5 bg-zinc-900/30 border border-zinc-800 rounded-3xl flex justify-between items-center">
                     <div>
                         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Pending Script Approvals</p>
-                        <p className="text-2xl font-serif text-yellow-500 mt-1">{stats.pendingProjects}</p>
+                        <p className="text-2xl font-serif text-yellow-500 mt-1">{loading ? '...' : stats.pendingProjects}</p>
                     </div>
                 </div>
                 <div className="p-5 bg-zinc-900/30 border border-zinc-800 rounded-3xl flex justify-between items-center">
                     <div>
                         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Pending Ticket Payments</p>
-                        <p className="text-2xl font-serif text-yellow-500 mt-1">{stats.pendingBookings}</p>
+                        <p className="text-2xl font-serif text-yellow-500 mt-1">{loading ? '...' : stats.pendingBookings}</p>
                     </div>
                 </div>
             </div>
@@ -629,12 +462,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 >
                     User Approvals ({stats.pendingUsers})
                 </button>
-                <button
-                    onClick={() => setActiveAdminTab('tickets')}
-                    className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'tickets' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
-                >
-                    Ticket Payment Verification ({stats.pendingBookings})
-                </button>
+
             </div>
 
             {/* Content Area */}
@@ -909,102 +737,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 </div>
             )}
 
-            {activeAdminTab === 'tickets' && (
-                <div className="space-y-6">
-                    <h2 className="text-xl font-serif text-white flex items-center gap-3">
-                        <Film className="text-yellow-500" size={20} />
-                        Ticket Payment Verification
-                        <span className="text-sm font-sans font-normal text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full">{pendingBookings.length}</span>
-                    </h2>
 
-                    <div className="overflow-x-auto bg-zinc-950 border border-zinc-900 rounded-[2rem] p-4">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-zinc-800 text-zinc-500 text-[10px] uppercase font-bold tracking-widest">
-                                    <th className="p-4">Booking ID</th>
-                                    <th className="p-4">Movie Name</th>
-                                    <th className="p-4">Customer Name</th>
-                                    <th className="p-4">Customer Email</th>
-                                    <th className="p-4">Phone Number</th>
-                                    <th className="p-4">Number of Tickets</th>
-                                    <th className="p-4">Total Amount</th>
-                                    <th className="p-4">UTR / Ref Number</th>
-                                    <th className="p-4">Payment Date & Time</th>
-                                    <th className="p-4">Booking Status</th>
-                                    <th className="p-4">Payment Status</th>
-                                    <th className="p-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-sm text-zinc-300">
-                                {pendingBookings.map(b => (
-                                    <tr key={b.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors">
-                                        <td className="p-4 font-mono font-bold text-white">{b.bookingId}</td>
-                                        <td className="p-4">🎬 Vishwavikhyatha Nata Sarvabhouma</td>
-                                        <td className="p-4 font-bold text-white">{b.name}</td>
-                                        <td className="p-4">{b.email}</td>
-                                        <td className="p-4">{b.phone || 'N/A'}</td>
-                                        <td className="p-4 font-mono text-yellow-500 font-bold">{b.quantity} Ticket(s)</td>
-                                        <td className="p-4 font-mono text-green-400">₹{b.amount.toLocaleString('en-IN')}.00</td>
-                                        <td className="p-4 font-mono text-yellow-500 font-bold">{b.utr}</td>
-                                        <td className="p-4 font-mono text-zinc-500">{b.createdAt ? new Date(b.createdAt).toLocaleString() : 'N/A'}</td>
-                                        <td className="p-4">
-                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
-                                                (b.status || '').toUpperCase() === 'CONFIRMED' ? 'bg-green-900/20 text-green-400 border border-green-500/20' :
-                                                (b.status || '').toUpperCase() === 'PAYMENT REJECTED' || (b.status || '').toUpperCase() === 'FAILED' ? 'bg-red-900/20 text-red-400 border border-red-500/20' :
-                                                'bg-yellow-900/20 text-yellow-500 border border-yellow-500/20'
-                                            }`}>
-                                                {b.status}
-                                            </span>
-                                        </td>
-                                        <td className="p-4">
-                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
-                                                (b.paymentStatus || '').toUpperCase() === 'VERIFIED' ? 'bg-green-900/20 text-green-400 border border-green-500/20' :
-                                                (b.paymentStatus || '').toUpperCase() === 'REJECTED' || (b.paymentStatus || '').toUpperCase() === 'FAILED' ? 'bg-red-900/20 text-red-400 border border-red-500/20' :
-                                                'bg-yellow-900/20 text-yellow-500 border border-yellow-500/20'
-                                            }`}>
-                                                {b.paymentStatus}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 text-right">
-                                            <div className="flex gap-2 justify-end">
-                                                {((b.status || '').toUpperCase() === 'PENDING' || (b.status || '').toLowerCase() === 'pending admin approval') && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => approveTicketPayment(b.id, b.bookingId, b.quantity)}
-                                                            className="px-3 py-1.5 bg-green-950 text-green-400 border border-green-800 rounded-lg hover:bg-green-500 hover:text-black transition-all text-xs font-bold uppercase tracking-wider"
-                                                        >
-                                                            Approve Payment
-                                                        </button>
-                                                        <button
-                                                            onClick={() => rejectTicketPayment(b.id, b.bookingId)}
-                                                            className="px-3 py-1.5 bg-red-950 text-red-400 border border-red-800 rounded-lg hover:bg-red-500 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
-                                                        >
-                                                            Reject Payment
-                                                        </button>
-                                                    </>
-                                                )}
-                                                <button
-                                                    onClick={() => alert(`Booking Details:\n\nID: ${b.bookingId}\nName: ${b.name}\nEmail: ${b.email}\nPhone: ${b.phone || 'N/A'}\nTickets: ${b.quantity}\nTotal Price: ₹${b.amount}\nUTR ID: ${b.utr}\nStatus: ${b.status}`)}
-                                                    className="px-3 py-1.5 bg-zinc-900 text-zinc-400 border border-zinc-800 rounded-lg hover:bg-zinc-800 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
-                                                >
-                                                    View Booking Details
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {pendingBookings.length === 0 && (
-                                    <tr>
-                                        <td colSpan={12} className="p-12 text-center text-zinc-600">
-                                            No pending payment verifications.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
 
             {/* Inbound payment screenshot preview modal */}
             {previewScreenshot && (

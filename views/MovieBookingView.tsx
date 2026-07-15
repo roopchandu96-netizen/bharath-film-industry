@@ -6,7 +6,7 @@ import {
 import { db, supabase } from '../services/firebase';
 import { User, UserRole } from '../types';
 import { updateUserInFirestore } from '../services/userService';
-import { sendMovieTicketEmail } from '../services/notificationService';
+
 
 interface BookingRecord {
   id: string;
@@ -35,23 +35,16 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'BANK'>('UPI');
-  const [step, setStep] = useState<'FORM' | 'PAYMENT' | 'PAY_PROCESSING' | 'PAY_PENDING' | 'PAY_FAILED' | 'PAY_CANCELLED' | 'PAY_CONFIRMED'>('FORM');
-  const [utrId, setUtrId] = useState('');
-  const [cardNo, setCardNo] = useState('');
-  const [cardName, setCardName] = useState(user?.name || '');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'RAZORPAY'>('RAZORPAY');
+  const [step, setStep] = useState<'FORM' | 'PAY_PROCESSING' | 'PAY_FAILED' | 'PAY_CANCELLED' | 'PAY_CONFIRMED'>('FORM');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [gatewaySimMode, setGatewaySimMode] = useState<'SUCCESS' | 'FAILURE' | 'PENDING' | 'CANCELLED'>('SUCCESS');
   const [gatewayStatus, setGatewayStatus] = useState<'PENDING_HANDSHAKE' | 'AWAITING_CALLBACK' | 'SUCCESS' | 'FAILED'>('PENDING_HANDSHAKE');
   const [gatewayProgress, setGatewayProgress] = useState(0);
   const [bookingHistory, setBookingHistory] = useState<BookingRecord[]>([]);
   const [currentBooking, setCurrentBooking] = useState<BookingRecord | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'BOOKING' | 'HISTORY'>('BOOKING');
   const [switchingRole, setSwitchingRole] = useState(false);
-  const [showGatewayModal, setShowGatewayModal] = useState(false);
 
   const [posterLanguage, setPosterLanguage] = useState<'EN' | 'TE'>('TE');
   const [activeMediaTab, setActiveMediaTab] = useState<'LAUNCH' | 'TRACK'>('LAUNCH');
@@ -139,28 +132,30 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
 
       if (error) throw error;
 
-      const formattedBookings: BookingRecord[] = (bookingsData || []).map((b: any) => {
-        const ticketNumbers = b.tickets && b.tickets.length > 0 
-          ? b.tickets.map((t: any) => t.ticket_number).join(', ') 
-          : '';
-        return {
-          id: b.id,
-          name: b.name || user?.name || '',
-          email: b.email || user?.email || '',
-          phone: b.phone || '',
-          txnId: b.payments?.[0]?.gateway_order_id || 'PENDING',
-          paymentMethod: b.payments?.[0]?.gateway_order_id ? 'UPI QR/Bank' : 'Pending',
-          amount: Number(b.amount),
-          quantity: b.quantity || 1,
-          date: b.created_at,
-          status: b.status,
-          paymentStatus: b.payment_status,
-          watched: false,
-          bookingRef: b.booking_id,
-          invoiceNumber: b.tickets?.[0]?.invoice_number || null,
-          ticketNumbers: ticketNumbers
-        };
-      });
+      const formattedBookings: BookingRecord[] = (bookingsData || [])
+        .filter((b: any) => b.status === 'CONFIRMED' && b.payment_status === 'Verified')
+        .map((b: any) => {
+          const ticketNumbers = b.tickets && b.tickets.length > 0 
+            ? b.tickets.map((t: any) => t.ticket_number).join(', ') 
+            : '';
+          return {
+            id: b.id,
+            name: b.name || user?.name || '',
+            email: b.email || user?.email || '',
+            phone: b.phone || '',
+            txnId: b.payments?.[0]?.gateway_payment_id || 'N/A',
+            paymentMethod: 'Razorpay',
+            amount: Number(b.amount),
+            quantity: b.quantity || 1,
+            date: b.created_at,
+            status: b.status,
+            paymentStatus: b.payment_status,
+            watched: false,
+            bookingRef: b.booking_id,
+            invoiceNumber: b.tickets?.[0]?.invoice_number || null,
+            ticketNumbers: ticketNumbers
+          };
+        });
 
       setBookingHistory(formattedBookings);
     } catch (err) {
@@ -169,130 +164,108 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
     }
   };
 
-
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert('Copied to clipboard');
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handlePaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !phone) {
       alert('Please fill in all details.');
       return;
     }
-    setStep('PAYMENT');
-  };
-
-  const generateTicketId = () => {
-    return 'BFI-VNS-' + Math.floor(100000 + Math.random() * 900000);
-  };
-
-  const handleManualPaymentSubmit = async () => {
-    setStep('PAY_PROCESSING');
-    setGatewayProgress(20);
-    setGatewayStatus('PENDING_HANDSHAKE');
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("User session not found. Please log in.");
-      }
-
-      // 1. Check for duplicate UTR IDs
-      const { data: existingPayment } = await supabase
-        .from('payments')
-        .select('id')
-        .eq('gateway_order_id', utrId.trim())
-        .maybeSingle();
-
-      if (existingPayment) {
-        throw new Error("This UTR / Transaction Reference ID has already been submitted.");
-      }
-
-      setGatewayProgress(40);
-
-      // 2. Generate Booking Reference ID
-      const bookingRef = generateTicketId();
-
-      // 3. Insert movie_bookings record
-      const { data: bookingData, error: bookingErr } = await supabase
-        .from('movie_bookings')
-        .insert([{
-          user_id: session.user.id,
-          booking_id: bookingRef,
-          amount: 59 * quantity,
-          status: 'Pending Admin Approval',
-          payment_status: 'Pending Verification',
-          quantity,
-          phone,
-          email: session.user.email || '',
-          name
-        }])
-        .select()
-        .single();
-
-      if (bookingErr) throw bookingErr;
-
-      setGatewayProgress(70);
-
-      // 4. Insert payments record
-      const { error: paymentErr } = await supabase
-        .from('payments')
-        .insert([{
-          booking_id: bookingData.id,
-          gateway_order_id: utrId.trim(),
-          amount: 59 * quantity,
-          payment_status: 'Pending Verification'
-        }]);
-
-      if (paymentErr) {
-        // Rollback booking if payment insert fails
-        await supabase.from('movie_bookings').delete().eq('id', bookingData.id);
-        throw paymentErr;
-      }
-
-      const newBooking: BookingRecord = {
-        id: bookingData.id,
-        bookingRef: bookingRef,
-        name,
-        email: user?.email || '',
-        phone,
-        txnId: utrId.trim(),
-        paymentMethod: paymentMethod === 'UPI' ? 'UPI QR' : 'Bank Transfer',
-        amount: 59 * quantity,
-        quantity,
-        date: new Date().toISOString(),
-        status: 'Pending Admin Approval',
-        watched: false
-      };
-
-      setGatewayProgress(100);
-      setCurrentBooking(newBooking);
-      await loadBookingHistory();
-      setStep('PAY_PENDING');
-
-    } catch (err: any) {
-      console.error("Manual payment submission error:", err);
-      alert(err.message || "Failed to record manual transfer reference. Please try again.");
-      setStep('PAYMENT');
-    }
-  };
-
-  const handlePaymentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
     if (!acceptedTerms) {
       alert('Please accept the pre-booking terms & conditions.');
       return;
     }
+    handleRazorpayPayment();
+  };
 
-    if (!utrId.trim()) {
-      alert('Please enter your Transaction Reference ID (UTR / Txn ID) to confirm transfer.');
-      return;
+
+  const handleRazorpayPayment = async () => {
+    setStep('PAY_PROCESSING');
+    setGatewayProgress(10);
+    setGatewayStatus('PENDING_HANDSHAKE');
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('create-order', {
+        body: {
+          quantity: quantity,
+          phone: phone,
+          name: name
+        }
+      });
+      
+      if (error) throw error;
+      
+      setGatewayProgress(30);
+      
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TCx8Bwnh4y2e2A',
+        amount: data.amount,
+        currency: data.currency,
+        name: "Bharat Film Industry",
+        description: `Pre-booking for ${quantity} Ticket(s)`,
+        order_id: data.order_id,
+        handler: async function (response: any) {
+          setGatewayProgress(60);
+          setGatewayStatus('AWAITING_CALLBACK');
+          
+          try {
+            const { data: verifyData, error: verifyErr } = await supabase.functions.invoke('verify-payment', {
+              body: {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              }
+            });
+            
+            if (verifyErr) throw verifyErr;
+            
+            setGatewayProgress(100);
+            
+            const confirmedBooking: BookingRecord = {
+              id: verifyData.booking?.id || data.booking_id,
+              bookingRef: data.booking_id,
+              name,
+              email,
+              phone,
+              txnId: response.razorpay_payment_id,
+              paymentMethod: 'Razorpay',
+              amount: 59 * quantity,
+              quantity,
+              date: new Date().toISOString(),
+              status: 'CONFIRMED',
+              watched: false
+            };
+            
+            setCurrentBooking(confirmedBooking);
+            await loadBookingHistory();
+            setStep('PAY_CONFIRMED');
+          } catch (err: any) {
+            console.error("Verification failed:", err);
+            alert("Payment verification failed: " + (err.message || err));
+            setStep('PAY_FAILED');
+          }
+        },
+        prefill: {
+          name: name,
+          email: email,
+          contact: phone
+        },
+        theme: {
+          color: "#EAB308"
+        },
+        modal: {
+          ondismiss: function () {
+            setStep('PAY_CANCELLED');
+          }
+        }
+      };
+      
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (err: any) {
+      console.error("Razorpay checkout failed:", err);
+      alert("Failed to initialize Razorpay checkout: " + (err.message || err));
+      setStep('FORM');
     }
-    handleManualPaymentSubmit();
   };
   const printTicket = (booking: BookingRecord) => {
     const printWindow = window.open('', '_blank', 'width=600,height=800');
@@ -515,11 +488,6 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
     setEmail(user?.email || '');
     setPhone('');
     setQuantity(1);
-    setUtrId('');
-    setCardNo('');
-    setCardName(user?.name || '');
-    setCardExpiry('');
-    setCardCvv('');
     setAcceptedTerms(false);
     setCurrentBooking(null);
     setStep('FORM');
@@ -789,7 +757,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
               ) : (
                 <>
                   {step === 'FORM' && (
-                    <form onSubmit={handleFormSubmit} className="space-y-6">
+                    <form onSubmit={handlePaymentSubmit} className="space-y-6">
                       <h3 className="text-base font-serif text-white">Enter Ticket Holder Information</h3>
                       
                       <div className="space-y-1">
@@ -858,122 +826,17 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         <span className="text-yellow-500 text-sm">₹{59 * quantity}.00</span>
                       </div>
 
-                      <button 
-                        type="submit" 
-                        className="w-full py-4 bg-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
-                      >
-                        Proceed to Payment <ChevronRight size={14} />
-                      </button>
-                    </form>
-                  )}
-
-                  {step === 'PAYMENT' && (
-                    <form onSubmit={handlePaymentSubmit} className="space-y-6 animate-in fade-in duration-300">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="text-xs font-black text-white uppercase tracking-wider">Select Payment Method</h3>
-                          <p className="text-[10px] text-yellow-500 mt-0.5 font-bold">Total: ₹{59 * quantity}.00 ({quantity} Tickets)</p>
+                      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 text-center">
+                        <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto animate-pulse">
+                          <ShieldCheck size={32} />
                         </div>
-                        <button type="button" onClick={() => setStep('FORM')} className="text-xs text-yellow-500 hover:text-yellow-400 font-bold uppercase tracking-wider">Edit Form</button>
-                      </div>
-
-                      {/* Payment Method Selector Tabs */}
-                      <div className="flex gap-1 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod('UPI')}
-                          className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
-                            paymentMethod === 'UPI' ? 'bg-yellow-500 text-black shadow-md' : 'text-zinc-400 hover:text-white'
-                          }`}
-                        >
-                          <QrCode size={12} /> UPI QR
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod('BANK')}
-                          className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
-                            paymentMethod === 'BANK' ? 'bg-yellow-500 text-black shadow-md' : 'text-zinc-400 hover:text-white'
-                          }`}
-                        >
-                          <Landmark size={12} /> Bank Info
-                        </button>
-                      </div>
-
-                      {paymentMethod === 'UPI' && (
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 text-center">
-                          <p className="text-[10px] text-zinc-400 uppercase font-black tracking-widest">Scan using any UPI App</p>
-                          
-                          <div className="w-40 aspect-square bg-white rounded-xl p-2 mx-auto shadow-lg flex items-center justify-center border border-zinc-700/50">
-                            <img src="/upi_qr.png" alt="UPI QR Code" className="w-full h-full object-contain" />
-                          </div>
-
-                          <div className="text-left space-y-2">
-                            <div className="flex justify-between items-center p-3 bg-black rounded-xl border border-zinc-800/50">
-                              <span className="text-[9px] text-zinc-500 uppercase font-bold">UPI ID</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-mono text-white">s0619553827098418@slc</span>
-                                <button type="button" onClick={() => copyToClipboard('s0619553827098418@slc')} className="text-zinc-500 hover:text-yellow-500"><Copy size={12} /></button>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="space-y-1.5 text-left">
-                            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">Transaction UTR / Reference ID</label>
-                            <input
-                              required
-                              type="text"
-                              value={utrId}
-                              onChange={(e) => setUtrId(e.target.value)}
-                              className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-4 text-xs text-white focus:border-yellow-400 outline-none font-mono"
-                              placeholder="Enter 12-digit UTR or transaction ID"
-                            />
-                          </div>
-
-                          <p className="text-[10px] text-yellow-500 font-bold text-center leading-relaxed">
-                            ⚠️ Note: Once payment is verified by admin, you can see the ticket and invoice.
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-black text-white uppercase tracking-wider">Razorpay Secure Checkout</h4>
+                          <p className="text-[10px] text-zinc-400 leading-relaxed px-4">
+                            Complete your pre-booking instantly using Credit/Debit Cards, Net Banking, Wallets, or UPI via Razorpay. Your ticket will be automatically verified and confirmed.
                           </p>
                         </div>
-                      )}
-
-                      {paymentMethod === 'BANK' && (
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
-                          <p className="text-[10px] text-zinc-400 uppercase font-black tracking-widest text-center">Transfer funds to account</p>
-
-                          <div className="space-y-2">
-                            {[
-                              { label: 'Beneficiary', value: 'Bharat film industry' },
-                              { label: 'Bank Name', value: 'Northeast Small Finance Bank' },
-                              { label: 'Account No', value: '033311501068467' },
-                              { label: 'IFSC Code', value: 'NESF0000333' }
-                            ].map((item, i) => (
-                              <div key={i} className="flex justify-between items-center p-2.5 bg-black rounded-xl border border-zinc-800/50 text-xs">
-                                <span className="text-[9px] text-zinc-500 uppercase font-bold">{item.label}</span>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-mono text-white text-[11px]">{item.value}</span>
-                                  <button type="button" onClick={() => copyToClipboard(item.value)} className="text-zinc-500 hover:text-yellow-500"><Copy size={10} /></button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="space-y-1.5 text-left">
-                            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">Transaction UTR / Reference ID</label>
-                            <input
-                              required
-                              type="text"
-                              value={utrId}
-                              onChange={(e) => setUtrId(e.target.value)}
-                              className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-4 text-xs text-white focus:border-yellow-400 outline-none font-mono"
-                              placeholder="Enter bank transaction reference number"
-                            />
-                          </div>
-
-                          <p className="text-[10px] text-yellow-500 font-bold text-center leading-relaxed">
-                            ⚠️ Note: Once payment is verified by admin, you can see the ticket and invoice.
-                          </p>
-                        </div>
-                      )}
-
+                      </div>
 
                       {/* Terms checkbox */}
                       <div className="flex items-start gap-3 p-3 bg-slate-900/50 border border-slate-800 rounded-2xl">
@@ -994,7 +857,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         type="submit" 
                         className="w-full py-4 bg-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
                       >
-                        Submit Payment Reference
+                        <CreditCard size={14} /> Pay Securely with Razorpay
                       </button>
                     </form>
                   )}
@@ -1035,53 +898,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                     </div>
                   )}
 
-                  {step === 'PAY_PENDING' && currentBooking && (
-                    <div className="space-y-6 text-center py-6 animate-in zoom-in duration-500">
-                      <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto animate-pulse">
-                        <Clock size={32} />
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <h3 className="text-base font-bold text-white uppercase tracking-wider">Awaiting Admin Verification</h3>
-                        <p className="text-[10px] text-yellow-500 font-bold leading-relaxed text-left bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                          ⚠️ Once payment is verified by admin, you can see the ticket and invoice.
-                        </p>
-                        <p className="text-[10px] text-slate-400 leading-relaxed text-left px-2">
-                          Your manual payment reference UTR has been submitted. You can check the verification status under the <strong>My Tickets</strong> dashboard tab at any time.
-                        </p>
-                      </div>
 
-                      {/* Digital Ticket Preview (Pending) */}
-                      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-left relative overflow-hidden">
-                        <div className="flex justify-between items-center mb-4">
-                          <span className="text-[9px] font-black uppercase text-yellow-500 tracking-wider">Pre-Booking Reference</span>
-                          <span className="text-[10px] font-mono text-zinc-400 font-bold">{currentBooking.id}</span>
-                        </div>
-
-                        <div className="space-y-2.5 text-xs">
-                          <div className="flex justify-between"><span className="text-zinc-500">Quantity:</span><span className="font-bold text-white">{currentBooking.quantity} Ticket(s)</span></div>
-                          <div className="flex justify-between"><span className="text-zinc-500">Method:</span><span className="font-bold text-white">{currentBooking.paymentMethod}</span></div>
-                          <div className="flex justify-between"><span className="text-zinc-500">Txn ID / UTR:</span><span className="font-bold text-white truncate max-w-[160px]">{currentBooking.txnId}</span></div>
-                          <div className="flex justify-between"><span className="text-zinc-500">Amount:</span><span className="font-bold text-white">₹{currentBooking.amount.toFixed(2)}</span></div>
-                          <div className="flex justify-between">
-                            <span className="text-zinc-500">Status:</span>
-                            <span className="font-bold text-amber-500">Waiting for Payment Verification</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setStep('FORM');
-                          startNewBooking();
-                        }}
-                        className="w-full py-4 bg-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all"
-                      >
-                        Book Another Ticket
-                      </button>
-                    </div>
-                  )}
 
                   {step === 'PAY_FAILED' && (
                     <div className="space-y-6 text-center py-6 animate-in zoom-in duration-500">
@@ -1098,7 +915,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
 
                       <button
                         type="button"
-                        onClick={() => setStep('PAYMENT')}
+                        onClick={() => setStep('FORM')}
                         className="w-full py-3.5 bg-yellow-500 text-black font-black uppercase text-xs tracking-wider rounded-xl hover:bg-yellow-400 active:scale-95 transition-all"
                       >
                         Retry Payment
@@ -1223,7 +1040,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
           <div className="bg-slate-950 border border-slate-900 rounded-[2.5rem] p-8 space-y-6 shadow-2xl">
             <h2 className="text-2xl font-serif text-white">Your Pre-Booked Tickets</h2>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Below is the ledger of tickets booked from this browser session. If you paid via UPI or Bank Transfer, your status will update to **CONFIRMED** once our treasury verifies the reference UTR ID.
+              Below is the ledger of your successfully verified movie pre-bookings and digital passes.
             </p>
 
             {bookingHistory.length === 0 ? (
@@ -1247,10 +1064,6 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
             ) : (
               <div className="space-y-4">
                 {bookingHistory.map((booking) => {
-                  const allBookings = db.getCollection('bookings');
-                  const dbRecord = allBookings.find((b: any) => b.id === booking.id);
-                  const isExpired = dbRecord?.watched;
-
                   return (
                     <div key={booking.id} className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-yellow-500/10 transition-colors">
                       <div className="space-y-2">
@@ -1262,56 +1075,36 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                         <p className="text-[10px] text-zinc-500">
                           Billed: ₹{booking.amount.toFixed(2)} for {booking.quantity} ticket(s) on {new Date(booking.date).toLocaleDateString()}
                         </p>
-                        {(booking.status || '').toUpperCase() === 'CONFIRMED' ? (
-                          <div className="space-y-1 pt-1">
-                            <div className="text-[10px] text-yellow-500 font-bold">
-                              🎟️ Ticket Numbers: {booking.ticketNumbers || booking.id}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
-                              <Lock size={12} /> Viewing link will be emailed on release
-                            </div>
+                        <div className="space-y-1 pt-1">
+                          <div className="text-[10px] text-yellow-500 font-bold">
+                            🎟️ Ticket Numbers: {booking.ticketNumbers || booking.id}
                           </div>
-                        ) : (booking.status || '').toUpperCase() === 'PAYMENT REJECTED' || (booking.status || '').toUpperCase() === 'FAILED' ? (
-                          <div className="pt-2 text-[9px] font-bold text-red-500 uppercase tracking-wider">
-                            ❌ Payment Rejected - UTR Verification Failed
+                          <div className="flex items-center gap-1.5 text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
+                            <Lock size={12} /> Viewing link will be emailed on release
                           </div>
-                        ) : (
-                          <div className="pt-2 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
-                            ⏳ Waiting for Payment Verification (Payment Status: {booking.paymentStatus})
-                          </div>
-                        )}
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-4">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                          (booking.status || '').toUpperCase() === 'CONFIRMED' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                          (booking.status || '').toUpperCase() === 'PAYMENT REJECTED' || (booking.status || '').toUpperCase() === 'FAILED' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                          'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
-                        }`}>
+                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-green-500/10 text-green-500 border border-green-500/20">
                           {booking.status}
                         </span>
-                        {(booking.status || '').toUpperCase() === 'CONFIRMED' ? (
-                          <div className="flex gap-2">
-                            <button 
-                              onClick={() => printTicket(booking)} 
-                              title="Print Ticket"
-                              className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
-                            >
-                              <Printer size={14} />
-                            </button>
-                            <button 
-                              onClick={() => printInvoice(booking)} 
-                              title="Download Tax Invoice"
-                              className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
-                            >
-                              <FileText size={14} />
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-                            {(booking.status || '').toUpperCase() === 'PAYMENT REJECTED' ? 'Rejected' : 'Awaiting Verification'}
-                          </span>
-                        )}
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => printTicket(booking)} 
+                            title="Print Ticket"
+                            className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
+                          >
+                            <Printer size={14} />
+                          </button>
+                          <button 
+                            onClick={() => printInvoice(booking)} 
+                            title="Download Tax Invoice"
+                            className="p-2 bg-black border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all"
+                          >
+                            <FileText size={14} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );

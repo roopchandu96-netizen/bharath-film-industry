@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Investment, MovieProject } from '../types';
 import { CURRENCY_FORMATTER } from '../constants';
-import { getUserInvestments } from '../services/investmentService';
+import { getUserInvestmentsWithProjects } from '../services/investmentService';
 import { getProjectById } from '../services/projectService';
 import { downloadInvestmentAgreement } from '../services/fileService';
 import { supabase } from '../services/firebase';
@@ -18,12 +18,55 @@ interface InvestorDashboardProps {
   initialView?: string;
 }
 
+const StatCardSkeleton = () => (
+  <div className="p-8 bg-zinc-900/50 border border-zinc-800 rounded-3xl space-y-4 animate-pulse">
+    <div className="flex items-center gap-3">
+      <div className="w-5 h-5 bg-zinc-800 rounded" />
+      <div className="w-24 h-4 bg-zinc-800 rounded" />
+    </div>
+    <div className="w-36 h-8 bg-zinc-800/60 rounded" />
+  </div>
+);
+
+const ProjectCardSkeleton = () => (
+  <div className="bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-800 flex flex-col justify-between animate-pulse min-h-[350px]">
+    <div className="aspect-video bg-zinc-800/60" />
+    <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
+      <div className="space-y-2">
+        <div className="w-3/4 h-5 bg-zinc-800/60 rounded" />
+        <div className="w-1/2 h-3 bg-zinc-800/60 rounded" />
+        <div className="w-full h-10 bg-zinc-800/40 rounded mt-2" />
+      </div>
+      <div className="space-y-2">
+        <div className="h-1.5 bg-zinc-850 rounded-full overflow-hidden" />
+        <div className="flex justify-between items-center">
+          <div className="w-1/3 h-4 bg-zinc-800/60 rounded" />
+          <div className="w-16 h-6 bg-zinc-800/60 rounded-full" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const NotificationSkeleton = () => (
+  <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-3xl space-y-2 animate-pulse">
+    <div className="flex justify-between items-center">
+      <div className="w-1/3 h-4 bg-zinc-800/60 rounded" />
+      <div className="w-16 h-3 bg-zinc-800/60 rounded" />
+    </div>
+    <div className="w-full h-3 bg-zinc-800/60 rounded" />
+    <div className="w-5/6 h-3 bg-zinc-800/60 rounded" />
+  </div>
+);
+
 const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSelect, initialView = 'dashboard' }) => {
   const [activeView, setActiveView] = useState(initialView);
   const [investments, setInvestments] = useState<(Investment & { project?: MovieProject })[]>([]);
   const [allProjects, setAllProjects] = useState<MovieProject[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [investmentsLoading, setInvestmentsLoading] = useState(true);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,28 +74,39 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
   }, [initialView]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchInvestments = async () => {
       try {
-        setLoading(true);
-        // Fetch Investments
-        const invs = await getUserInvestments(user.id);
-        const detailedInvs = await Promise.all(invs.map(async inv => {
-          const project = await getProjectById(inv.projectId);
-          return { ...inv, project: project || undefined };
-        }));
+        setInvestmentsLoading(true);
+        const detailedInvs = await getUserInvestmentsWithProjects(user.id);
         setInvestments(detailedInvs);
+      } catch (err) {
+        console.error("Investments fetch error:", err);
+      } finally {
+        setInvestmentsLoading(false);
+      }
+    };
 
-        // Fetch All Active Projects for Browse
+    const fetchActiveProjects = async () => {
+      try {
+        setProjectsLoading(true);
         const { data: projects } = await supabase
           .from('projects')
-          .select('*')
+          .select('id, title, tagline, genre, budget, fundingGoal, currentFunding, investorCount, director, status, posterUrl, description')
           .eq('status', 'ACTIVE');
         if (projects) setAllProjects(projects as MovieProject[]);
+      } catch (err) {
+        console.error("Projects fetch error:", err);
+      } finally {
+        setProjectsLoading(false);
+      }
+    };
 
-        // Fetch Real Notifications for User
+    const fetchNotifications = async () => {
+      try {
+        setNotificationsLoading(true);
         const { data: notifs } = await supabase
           .from('notifications')
-          .select('*')
+          .select('id, recipient, title, message, read, created_at')
           .eq('recipient', user.email)
           .order('created_at', { ascending: false });
         if (notifs) {
@@ -60,14 +114,16 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
         } else {
           setNotifications([]);
         }
-
       } catch (err) {
-        console.error("Data fetch error:", err);
+        console.error("Notifications fetch error:", err);
       } finally {
-        setLoading(false);
+        setNotificationsLoading(false);
       }
     };
-    fetchData();
+
+    fetchInvestments();
+    fetchActiveProjects();
+    fetchNotifications();
   }, [user.id, user.email]);
 
   const handleDownloadAgreement = async (inv: Investment, project?: MovieProject) => {
@@ -89,7 +145,7 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
   const totalInvested = investments.reduce((acc, inv) => acc + inv.amount, 0);
   const activeCount = new Set(investments.map(i => i.projectId)).size;
 
-  if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-yellow-400" /></div>;
+
 
   return (
     <div className="flex flex-col md:flex-row min-h-[80vh] gap-6 animate-in fade-in">
@@ -120,22 +176,29 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
               <h2 className="text-2xl font-serif text-white mb-1">Portfolio Snapshot</h2>
               <p className="text-zinc-500 text-xs uppercase tracking-widest">Real-time Asset Performance</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-8 bg-zinc-900/50 border border-zinc-800 rounded-3xl space-y-4">
-                <div className="flex items-center gap-3 text-yellow-500">
-                  <TrendingUp size={20} />
-                  <span className="text-[10px] bg-yellow-400/10 px-2 py-1 rounded text-yellow-400 font-black uppercase tracking-widest">Total Deployed</span>
-                </div>
-                <p className="text-4xl font-black text-white tracking-tighter">{CURRENCY_FORMATTER.format(totalInvested)}</p>
+            {investmentsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <StatCardSkeleton />
+                <StatCardSkeleton />
               </div>
-              <div className="p-8 bg-zinc-900/50 border border-zinc-800 rounded-3xl space-y-4">
-                <div className="flex items-center gap-3 text-green-500">
-                  <FileText size={20} />
-                  <span className="text-[10px] bg-green-900/20 px-2 py-1 rounded text-green-400 font-black uppercase tracking-widest">Active Contracts</span>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-8 bg-zinc-900/50 border border-zinc-800 rounded-3xl space-y-4">
+                  <div className="flex items-center gap-3 text-yellow-500">
+                    <TrendingUp size={20} />
+                    <span className="text-[10px] bg-yellow-400/10 px-2 py-1 rounded text-yellow-400 font-black uppercase tracking-widest">Total Deployed</span>
+                  </div>
+                  <p className="text-4xl font-black text-white tracking-tighter">{CURRENCY_FORMATTER.format(totalInvested)}</p>
                 </div>
-                <p className="text-4xl font-black text-white tracking-tighter">{activeCount}</p>
+                <div className="p-8 bg-zinc-900/50 border border-zinc-800 rounded-3xl space-y-4">
+                  <div className="flex items-center gap-3 text-green-500">
+                    <FileText size={20} />
+                    <span className="text-[10px] bg-green-900/20 px-2 py-1 rounded text-green-400 font-black uppercase tracking-widest">Active Contracts</span>
+                  </div>
+                  <p className="text-4xl font-black text-white tracking-tighter">{activeCount}</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Bidding Scripts (Active Projects) Available for Investment */}
             <div className="space-y-6 pt-8 border-t border-zinc-900">
@@ -144,7 +207,12 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
                 <p className="text-zinc-500 text-xs uppercase tracking-widest font-bold">Select a synopsis to evaluate and deploy capital</p>
               </div>
 
-              {allProjects.length === 0 ? (
+              {projectsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <ProjectCardSkeleton />
+                  <ProjectCardSkeleton />
+                </div>
+              ) : allProjects.length === 0 ? (
                 <div className="p-8 text-center border border-dashed border-zinc-800 rounded-3xl text-zinc-600">
                   No scripts are currently available for investment.
                 </div>
@@ -234,23 +302,35 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
               <h2 className="text-2xl font-serif text-white mb-1">My Investments</h2>
               <p className="text-zinc-500 text-xs uppercase tracking-widest">Detailed Ledger</p>
             </div>
-            <div className="space-y-4">
-              {investments.map(inv => (
-                <div key={inv.id} className="p-6 bg-zinc-900/30 border border-zinc-800 rounded-3xl flex items-center justify-between group hover:border-yellow-400/20 transition-all">
-                  <div className="flex items-center gap-4">
-                    <img src={inv.project?.posterUrl} className="w-12 h-16 object-cover rounded-lg bg-zinc-950" />
-                    <div>
-                      <h4 className="font-bold text-white">{inv.project?.title}</h4>
-                      <p className="text-xs text-zinc-500">{new Date(inv.date).toLocaleDateString()}</p>
+            {investmentsLoading ? (
+              <div className="space-y-4">
+                <div className="h-16 bg-zinc-900/50 border border-zinc-800 rounded-3xl animate-pulse" />
+                <div className="h-16 bg-zinc-900/50 border border-zinc-800 rounded-3xl animate-pulse" />
+                <div className="h-16 bg-zinc-900/50 border border-zinc-800 rounded-3xl animate-pulse" />
+              </div>
+            ) : investments.length === 0 ? (
+              <div className="p-8 text-center border border-dashed border-zinc-800 rounded-3xl text-zinc-600">
+                You have not deployed capital to any projects yet.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {investments.map(inv => (
+                  <div key={inv.id} className="p-6 bg-zinc-900/30 border border-zinc-800 rounded-3xl flex items-center justify-between group hover:border-yellow-400/20 transition-all">
+                    <div className="flex items-center gap-4">
+                      <img src={inv.project?.posterUrl} className="w-12 h-16 object-cover rounded-lg bg-zinc-950" />
+                      <div>
+                        <h4 className="font-bold text-white">{inv.project?.title}</h4>
+                        <p className="text-xs text-zinc-500">{new Date(inv.date).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-mono text-yellow-400 font-bold">{CURRENCY_FORMATTER.format(inv.amount)}</p>
+                      <p className="text-[9px] text-zinc-600 uppercase font-black tracking-widest">{inv.status}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-mono text-yellow-400 font-bold">{CURRENCY_FORMATTER.format(inv.amount)}</p>
-                    <p className="text-[9px] text-zinc-600 uppercase font-black tracking-widest">{inv.status}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -308,24 +388,35 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              {investments.map(inv => (
-                <div key={inv.id} className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-zinc-950 rounded-xl text-yellow-500"><FileText size={20} /></div>
-                    <div>
-                      <h4 className="text-sm font-bold text-white">Investment Agreement - {inv.project?.title}</h4>
-                      <p className="text-[10px] text-zinc-500 uppercase">Signed on {new Date(inv.date).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDownloadAgreement(inv, inv.project)}
-                    disabled={downloadingId === inv.id}
-                    className="p-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-700"
-                  >
-                    {downloadingId === inv.id ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-                  </button>
+              {investmentsLoading ? (
+                <>
+                  <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl animate-pulse h-16 bg-zinc-900/50" />
+                  <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl animate-pulse h-16 bg-zinc-900/50" />
+                </>
+              ) : investments.length === 0 ? (
+                <div className="p-8 text-center border border-dashed border-zinc-800 rounded-2xl text-zinc-600 text-xs">
+                  No agreements available.
                 </div>
-              ))}
+              ) : (
+                investments.map(inv => (
+                  <div key={inv.id} className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-zinc-950 rounded-xl text-yellow-500"><FileText size={20} /></div>
+                      <div>
+                        <h4 className="text-sm font-bold text-white">Investment Agreement - {inv.project?.title}</h4>
+                        <p className="text-[10px] text-zinc-500 uppercase">Signed on {new Date(inv.date).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDownloadAgreement(inv, inv.project)}
+                      disabled={downloadingId === inv.id}
+                      className="p-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-700"
+                    >
+                      {downloadingId === inv.id ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -337,25 +428,31 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
               <h2 className="text-2xl font-serif text-white mb-1">Notifications</h2>
               <p className="text-zinc-500 text-xs uppercase tracking-widest">System Alerts</p>
             </div>
-            <div className="space-y-4">
-              {notifications.map((n) => (
-                <div key={n.id} className="p-5 bg-zinc-900/40 border border-zinc-800 rounded-3xl flex gap-4 items-start">
-                  <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-zinc-700' : 'bg-yellow-500 animate-pulse'}`} />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-white leading-snug">{n.subject}</h4>
-                    <p className="text-xs text-zinc-400 mt-1 whitespace-pre-wrap leading-relaxed">{n.message}</p>
-                    <p className="text-[9px] text-zinc-600 mt-2.5 font-mono uppercase">
-                      {new Date(n.created_at || n.createdAt).toLocaleString()}
-                    </p>
+            {notificationsLoading ? (
+              <div className="space-y-4">
+                <NotificationSkeleton />
+                <NotificationSkeleton />
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="p-12 text-center border border-dashed border-zinc-800 rounded-3xl text-zinc-600">
+                No alerts or notifications at this time.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {notifications.map((n) => (
+                  <div key={n.id} className="p-5 bg-zinc-900/40 border border-zinc-800 rounded-3xl flex gap-4 items-start">
+                    <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-zinc-700' : 'bg-yellow-500 animate-pulse'}`} />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold text-white leading-snug">{n.subject || n.title}</h4>
+                      <p className="text-xs text-zinc-400 mt-1 whitespace-pre-wrap leading-relaxed">{n.message}</p>
+                      <p className="text-[9px] text-zinc-600 mt-2.5 font-mono uppercase">
+                        {new Date(n.created_at || n.createdAt).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-              {notifications.length === 0 && (
-                <div className="p-12 text-center border border-dashed border-zinc-800 rounded-3xl text-zinc-600">
-                  No alerts or notifications at this time.
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

@@ -35,3 +35,17 @@ export const getUserInvestments = async (uid: string): Promise<Investment[]> => 
   if (error) return [];
   return data as Investment[];
 };
+
+export const getUserInvestmentsWithProjects = async (uid: string): Promise<(Investment & { project?: MovieProject })[]> => {
+  const { data, error } = await supabase
+    .from('investments')
+    .select('*, project:projects(id, title, genre, budget, fundingGoal, currentFunding, investorCount, director, status)')
+    .eq('userId', uid)
+    .order('date', { ascending: false });
+
+  if (error) {
+    console.error("getUserInvestmentsWithProjects failed:", error);
+    return [];
+  }
+  return data as any[];
+};

@@ -55,7 +55,7 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
 
             const { data, error } = await supabase
                 .from('projects')
-                .select('*')
+                .select('id, title, tagline, genre, budget, fundingGoal, currentFunding, investorCount, director, status, posterUrl, description')
                 .eq('directorId', user.id)
                 .order('created_at', { ascending: false });
 
@@ -118,8 +118,6 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
         { id: 'notifications', label: 'Inbox', icon: '🔔' },
     ];
 
-    if (loading) return <div className="flex justify-center items-center h-96 text-amber-500">Loading Studio...</div>;
-
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* SUB-NAVIGATION TABS */}
@@ -146,7 +144,13 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
                 {/* 1. DASHBOARD */}
                 {activeView === 'dashboard' && (
                     <div className="space-y-12">
-                        {!activeProject ? (
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center p-20 bg-slate-900/50 border border-slate-800 rounded-[3rem] text-center space-y-6 animate-pulse">
+                                <div className="w-24 h-24 bg-slate-800/40 rounded-full" />
+                                <div className="w-48 h-6 bg-slate-800/60 rounded mx-auto" />
+                                <div className="w-64 h-4 bg-slate-800/40 rounded mx-auto" />
+                            </div>
+                        ) : !activeProject ? (
                             <div className="flex flex-col items-center justify-center p-20 bg-slate-900/50 border border-slate-800 rounded-[3rem] text-center space-y-6">
                                 <div className="w-32 h-32 relative group mb-2 flex items-center justify-center">
                                     <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 rounded-full blur-lg opacity-60" />

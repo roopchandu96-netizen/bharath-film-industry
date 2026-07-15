@@ -1,6 +1,6 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { withSupabase } from "jsr:@supabase/server@^1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
@@ -9,13 +9,52 @@ const corsHeaders = {
 }
 
 export default {
-  fetch: withSupabase({ auth: "required" }, async (req, { supabaseAdmin, user }) => {
+  async fetch(req: Request) {
     // Handle CORS OPTIONS preflight request
     if (req.method === 'OPTIONS') {
       return new Response('ok', { headers: corsHeaders })
     }
 
     try {
+      // 1. Authenticate user using the Authorization header
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return new Response(
+          JSON.stringify({ error: "Missing or invalid authorization header." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const token = authHeader.split(" ")[1];
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+      const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+      if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+        console.error("Missing system environment variables.");
+        return new Response(
+          JSON.stringify({ error: "Server configuration error." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Create a client with the user's token to verify identity
+      const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } }
+      });
+
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+      if (authError || !user) {
+        console.error("Authentication failed:", authError);
+        return new Response(
+          JSON.stringify({ error: "Unauthorized." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Create admin client
+      const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
       const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = await req.json()
 
       if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
@@ -268,5 +307,5 @@ Bharat Film Industry Treasury
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
     }
-  })
+  }
 }

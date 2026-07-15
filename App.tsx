@@ -1,46 +1,50 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { supabase } from './services/firebase.ts';
 import { syncUserToFirestore } from './services/userService.ts';
 import { createProject } from './services/projectService.ts';
 import { notifyNewSynopsis } from './services/notificationService.ts';
 import Layout from './components/Layout.tsx';
-import ExploreView from './views/ExploreView.tsx';
-import InvestorDashboard from './views/InvestorDashboard.tsx';
-import AuthView from './views/AuthView.tsx';
-import ProfileView from './views/ProfileView.tsx';
-import ProjectDetailView from './views/ProjectDetailView.tsx';
-import AboutView from './views/AboutView.tsx';
-import OurWorksView from './views/OurWorksView.tsx';
-import TermsView from './views/TermsView.tsx';
-import { MovieBookingView } from './views/MovieBookingView.tsx';
 import PaymentGateway from './components/PaymentGateway.tsx';
 import BFIIntellect from './components/BFIIntellect.tsx';
 import { BFILogo } from './components/BFILogo.tsx';
-import AdminDashboard from './views/AdminDashboard.tsx';
-import DirectorDashboard from './views/DirectorDashboard.tsx';
-import WriterDashboard from './views/WriterDashboard.tsx';
-import ActorDashboard from './views/ActorDashboard.tsx';
-import CrewDashboard from './views/CrewDashboard.tsx';
-import VendorDashboard from './views/VendorDashboard.tsx';
-import DistributorDashboard from './views/DistributorDashboard.tsx';
-import ServiceProviderDashboard from './views/ServiceProviderDashboard.tsx';
-import StudentDashboard from './views/StudentDashboard.tsx';
-import ProducerDashboard from './views/ProducerDashboard.tsx';
-import PostsView from './views/PostsView.tsx';
 import { UserRole, MovieProject, User } from './types.ts';
 import { Loader2, X, Globe, Film, AlignLeft, Tag, UploadCloud, Menu } from 'lucide-react';
 
 import { MobileLayout } from './components/MobileLayout.tsx';
-import { MobileHomeView } from './views/mobile/MobileHomeView.tsx';
-import { MobileDiscoverView } from './views/mobile/MobileDiscoverView.tsx';
-import { MobileInvestView } from './views/mobile/MobileInvestView.tsx';
-import { MobileProjectDetailView } from './views/mobile/MobileProjectDetailView.tsx';
-import { MobileAuthView } from './views/mobile/MobileAuthView.tsx';
-import { MobileWriterDashboard } from './views/mobile/MobileWriterDashboard.tsx';
-import { MobileDirectorDashboard } from './views/mobile/MobileDirectorDashboard.tsx';
-import { MobileProducerDashboard } from './views/mobile/MobileProducerDashboard.tsx';
-import { MobileAdminDashboard } from './views/mobile/MobileAdminDashboard.tsx';
+
+// Desktop lazy loaded views
+const ExploreView = lazy(() => import('./views/ExploreView.tsx'));
+const InvestorDashboard = lazy(() => import('./views/InvestorDashboard.tsx'));
+const AuthView = lazy(() => import('./views/AuthView.tsx'));
+const ProfileView = lazy(() => import('./views/ProfileView.tsx'));
+const ProjectDetailView = lazy(() => import('./views/ProjectDetailView.tsx'));
+const AboutView = lazy(() => import('./views/AboutView.tsx'));
+const OurWorksView = lazy(() => import('./views/OurWorksView.tsx'));
+const TermsView = lazy(() => import('./views/TermsView.tsx'));
+const MovieBookingView = lazy(() => import('./views/MovieBookingView.tsx').then(m => ({ default: m.MovieBookingView })));
+const AdminDashboard = lazy(() => import('./views/AdminDashboard.tsx'));
+const DirectorDashboard = lazy(() => import('./views/DirectorDashboard.tsx'));
+const WriterDashboard = lazy(() => import('./views/WriterDashboard.tsx'));
+const ActorDashboard = lazy(() => import('./views/ActorDashboard.tsx'));
+const CrewDashboard = lazy(() => import('./views/CrewDashboard.tsx'));
+const VendorDashboard = lazy(() => import('./views/VendorDashboard.tsx'));
+const DistributorDashboard = lazy(() => import('./views/DistributorDashboard.tsx'));
+const ServiceProviderDashboard = lazy(() => import('./views/ServiceProviderDashboard.tsx'));
+const StudentDashboard = lazy(() => import('./views/StudentDashboard.tsx'));
+const ProducerDashboard = lazy(() => import('./views/ProducerDashboard.tsx'));
+const PostsView = lazy(() => import('./views/PostsView.tsx'));
+
+// Mobile lazy loaded views
+const MobileHomeView = lazy(() => import('./views/mobile/MobileHomeView.tsx').then(m => ({ default: m.MobileHomeView })));
+const MobileDiscoverView = lazy(() => import('./views/mobile/MobileDiscoverView.tsx').then(m => ({ default: m.MobileDiscoverView })));
+const MobileInvestView = lazy(() => import('./views/mobile/MobileInvestView.tsx').then(m => ({ default: m.MobileInvestView })));
+const MobileProjectDetailView = lazy(() => import('./views/mobile/MobileProjectDetailView.tsx').then(m => ({ default: m.MobileProjectDetailView })));
+const MobileAuthView = lazy(() => import('./views/mobile/MobileAuthView.tsx').then(m => ({ default: m.MobileAuthView })));
+const MobileWriterDashboard = lazy(() => import('./views/mobile/MobileWriterDashboard.tsx').then(m => ({ default: m.MobileWriterDashboard })));
+const MobileDirectorDashboard = lazy(() => import('./views/mobile/MobileDirectorDashboard.tsx').then(m => ({ default: m.MobileDirectorDashboard })));
+const MobileProducerDashboard = lazy(() => import('./views/mobile/MobileProducerDashboard.tsx').then(m => ({ default: m.MobileProducerDashboard })));
+const MobileAdminDashboard = lazy(() => import('./views/mobile/MobileAdminDashboard.tsx').then(m => ({ default: m.MobileAdminDashboard })));
 
 
 
@@ -86,119 +90,99 @@ const App: React.FC = () => {
   const [isScriptRegistered, setIsScriptRegistered] = useState(false);
   const [acceptedDirectorTerms, setAcceptedDirectorTerms] = useState(false);
 
+  const lastSyncedUserIdRef = React.useRef<string | null>(null);
+
   useEffect(() => {
+    let active = true;
+
     // Safety Force Load: In case onAuthStateChange never fires or hangs
     const globalTimeout = setTimeout(() => {
-      console.warn("App: Auth global timeout reached. Forcing load.");
-      setAuthLoading(false);
-    }, 12000);
-
-    let legacySession: any = null;
-    try {
-      const legacySessionStr = localStorage.getItem('bfi_legacy_session');
-      if (legacySessionStr) {
-        legacySession = JSON.parse(legacySessionStr);
+      if (active) {
+        console.warn("App: Auth global timeout reached. Forcing load.");
+        setAuthLoading(false);
       }
-    } catch (e) {
-      console.error("Failed to parse legacy session from storage:", e);
-    }
+    }, 15000);
 
-    if (legacySession && legacySession.user) {
-      setSession(legacySession);
-      const userEmail = (legacySession.user.email || "").toLowerCase();
-      const isAdminEmail = userEmail === 'bharathfilmindustry@gmail.com';
-      const fallbackRole = isAdminEmail ? UserRole.ADMIN : (legacySession.user.user_metadata?.role || UserRole.INVESTOR);
-      setUser({
-        id: legacySession.user.id,
-        email: legacySession.user.email,
-        name: legacySession.user.user_metadata?.full_name || 'Legacy User',
-        role: fallbackRole,
-        kycStatus: 'VERIFIED',
-        totalInvested: 0,
-        projects: []
-      });
-      if (fallbackRole === UserRole.ADMIN) setActiveTab('admin');
-      else if (fallbackRole === UserRole.INVESTOR) setActiveTab('explore');
-      else setActiveTab('portfolio');
-      
-      setAuthLoading(false);
-      clearTimeout(globalTimeout);
-      return () => clearTimeout(globalTimeout);
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("Auth State Changed. User Email:", session?.user?.email);
-
-      // Race Condition Handler: Ensure loading stops (increase to 45s for slower connections)
-      const startTime = Date.now();
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(`Auth Timeout after ${((Date.now() - startTime) / 1000).toFixed(1)}s`), 45000));
-
+    const initAuth = async () => {
       try {
-        if (session?.user) {
-          setSession(session);
-          console.log("Fetching user profile from database...");
+        console.log("App: Pre-fetching active session...");
+        const { data: { session: activeSession } } = await supabase.auth.getSession();
 
-          // Race the profile sync against a 45s timeout
-          const userData = await Promise.race([
-            syncUserToFirestore(session.user),
-            timeoutPromise
-          ]) as User;
+        if (!active) return;
 
-          console.log("User Profile Fetched:", userData);
+        if (activeSession?.user) {
+          console.log("App: Session found on startup. Syncing user...", activeSession.user.email);
+          setSession(activeSession);
+          lastSyncedUserIdRef.current = activeSession.user.id;
+
+          const userData = await syncUserToFirestore(activeSession.user);
+          if (!active) return;
+
           setUser(userData);
 
-          // Logic to set initial tab based on role
+          // Route immediately based on role
           if (userData.role === UserRole.ADMIN) {
-            console.log("User is ADMIN. Setting tab to 'admin'");
             setActiveTab('admin');
           } else if (userData.role === UserRole.INVESTOR) {
-            console.log("User is INVESTOR. Setting tab to 'explore'");
             setActiveTab('explore');
           } else {
-            console.log(`User is ${userData.role}. Setting tab to 'portfolio'`);
             setActiveTab('portfolio');
           }
         } else {
-          console.log("No active session. Resetting state.");
-          setUser(null);
-          setSession(null);
-          setActiveTab('explore');
+          console.log("App: No session found on startup.");
         }
       } catch (err) {
-        console.error("CRITICAL: Failed to fetch user profile or Timeout:", err);
-        // Fallback to prevent blank screen
-        if (session?.user) {
-          const userEmail = (session.user.email || "").toLowerCase();
-          const isDevAdmin = userEmail === 'bharathfilmindustry@gmail.com';
-          const fallbackRole = isDevAdmin ? UserRole.ADMIN : (session.user.user_metadata?.role || UserRole.INVESTOR);
-          console.warn("Using Fallback Role due to error:", fallbackRole);
+        console.error("App: Auth initialization failed:", err);
+      } finally {
+        if (active) {
+          setAuthLoading(false);
+          clearTimeout(globalTimeout);
+        }
+      }
+    };
 
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.full_name || 'User (Offline)',
-            role: fallbackRole,
-            kycStatus: 'PENDING',
-            totalInvested: 0,
-            projects: []
-          });
+    // Run startup pre-fetch
+    initAuth();
 
-          // Set tab based on fallback role
-          if (fallbackRole === UserRole.ADMIN) {
-            setActiveTab('admin');
-          } else if (fallbackRole === UserRole.INVESTOR) {
-            setActiveTab('explore');
-          } else {
-            setActiveTab('portfolio');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`App: Auth Event fired: ${event}. User Email:`, session?.user?.email);
+      if (!active) return;
+
+      if (session?.user) {
+        setSession(session);
+        // Avoid duplicate profile sync if we already synced this user
+        if (session.user.id !== lastSyncedUserIdRef.current) {
+          lastSyncedUserIdRef.current = session.user.id;
+          try {
+            setAuthLoading(true);
+            const userData = await syncUserToFirestore(session.user);
+            if (!active) return;
+            setUser(userData);
+
+            if (userData.role === UserRole.ADMIN) {
+              setActiveTab('admin');
+            } else if (userData.role === UserRole.INVESTOR) {
+              setActiveTab('explore');
+            } else {
+              setActiveTab('portfolio');
+            }
+          } catch (err) {
+            console.error("App: Auth change profile sync failed:", err);
+          } finally {
+            if (active) setAuthLoading(false);
           }
         }
-      } finally {
-        setAuthLoading(false);
-        clearTimeout(globalTimeout);
+      } else {
+        console.log("App: No session or user logged out.");
+        setUser(null);
+        setSession(null);
+        lastSyncedUserIdRef.current = null;
+        setActiveTab('explore');
       }
     });
 
     return () => {
+      active = false;
       subscription.unsubscribe();
       clearTimeout(globalTimeout);
     };
@@ -405,11 +389,13 @@ const App: React.FC = () => {
         )}
 
         <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-16">
-          {loggedOutTab === 'booking' && <MovieBookingView user={null} />}
-          {loggedOutTab === 'about' && <AboutView />}
-          {loggedOutTab === 'works' && <OurWorksView />}
-          {loggedOutTab === 'terms' && <TermsView />}
-          {loggedOutTab === 'posts' && <PostsView />}
+          <Suspense fallback={<div className="flex justify-center p-20"><Loader2 className="animate-spin text-yellow-400" /></div>}>
+            {loggedOutTab === 'booking' && <MovieBookingView user={null} />}
+            {loggedOutTab === 'about' && <AboutView />}
+            {loggedOutTab === 'works' && <OurWorksView />}
+            {loggedOutTab === 'terms' && <TermsView />}
+            {loggedOutTab === 'posts' && <PostsView />}
+          </Suspense>
         </main>
         
         <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-400 text-sm space-y-4">
@@ -438,61 +424,63 @@ const App: React.FC = () => {
         userName={user.name || 'User'}
         onOpenSubmission={() => setIsProjectModalOpen(true)}
       >
-        {selectedProject ? (
-          <MobileProjectDetailView
-            project={selectedProject}
-            onBack={() => setSelectedProject(null)}
-            onInvest={(amount) => setInvestmentRequest({ project: selectedProject, amount })}
-          />
-        ) : (
-          <>
-            {(activeTab === 'home' || activeTab === 'explore') && (
-              (user.activeRole || user.role) === UserRole.ADMIN ? (
-                <MobileAdminDashboard user={user} />
-              ) : (
-                <MobileHomeView 
-                  user={user}
-                  onSelectProject={setSelectedProject}
+        <Suspense fallback={<div className="flex justify-center p-20"><Loader2 className="animate-spin text-yellow-400" /></div>}>
+          {selectedProject ? (
+            <MobileProjectDetailView
+              project={selectedProject}
+              onBack={() => setSelectedProject(null)}
+              onInvest={(amount) => setInvestmentRequest({ project: selectedProject, amount })}
+            />
+          ) : (
+            <>
+              {(activeTab === 'home' || activeTab === 'explore') && (
+                (user.activeRole || user.role) === UserRole.ADMIN ? (
+                  <MobileAdminDashboard user={user} />
+                ) : (
+                  <MobileHomeView 
+                    user={user}
+                    onSelectProject={setSelectedProject}
+                    onOpenSubmission={() => setIsProjectModalOpen(true)}
+                    onQuickInvest={(p, amount) => setInvestmentRequest({ project: p, amount })}
+                  />
+                )
+              )}
+              {activeTab === 'discover' && (
+                <MobileDiscoverView 
+                  onSelectProject={setSelectedProject} 
                   onOpenSubmission={() => setIsProjectModalOpen(true)}
-                  onQuickInvest={(p, amount) => setInvestmentRequest({ project: p, amount })}
                 />
-              )
-            )}
-            {activeTab === 'discover' && (
-              <MobileDiscoverView 
-                onSelectProject={setSelectedProject} 
-                onOpenSubmission={() => setIsProjectModalOpen(true)}
-              />
-            )}
-            {(activeTab === 'invest' || activeTab === 'portfolio') && (() => {
-              switch (user.activeRole || user.role) {
-                case UserRole.INVESTOR:
-                  return <MobileInvestView user={user} onSelectProject={setSelectedProject} />;
-                case UserRole.ADMIN:
-                  return <AdminDashboard user={user} />;
-                case UserRole.DIRECTOR:
-                  return <MobileDirectorDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
-                case UserRole.WRITER:
-                  return <MobileWriterDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
-                case UserRole.PRODUCER:
-                  return <MobileProducerDashboard user={user} />;
-                case UserRole.MOVIE_LOVER:
-                  return <MovieBookingView user={user} />;
-                default:
-                  return <MobileInvestView user={user} onSelectProject={setSelectedProject} />;
-              }
-            })()}
-            {activeTab === 'profile' && (
-              <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />
-            )}
-             {activeTab === 'about' && (
-               <AboutView />
-             )}
-             {activeTab === 'booking' && (
-               <MovieBookingView user={user} />
-             )}
-           </>
-         )}
+              )}
+              {(activeTab === 'invest' || activeTab === 'portfolio') && (() => {
+                switch (user.activeRole || user.role) {
+                  case UserRole.INVESTOR:
+                    return <MobileInvestView user={user} onSelectProject={setSelectedProject} />;
+                  case UserRole.ADMIN:
+                    return <AdminDashboard user={user} />;
+                  case UserRole.DIRECTOR:
+                    return <MobileDirectorDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
+                  case UserRole.WRITER:
+                    return <MobileWriterDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
+                  case UserRole.PRODUCER:
+                    return <MobileProducerDashboard user={user} />;
+                  case UserRole.MOVIE_LOVER:
+                    return <MovieBookingView user={user} />;
+                  default:
+                    return <MobileInvestView user={user} onSelectProject={setSelectedProject} />;
+                }
+              })()}
+              {activeTab === 'profile' && (
+                <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />
+              )}
+               {activeTab === 'about' && (
+                 <AboutView />
+               )}
+               {activeTab === 'booking' && (
+                 <MovieBookingView user={user} />
+               )}
+             </>
+           )}
+        </Suspense>
 
         {investmentRequest && (
           <PaymentGateway
@@ -586,7 +574,11 @@ const App: React.FC = () => {
   }
 
   if (activeTab === 'admin' && (user.activeRole || user.role) === UserRole.ADMIN && user.email === 'bharathfilmindustry@gmail.com') {
-    return <AdminDashboard user={user} />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-yellow-500" size={48} /></div>}>
+        <AdminDashboard user={user} />
+      </Suspense>
+    );
   }
 
   return (
@@ -600,55 +592,57 @@ const App: React.FC = () => {
       }} 
       role={user.activeRole || user.role}
     >
-      {selectedProject ? (
-        <ProjectDetailView
-          project={selectedProject}
-          onBack={() => setSelectedProject(null)}
-          onInvest={(user.activeRole || user.role) === UserRole.INVESTOR ? (amount) => setInvestmentRequest({ project: selectedProject, amount }) : undefined}
-          onPlayTrailer={() => { }}
-        />
-      ) : (
-        <>
-          {activeTab === 'explore' && <ExploreView onSelectProject={setSelectedProject} onQuickInvest={(p) => setInvestmentRequest({ project: p, amount: 100000 })} user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />}
+      <Suspense fallback={<div className="flex justify-center p-20"><Loader2 className="animate-spin text-yellow-400" /></div>}>
+        {selectedProject ? (
+          <ProjectDetailView
+            project={selectedProject}
+            onBack={() => setSelectedProject(null)}
+            onInvest={(user.activeRole || user.role) === UserRole.INVESTOR ? (amount) => setInvestmentRequest({ project: selectedProject, amount }) : undefined}
+            onPlayTrailer={() => { }}
+          />
+        ) : (
+          <>
+            {activeTab === 'explore' && <ExploreView onSelectProject={setSelectedProject} onQuickInvest={(p) => setInvestmentRequest({ project: p, amount: 100000 })} user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />}
 
-          {/* ROLE DASHBOARD LOGIC */}
-          {activeTab === 'portfolio' && (() => {
-            switch (user.activeRole || user.role) {
-              case UserRole.DIRECTOR:
-                return <DirectorDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
-              case UserRole.INVESTOR:
-                return <InvestorDashboard user={user} initialView={investorDashboardView} />;
-              case UserRole.PRODUCER:
-                return <ProducerDashboard user={user} />;
-              case UserRole.WRITER:
-                return <WriterDashboard user={user} />;
-              case UserRole.ACTOR:
-                return <ActorDashboard user={user} />;
-              case UserRole.CREW:
-                return <CrewDashboard user={user} />;
-              case UserRole.VENDOR:
-                return <VendorDashboard user={user} />;
-              case UserRole.DISTRIBUTOR:
-                return <DistributorDashboard user={user} />;
-              case UserRole.SERVICE_PROVIDER:
-                return <ServiceProviderDashboard user={user} />;
-              case UserRole.STUDENT:
-                return <StudentDashboard user={user} />;
-              case UserRole.MOVIE_LOVER:
-                return <MovieBookingView user={user} />;
-              default:
-                return <InvestorDashboard user={user} initialView={investorDashboardView} />;
-            }
-          })()}
+            {/* ROLE DASHBOARD LOGIC */}
+            {activeTab === 'portfolio' && (() => {
+              switch (user.activeRole || user.role) {
+                case UserRole.DIRECTOR:
+                  return <DirectorDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
+                case UserRole.INVESTOR:
+                  return <InvestorDashboard user={user} initialView={investorDashboardView} />;
+                case UserRole.PRODUCER:
+                  return <ProducerDashboard user={user} />;
+                case UserRole.WRITER:
+                  return <WriterDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
+                case UserRole.ACTOR:
+                  return <ActorDashboard user={user} />;
+                case UserRole.CREW:
+                  return <CrewDashboard user={user} />;
+                case UserRole.VENDOR:
+                  return <VendorDashboard user={user} />;
+                case UserRole.DISTRIBUTOR:
+                  return <DistributorDashboard user={user} />;
+                case UserRole.SERVICE_PROVIDER:
+                  return <ServiceProviderDashboard user={user} />;
+                case UserRole.STUDENT:
+                  return <StudentDashboard user={user} />;
+                case UserRole.MOVIE_LOVER:
+                  return <MovieBookingView user={user} />;
+                default:
+                  return <InvestorDashboard user={user} initialView={investorDashboardView} />;
+              }
+            })()}
 
-           {activeTab === 'works' && <OurWorksView />}
-           {activeTab === 'booking' && <MovieBookingView user={user} />}
-           {activeTab === 'terms' && <TermsView />}
-           {activeTab === 'profile' && <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />}
-           {activeTab === 'about' && <AboutView />}
-           {activeTab === 'posts' && <PostsView />}
-        </>
-      )}
+             {activeTab === 'works' && <OurWorksView />}
+             {activeTab === 'booking' && <MovieBookingView user={user} />}
+             {activeTab === 'terms' && <TermsView />}
+             {activeTab === 'profile' && <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />}
+             {activeTab === 'about' && <AboutView />}
+             {activeTab === 'posts' && <PostsView />}
+          </>
+        )}
+      </Suspense>
 
       <BFIIntellect />
 

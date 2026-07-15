@@ -26,3 +26,8 @@ CREATE INDEX IF NOT EXISTS idx_payments_payment_status ON public.payments(paymen
 -- Notifications table indexes
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON public.notifications(recipient);
 CREATE INDEX IF NOT EXISTS idx_notifications_read ON public.notifications(read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON public.notifications(created_at);
+
+-- Date sorting indexes
+CREATE INDEX IF NOT EXISTS idx_investments_date ON public.investments(date);
+CREATE INDEX IF NOT EXISTS idx_movie_bookings_created_at ON public.movie_bookings(created_at);

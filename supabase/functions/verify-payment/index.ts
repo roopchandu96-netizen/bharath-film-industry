@@ -216,10 +216,25 @@ export default {
         .maybeSingle();
 
       if (existingVerifiedPayment) {
-        console.error("Replay check: transaction has already been verified.");
+        console.log("Replay check: transaction has already been verified. Returning success.");
+        const { data: paymentRecord } = await supabaseAdmin
+          .from("payments")
+          .select("*, movie_bookings(*)")
+          .eq("gateway_payment_id", razorpay_payment_id)
+          .maybeSingle();
+
+        let bookingObj = paymentRecord?.movie_bookings;
+        if (Array.isArray(bookingObj)) {
+          bookingObj = bookingObj[0];
+        }
+
         return new Response(
-          JSON.stringify({ error: "Transaction has already been verified." }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ 
+            success: true, 
+            message: "Payment verified successfully.",
+            booking: bookingObj
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 

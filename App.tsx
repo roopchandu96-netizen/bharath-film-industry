@@ -108,7 +108,7 @@ const App: React.FC = () => {
         console.log("App: Pre-fetching active session...");
         const { data: { session: activeSession } } = await supabase.auth.getSession();
 
-        if (!active) return;
+        if (!active) return null;
 
         if (activeSession?.user) {
           console.log("App: Session found on startup. Syncing user...", activeSession.user.email);
@@ -116,7 +116,7 @@ const App: React.FC = () => {
           lastSyncedUserIdRef.current = activeSession.user.id;
 
           const userData = await syncUserToFirestore(activeSession.user);
-          if (!active) return;
+          if (!active) return null;
 
           setUser(userData);
 
@@ -131,8 +131,10 @@ const App: React.FC = () => {
         } else {
           console.log("App: No session found on startup.");
         }
+        return activeSession;
       } catch (err) {
         console.error("App: Auth initialization failed:", err);
+        return null;
       } finally {
         if (active) {
           setAuthLoading(false);
@@ -141,49 +143,55 @@ const App: React.FC = () => {
       }
     };
 
-    // Run startup pre-fetch
-    initAuth();
+    let subscription: any = null;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log(`App: Auth Event fired: ${event}. User Email:`, session?.user?.email);
+    initAuth().then((initialSession) => {
       if (!active) return;
 
-      if (session?.user) {
-        setSession(session);
-        // Avoid duplicate profile sync if we already synced this user
-        if (session.user.id !== lastSyncedUserIdRef.current) {
-          lastSyncedUserIdRef.current = session.user.id;
-          try {
-            setAuthLoading(true);
-            const userData = await syncUserToFirestore(session.user);
-            if (!active) return;
-            setUser(userData);
-
-            if (userData.role === UserRole.ADMIN) {
-              setActiveTab('admin');
-            } else if (userData.role === UserRole.INVESTOR) {
-              setActiveTab('explore');
-            } else {
-              setActiveTab('portfolio');
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log(`App: Auth Event fired: ${event}. User ID:`, session?.user?.id);
+        
+        if (session?.user) {
+          if (session.user.id !== lastSyncedUserIdRef.current) {
+            lastSyncedUserIdRef.current = session.user.id;
+            setSession(session);
+            try {
+              setAuthLoading(true);
+              const userData = await syncUserToFirestore(session.user);
+              if (!active) return;
+              setUser(userData);
+              
+              if (userData.role === UserRole.ADMIN) {
+                setActiveTab('admin');
+              } else if (userData.role === UserRole.INVESTOR) {
+                setActiveTab('explore');
+              } else {
+                setActiveTab('portfolio');
+              }
+            } catch (err) {
+              console.error("App: Auth change profile sync failed:", err);
+            } finally {
+              if (active) setAuthLoading(false);
             }
-          } catch (err) {
-            console.error("App: Auth change profile sync failed:", err);
-          } finally {
-            if (active) setAuthLoading(false);
+          } else {
+            setSession(session);
+          }
+        } else {
+          if (lastSyncedUserIdRef.current !== null) {
+            console.log("App: No session or user logged out.");
+            setUser(null);
+            setSession(null);
+            lastSyncedUserIdRef.current = null;
+            setActiveTab('explore');
           }
         }
-      } else {
-        console.log("App: No session or user logged out.");
-        setUser(null);
-        setSession(null);
-        lastSyncedUserIdRef.current = null;
-        setActiveTab('explore');
-      }
+      });
+      subscription = data.subscription;
     });
 
     return () => {
       active = false;
-      subscription.unsubscribe();
+      if (subscription) subscription.unsubscribe();
       clearTimeout(globalTimeout);
     };
   }, []);

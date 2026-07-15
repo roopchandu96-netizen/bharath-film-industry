@@ -5,7 +5,7 @@ import { updateUserInFirestore, deleteUserAccount } from '../services/userServic
 import {
   ShieldCheck, User as UserIcon, Camera, Save,
   Trash2, AlertTriangle, Loader2,
-  CheckCircle, Globe, Award, Mail, Key
+  CheckCircle, Globe, Award, Mail, Key, LogOut
 } from 'lucide-react';
 import { supabase } from '../services/firebase.ts';
 
@@ -141,6 +141,15 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
     }
   };
 
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to log out?")) {
+      supabase.auth.signOut().finally(() => {
+        localStorage.clear();
+        window.location.reload();
+      });
+    }
+  };
+
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
@@ -217,12 +226,12 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleSwitchRole(user.primaryRole || UserRole.INVESTOR)}
+                  onClick={() => handleSwitchRole(resolvedPrimaryRole as UserRole)}
                   disabled={isSwitchingRole}
                   className="px-5 py-2.5 rounded-xl bg-yellow-500 text-black hover:bg-yellow-400 font-extrabold text-[9px] uppercase tracking-wider disabled:opacity-50 transition-all flex items-center gap-1.5 shrink-0"
                 >
                   {isSwitchingRole && <Loader2 size={10} className="animate-spin" />}
-                  Switch back to {user.primaryRole || 'Investor'}
+                  Switch back to {resolvedPrimaryRole}
                 </button>
               </div>
             )}
@@ -291,6 +300,21 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
                   <div className="text-left">
                     <span className="text-xs font-bold text-white">Reset Access Key</span>
                     <p className="text-[8px] text-zinc-600 font-black uppercase">Standard 2FA protocol</p>
+                  </div>
+                </div>
+              </button>
+
+              <button 
+                onClick={handleLogout}
+                className="w-full p-5 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group hover:border-red-500/30 transition-all text-left"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-red-500 transition-colors">
+                    <LogOut size={18} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-white">Log Out</span>
+                    <p className="text-[8px] text-zinc-600 font-black uppercase">Clear session &amp; exit</p>
                   </div>
                 </div>
               </button>

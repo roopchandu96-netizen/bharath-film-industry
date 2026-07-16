@@ -107,56 +107,71 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
       return;
     }
     try {
-      const { data: bookingsData, error } = await supabase
+      // Step 1: Fetch bookings (flat query — no joins to avoid PGRST200 FK cache issue)
+      const { data: bookingsData, error: bookingsError } = await supabase
         .from('movie_bookings')
-        .select(`
-          id,
-          booking_id,
-          amount,
-          status,
-          payment_status,
-          created_at,
-          confirmed_at,
-          quantity,
-          phone,
-          email,
-          name,
-          payments (
-            gateway_payment_id,
-            payment_status
-          ),
-          tickets (
-            ticket_number,
-            invoice_number
-          )
-        `)
+        .select('id, booking_id, amount, status, payment_status, created_at, confirmed_at, quantity, phone, email, name')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (bookingsError) throw bookingsError;
+      if (!bookingsData || bookingsData.length === 0) {
+        setBookingHistory([]);
+        return;
+      }
 
-      const formattedBookings: BookingRecord[] = (bookingsData || [])
-        .map((b: any) => {
-          const ticketNumbers = b.tickets && b.tickets.length > 0 
-            ? b.tickets.map((t: any) => t.ticket_number).join(', ') 
-            : '';
-          return {
-            id: b.id,
-            name: b.name || user?.name || '',
-            email: b.email || user?.email || '',
-            phone: b.phone || '',
-            txnId: b.payments?.[0]?.gateway_payment_id || 'N/A',
-            paymentMethod: 'Razorpay',
-            amount: Number(b.amount),
-            quantity: b.quantity || 1,
-            date: b.created_at,
-            status: b.status,
-            paymentStatus: b.payment_status,
-            watched: false,
-            bookingRef: b.booking_id,
-            invoiceNumber: b.tickets?.[0]?.invoice_number || null,
-            ticketNumbers: ticketNumbers
-          };
-        });
+      const bookingIds = bookingsData.map((b: any) => b.id);
+
+      // Step 2: Fetch tickets for these bookings
+      const { data: ticketsData } = await supabase
+        .from('tickets')
+        .select('booking_id, ticket_number, invoice_number')
+        .in('booking_id', bookingIds);
+
+      // Step 3: Fetch payments for these bookings
+      const { data: paymentsData } = await supabase
+        .from('payments')
+        .select('booking_id, gateway_payment_id, payment_status')
+        .in('booking_id', bookingIds);
+
+      // Step 4: Build lookup maps
+      const ticketsByBooking: Record<string, any[]> = {};
+      for (const t of (ticketsData || [])) {
+        if (!ticketsByBooking[t.booking_id]) ticketsByBooking[t.booking_id] = [];
+        ticketsByBooking[t.booking_id].push(t);
+      }
+
+      const paymentsByBooking: Record<string, any[]> = {};
+      for (const p of (paymentsData || [])) {
+        if (!paymentsByBooking[p.booking_id]) paymentsByBooking[p.booking_id] = [];
+        paymentsByBooking[p.booking_id].push(p);
+      }
+
+      // Step 5: Format bookings with joined data
+      const formattedBookings: BookingRecord[] = bookingsData.map((b: any) => {
+        const tickets = ticketsByBooking[b.id] || [];
+        const payments = paymentsByBooking[b.id] || [];
+        const ticketNumbers = tickets.length > 0 
+          ? tickets.map((t: any) => t.ticket_number).join(', ') 
+          : '';
+        return {
+          id: b.id,
+          name: b.name || user?.name || '',
+          email: b.email || user?.email || '',
+          phone: b.phone || '',
+          txnId: payments[0]?.gateway_payment_id || 'N/A',
+          paymentMethod: 'Razorpay',
+          amount: Number(b.amount),
+          quantity: b.quantity || 1,
+          date: b.created_at,
+          status: b.status,
+          paymentStatus: b.payment_status,
+          watched: false,
+          bookingRef: b.booking_id,
+          invoiceNumber: tickets[0]?.invoice_number || null,
+          ticketNumbers: ticketNumbers
+        };
+      });
 
       setBookingHistory(formattedBookings);
     } catch (err) {

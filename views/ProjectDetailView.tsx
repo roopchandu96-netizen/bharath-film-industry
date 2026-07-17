@@ -181,8 +181,16 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onBack, 
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-[10px] font-bold text-zinc-400 hover:text-white uppercase tracking-widest transition-all"
               >
-                <ExternalLink size={12} /> Download PDF
+                <ExternalLink size={12} /> Download Synopsis
               </button>
+              {project.scriptUrl && (
+                <button
+                  onClick={() => window.open(project.scriptUrl, '_blank')}
+                  className="flex items-center gap-2 px-4 py-2 bg-yellow-400 hover:bg-yellow-300 rounded-xl text-[10px] font-bold text-black uppercase tracking-widest transition-all shadow-lg"
+                >
+                  <ExternalLink size={12} /> View Script Document
+                </button>
+              )}
             </div>
             <p className="text-zinc-300 text-base leading-relaxed font-serif tracking-wide whitespace-pre-wrap">{project.description}</p>
 

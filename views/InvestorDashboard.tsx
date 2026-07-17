@@ -92,8 +92,8 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
         // Use ilike for case-insensitive status matching (DB may store 'ACTIVE' or 'active')
         const { data: projects } = await supabase
           .from('projects')
-          .select('id, title, tagline, genre, budget, fundingGoal, currentFunding, investorCount, director, status, posterUrl, description')
-          .ilike('status', 'ACTIVE');
+          .select('id, title, tagline, genre, budget, fundingGoal, currentFunding, investorCount, director, status, posterUrl, description, scriptUrl, "scriptFileName"')
+          .in('status', ['ACTIVE', 'APPROVED', 'active', 'approved']);
         if (projects) setAllProjects(projects as MovieProject[]);
       } catch (err) {
         console.error("Projects fetch error:", err);

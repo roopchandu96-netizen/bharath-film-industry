@@ -85,6 +85,7 @@ const App: React.FC = () => {
     posterUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80',
     teaserUrl: ''
   });
+  const [scriptFile, setScriptFile] = useState<File | null>(null);
   const [scriptFileName, setScriptFileName] = useState('');
   const [posterFileName, setPosterFileName] = useState('');
   const [isScriptRegistered, setIsScriptRegistered] = useState(false);
@@ -211,17 +212,41 @@ const App: React.FC = () => {
     try {
       // Append Previous Works to description if exists
       let finalDescription = newProject.synopsis;
-      if (newProject.previousWorks.trim()) {
+      if (newProject.previousWorks?.trim()) {
         finalDescription += `\n\n--- Previous Works ---\n${newProject.previousWorks}`;
       }
 
+      let scriptUrl = undefined;
+      let finalScriptFileName = undefined;
+
+      if (scriptFile) {
+        // Upload script file to Supabase Storage
+        const fileExt = scriptFile.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('user_uploads')
+          .upload(filePath, scriptFile);
+
+        if (!uploadError) {
+          const { data } = supabase.storage.from('user_uploads').getPublicUrl(filePath);
+          scriptUrl = data.publicUrl;
+          finalScriptFileName = scriptFileName;
+        } else {
+          console.error("Script upload error:", uploadError);
+        }
+      }
+
       await createProject({
-        title: newProject.title,
-        tagline: newProject.logline,
-        genre: newProject.genre,
-        budget: newProject.budget,
-        fundingGoal: newProject.fundingGoal,
-        description: finalDescription,
+        title: newProject.title || '',
+        tagline: newProject.logline || '',
+        genre: newProject.genre || '',
+        budget: newProject.budget || 0,
+        fundingGoal: newProject.fundingGoal || 0,
+        description: finalDescription || '',
+        scriptUrl: scriptUrl,
+        scriptFileName: finalScriptFileName,
         posterUrl: newProject.posterUrl,
         teaserUrl: newProject.teaserUrl,
         director: user.name,
@@ -244,6 +269,7 @@ const App: React.FC = () => {
         posterUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80',
         teaserUrl: ''
       });
+      setScriptFile(null);
       setScriptFileName('');
       setPosterFileName('');
       setIsScriptRegistered(false);
@@ -620,7 +646,7 @@ const App: React.FC = () => {
                 case UserRole.DIRECTOR:
                   return <DirectorDashboard user={user} onOpenSubmission={() => setIsProjectModalOpen(true)} />;
                 case UserRole.INVESTOR:
-                  return <InvestorDashboard user={user} initialView={investorDashboardView} />;
+                  return <InvestorDashboard user={user} initialView={investorDashboardView} onProjectSelect={setSelectedProject} />;
                 case UserRole.PRODUCER:
                   return <ProducerDashboard user={user} />;
                 case UserRole.WRITER:
@@ -727,7 +753,10 @@ const App: React.FC = () => {
                       accept=".pdf,.doc,.docx,.txt"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) { setScriptFileName(file.name); }
+                        if (file) { 
+                          setScriptFile(file);
+                          setScriptFileName(file.name); 
+                        }
                       }}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />

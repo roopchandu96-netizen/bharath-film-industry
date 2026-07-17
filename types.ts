@@ -29,6 +29,8 @@ export interface MovieProject {
   posterUrl: string;
   teaserUrl: string;
   description: string; // Used for Synopsis
+  scriptUrl?: string;
+  scriptFileName?: string;
   budget: number;
   fundingGoal: number;
   currentFunding: number;

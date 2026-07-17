@@ -144,6 +144,14 @@ export const MobileProjectDetailView: React.FC<MobileProjectDetailViewProps> = (
             <p className="text-xs text-[#a39a88] leading-relaxed">
               {project.description}
             </p>
+            {project.scriptUrl && (
+              <button
+                onClick={() => window.open(project.scriptUrl, '_blank')}
+                className="w-full mt-3 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-xl text-[10px] font-extrabold text-black uppercase tracking-widest shadow-md hover:opacity-90 active:scale-95 transition-all"
+              >
+                <FileText size={14} /> Read Script Document
+              </button>
+            )}
           </div>
 
           {/* Key Creative Team */}

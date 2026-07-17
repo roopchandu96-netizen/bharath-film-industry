@@ -454,8 +454,10 @@ const App: React.FC = () => {
                 )
               )}
               {activeTab === 'discover' && (
-                <MobileDiscoverView 
-                  onSelectProject={setSelectedProject} 
+                <ExploreView 
+                  onSelectProject={setSelectedProject}
+                  onQuickInvest={(p, amount) => setInvestmentRequest({ project: p, amount: amount || 100000 })}
+                  user={user}
                   onOpenSubmission={() => setIsProjectModalOpen(true)}
                 />
               )}

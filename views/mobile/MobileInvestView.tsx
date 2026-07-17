@@ -52,11 +52,6 @@ export const MobileInvestView: React.FC<MobileInvestViewProps> = ({
         <span className="text-[9px] font-black uppercase text-emerald-400 tracking-widest block">Total Invested Capital</span>
         <div className="flex items-baseline gap-2.5 mt-1">
           <span className="text-3xl font-extrabold text-white font-mono leading-none">₹{totalInvestedAmount.toLocaleString('en-IN')}</span>
-          {totalInvestedAmount > 0 && (
-            <span className="bg-emerald-500/20 text-[#FFFBEB] text-[9px] font-black px-2 py-0.5 rounded-full border border-emerald-500/30">
-              +12.4% ROI
-            </span>
-          )}
         </div>
 
         {/* Horizontal Mini stats */}

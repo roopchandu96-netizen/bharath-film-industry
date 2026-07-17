@@ -56,13 +56,6 @@ export const MobileHomeView: React.FC<MobileHomeViewProps> = ({
             {user.role} • PREMIUM MEMBER
           </p>
         </div>
-        <div className="text-right">
-          <span className="text-[9px] font-black uppercase text-emerald-400/70 tracking-widest block">Portfolio Val</span>
-          <span className="text-base font-extrabold text-[#FACC15] font-mono">₹1.24 Cr</span>
-          <span className="text-[8px] bg-emerald-500/20 text-[#FFFBEB] px-1.5 py-0.5 rounded-full border border-emerald-500/30 font-black ml-1">
-            +12.4%
-          </span>
-        </div>
       </div>
 
       {/* Featured Cinematic Poster Slide */}

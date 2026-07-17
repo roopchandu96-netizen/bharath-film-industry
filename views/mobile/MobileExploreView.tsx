@@ -12,40 +12,7 @@ export const MobileExploreView: React.FC<MobileExploreViewProps> = ({
   onOpenSubmission
 }) => {
   // Mock projects matching Screen 1 and details
-  const mockProjects: MovieProject[] = [
-    {
-      id: 'aeon7',
-      title: 'Project: AEON 7',
-      tagline: 'Sci-Fi Feature',
-      genre: 'Sci-Fi Noir',
-      budget: '₹20.00 Cr',
-      fundingGoal: 2500000,
-      currentFunding: 2050000, // 82%
-      description: 'A high-budget pan-Indian science fiction spectacle charting the rise and fall of the first human colony on Mars. Under BFI blockchain governance, investors hold direct revenue-share rights.',
-      posterUrl: '',
-      teaserUrl: '',
-      director: 'Siddharth Anand',
-      status: 'ACTIVE',
-      investorCount: 1240,
-      createdAt: ''
-    },
-    {
-      id: 'lastmonsoon',
-      title: 'The Last Monsoon',
-      tagline: 'Drama • Script License',
-      genre: 'Cinematic Drama',
-      budget: '₹1.50 Cr',
-      fundingGoal: 150000,
-      currentFunding: 0,
-      description: 'Award-winning screenplay exploring a family drama set against the backdrop of the western ghats. The script is officially registered and listed for license acquisition.',
-      posterUrl: '',
-      teaserUrl: '',
-      director: 'Vikram Sethi',
-      status: 'NEW',
-      investorCount: 0,
-      createdAt: ''
-    }
-  ];
+  const mockProjects: MovieProject[] = [];
 
   return (
     <div className="space-y-6 pb-6">

@@ -43,7 +43,7 @@ const DistributorDashboard: React.FC<DistributorDashboardProps> = ({ user }) => 
           { label: 'Available Films', val: completedProjects.length, icon: '🎞️', color: 'text-amber-500' },
           { label: 'My Acquisition Bids', val: bids.length + ' Active', icon: '📝', color: 'text-blue-500' },
           { label: 'Verified Channel', val: 'Distributor Node', icon: '🛡️', color: 'text-green-500' },
-          { label: 'Total Placed Value', val: bids.length > 0 ? `₹${(minGuarantee/100000).toFixed(1)}L+` : '0', icon: '💰', color: 'text-purple-500' }
+          { label: 'Total Placed Value', val: bids.length > 0 ? `₹${minGuarantee.toLocaleString('en-IN')}` : '0', icon: '💰', color: 'text-purple-500' }
         ].map((m, i) => (
           <div key={i} className="p-6 bg-slate-900/50 border border-slate-800 rounded-3xl shadow-xl flex items-center justify-between">
             <div>

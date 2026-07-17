@@ -7,22 +7,9 @@ interface MobileAdminDashboardProps {
 }
 
 export const MobileAdminDashboard: React.FC<MobileAdminDashboardProps> = ({ user }) => {
-  const stats = [
-    { label: 'Total TVL', value: '₹8.42 Cr', change: '+12.4% vs last week', active: true },
-    { label: 'Active Escrows', value: '142', change: '98.2% Auto-match' },
-    { label: 'User Queue', value: '56', change: '12 Urgent Reviews', alert: true },
-    { label: 'Fraud Alerts', value: '02', change: 'Neutralized' }
-  ];
-
-  const verificationQueue = [
-    { name: 'Arjun Malhotra', role: 'PRODUCER', docId: 'DOC_ID: 9823-XA-21', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200' },
-    { name: 'Deepa Nair', role: 'DIRECTOR', docId: 'DOC_ID: 1140-ZZ-09', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200' }
-  ];
-
-  const escrows = [
-    { project: "Project 'Vikram'", phase: 'PHASE: PRE-PRODUCTION', amount: '₹45.5 L', status: 'Locked' },
-    { project: 'Neon Skies', phase: 'PHASE: POST', amount: '₹12.0 L', status: 'Distributed' }
-  ];
+  const stats: any[] = [];
+  const verificationQueue: any[] = [];
+  const escrows: any[] = [];
 
   return (
     <div className="space-y-6 pb-6 animate-in fade-in duration-300">
@@ -117,7 +104,7 @@ export const MobileAdminDashboard: React.FC<MobileAdminDashboardProps> = ({ user
 
         <div className="flex justify-between items-baseline">
           <span className="text-xs text-emerald-400">Pool Total</span>
-          <span className="text-2xl font-extrabold text-white font-mono">₹1.2 Cr</span>
+          <span className="text-2xl font-extrabold text-white font-mono">₹0</span>
         </div>
 
         {/* Custom stacked horizontal progress bar */}

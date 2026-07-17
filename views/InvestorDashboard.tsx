@@ -89,10 +89,11 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
     const fetchActiveProjects = async () => {
       try {
         setProjectsLoading(true);
+        // Use ilike for case-insensitive status matching (DB may store 'ACTIVE' or 'active')
         const { data: projects } = await supabase
           .from('projects')
           .select('id, title, tagline, genre, budget, fundingGoal, currentFunding, investorCount, director, status, posterUrl, description')
-          .eq('status', 'ACTIVE');
+          .ilike('status', 'ACTIVE');
         if (projects) setAllProjects(projects as MovieProject[]);
       } catch (err) {
         console.error("Projects fetch error:", err);
@@ -124,6 +125,18 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
     fetchInvestments();
     fetchActiveProjects();
     fetchNotifications();
+
+    // Realtime subscription: auto-refresh when projects change (e.g. newly approved)
+    const channel = supabase
+      .channel('investor_projects')
+      .on('postgres_changes', { event: '*', table: 'projects', schema: 'public' }, () => {
+        fetchActiveProjects();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user.id, user.email]);
 
   const handleDownloadAgreement = async (inv: Investment, project?: MovieProject) => {

@@ -35,7 +35,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ user }) => {
           { label: 'Equipment Listed', val: vendorGear.length + ' Items', icon: '📹', color: 'text-amber-500' },
           { label: 'Booking Request', val: '1 Pending', icon: '📅', color: 'text-blue-500' },
           { label: 'Verification Rate', val: '100%', icon: '🛡️', color: 'text-green-500' },
-          { label: 'Monthly Earnings', val: '₹1.8L Est.', icon: '💰', color: 'text-purple-500' }
+          { label: 'Monthly Earnings', val: '₹0', icon: '💰', color: 'text-purple-500' }
         ].map((m, i) => (
           <div key={i} className="p-6 bg-slate-900/50 border border-slate-800 rounded-3xl shadow-xl flex items-center justify-between">
             <div>

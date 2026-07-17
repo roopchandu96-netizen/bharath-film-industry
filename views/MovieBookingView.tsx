@@ -164,8 +164,14 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
           amount: Number(b.amount),
           quantity: b.quantity || 1,
           date: b.created_at,
-          status: b.status,
-          paymentStatus: b.payment_status,
+          status: (b.status || 'pending').toUpperCase(),
+          paymentStatus: (() => {
+            const ps = (payments[0]?.payment_status || b.payment_status || 'pending').toLowerCase();
+            if (ps === 'verified' || ps === 'successful') return 'Successful';
+            if (ps === 'pending') return 'Pending';
+            if (ps === 'failed') return 'Failed';
+            return ps;
+          })(),
           watched: false,
           bookingRef: b.booking_id,
           invoiceNumber: tickets[0]?.invoice_number || null,
@@ -376,8 +382,8 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
               </div>
               <div class="detail-row">
                 <span class="label">Access Status</span>
-                <span class="${booking.status === 'CONFIRMED' ? 'status-badge' : 'pending-badge'}">
-                  ${booking.status === 'CONFIRMED' ? 'ACTIVE PASS' : 'PENDING CLEARANCE'}
+                <span class="${booking.paymentStatus === 'Successful' || booking.status.toUpperCase() === 'CONFIRMED' ? 'status-badge' : 'pending-badge'}">
+                  ${booking.paymentStatus === 'Successful' || booking.status.toUpperCase() === 'CONFIRMED' ? 'ACTIVE PASS' : 'PENDING CLEARANCE'}
                 </span>
               </div>
 
@@ -456,7 +462,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
             <div class="invoice-details">
               <strong>Invoice Number:</strong> ${booking.invoiceNumber || 'INV-' + booking.id}<br/><br/>
               <strong>Date of Issue:</strong> ${new Date(booking.date).toLocaleDateString()}<br/>
-              <strong>Payment Status:</strong> ${booking.status === 'CONFIRMED' ? 'PAID' : 'PENDING VERIFICATION'}<br/>
+              <strong>Payment Status:</strong> ${booking.paymentStatus === 'Successful' || booking.status.toUpperCase() === 'CONFIRMED' ? 'PAID' : 'PENDING VERIFICATION'}<br/>
               <strong>Transaction UTR/ID:</strong> ${booking.txnId}
             </div>
 

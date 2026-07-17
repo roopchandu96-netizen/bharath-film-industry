@@ -443,7 +443,7 @@ const App: React.FC = () => {
             <>
               {(activeTab === 'home' || activeTab === 'explore') && (
                 (user.activeRole || user.role) === UserRole.ADMIN ? (
-                  <MobileAdminDashboard user={user} />
+                  <AdminDashboard user={user} />
                 ) : (
                   <MobileHomeView 
                     user={user}

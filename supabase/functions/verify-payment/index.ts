@@ -55,7 +55,42 @@ export default {
       // Create admin client
       const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-      const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = await req.json()
+      let { razorpay_payment_id, razorpay_order_id, razorpay_signature, booking_ref } = await req.json()
+
+      // If booking_ref is provided but order_id is not, resolve order_id from database separately
+      if (booking_ref && !razorpay_order_id) {
+        console.log(`Resolving gateway_order_id for booking reference: ${booking_ref}`);
+        const { data: bookingRec, error: bErr } = await supabaseAdmin
+          .from("movie_bookings")
+          .select("id")
+          .eq("booking_id", booking_ref)
+          .maybeSingle();
+
+        if (bErr || !bookingRec) {
+          console.error("Booking reference not found:", bErr);
+          return new Response(
+            JSON.stringify({ error: "Booking reference not found." }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const { data: paymentRec, error: payErr } = await supabaseAdmin
+          .from("payments")
+          .select("gateway_order_id")
+          .eq("booking_id", bookingRec.id)
+          .maybeSingle();
+
+        if (payErr || !paymentRec) {
+          console.error("No gateway order ID found for booking ref:", booking_ref);
+          return new Response(
+            JSON.stringify({ error: "No payment record found for this booking reference." }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        razorpay_order_id = paymentRec.gateway_order_id;
+        console.log(`Resolved order ID: ${razorpay_order_id} for booking: ${booking_ref}`);
+      }
 
       if (!razorpay_payment_id || !razorpay_order_id) {
         return new Response(
@@ -216,16 +251,60 @@ export default {
         .maybeSingle();
 
       if (existingVerifiedPayment) {
-        console.log("Replay check: transaction has already been verified. Returning success.");
+        console.log("Replay check: transaction has already been verified. Checking for missing tickets...");
         const { data: paymentRecord } = await supabaseAdmin
           .from("payments")
-          .select("*, movie_bookings(*)")
+          .select("*")
           .eq("gateway_payment_id", razorpay_payment_id)
           .maybeSingle();
 
-        let bookingObj = paymentRecord?.movie_bookings;
-        if (Array.isArray(bookingObj)) {
-          bookingObj = bookingObj[0];
+        let bookingObj = null;
+        if (paymentRecord?.booking_id) {
+          const { data: bObj } = await supabaseAdmin
+            .from("movie_bookings")
+            .select("*")
+            .eq("id", paymentRecord.booking_id)
+            .maybeSingle();
+          bookingObj = bObj;
+
+          if (bookingObj) {
+            // Verify if ticket exists
+            const { data: ticketRecord } = await supabaseAdmin
+              .from("tickets")
+              .select("id")
+              .eq("booking_id", bookingObj.id)
+              .maybeSingle();
+
+            if (!ticketRecord) {
+              console.log(`Ticket missing for verified booking ${bookingObj.id}. Generating now...`);
+              let nextSerial = 1996;
+              try {
+                const { count } = await supabaseAdmin
+                  .from("tickets")
+                  .select("id", { count: "exact", head: true });
+                
+                if (typeof count === 'number') {
+                  nextSerial = 1996 + count;
+                }
+              } catch (cErr) {
+                console.error("Failed to query ticket count. Generating random fallback serial:", cErr);
+                nextSerial = Math.floor(1996 + Math.random() * 1000);
+              }
+
+              const ticketNumber = `TKT-${nextSerial}`;
+              const invoiceNumber = `INV-${nextSerial}`;
+
+              await supabaseAdmin
+                .from("tickets")
+                .insert({
+                  booking_id: bookingObj.id,
+                  ticket_number: ticketNumber,
+                  invoice_number: invoiceNumber,
+                  email_sent: true
+                });
+              console.log(`Successfully generated missing ticket ${ticketNumber} for booking ${bookingObj.id}`);
+            }
+          }
         }
 
         return new Response(
@@ -238,10 +317,10 @@ export default {
         );
       }
 
-      // 4. Retrieve pending booking record
+      // 4. Retrieve pending booking record separately (avoiding broken schema cache joins)
       const { data: paymentRecord, error: paymentError } = await supabaseAdmin
         .from("payments")
-        .select("*, movie_bookings(*)")
+        .select("*")
         .eq("gateway_order_id", razorpay_order_id)
         .maybeSingle();
 
@@ -253,9 +332,18 @@ export default {
         );
       }
 
-      let booking = paymentRecord.movie_bookings;
-      if (Array.isArray(booking)) {
-        booking = booking[0];
+      const { data: booking, error: bookingError } = await supabaseAdmin
+        .from("movie_bookings")
+        .select("*")
+        .eq("id", paymentRecord.booking_id)
+        .maybeSingle();
+
+      if (bookingError || !booking) {
+        console.error("Booking record not found for payment booking_id:", paymentRecord.booking_id);
+        return new Response(
+          JSON.stringify({ error: "No matching booking record found." }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
 
       if (!booking) {
@@ -295,6 +383,10 @@ export default {
       const ticketNumber = `TKT-${nextSerial}`;
       const invoiceNumber = `INV-${nextSerial}`;
 
+      // --- CRITICAL OPERATIONS (must succeed) ---
+      let ticketDownloadUrl: string | null = null;
+      let invoiceDownloadUrl: string | null = null;
+
       try {
         // Update payment record to verified
         await supabaseAdmin
@@ -302,7 +394,7 @@ export default {
           .update({
             gateway_payment_id: razorpay_payment_id,
             gateway_signature: razorpay_signature,
-            payment_status: "verified",
+            payment_status: "VERIFIED",
             verified_at: new Date().toISOString()
           })
           .eq("id", paymentRecord.id);
@@ -311,8 +403,8 @@ export default {
         await supabaseAdmin
           .from("movie_bookings")
           .update({
-            status: "confirmed",
-            payment_status: "verified",
+            status: "CONFIRMED",
+            payment_status: "VERIFIED",
             confirmed_at: new Date().toISOString()
           })
           .eq("id", booking.id);
@@ -324,26 +416,62 @@ export default {
             booking_id: booking.id,
             ticket_number: ticketNumber,
             invoice_number: invoiceNumber,
-            email_sent: true
+            email_sent: false
           });
 
-        // 6. Send automatic confirmation email via SMTP
+        console.log(`Critical operations complete: payment ${razorpay_payment_id} verified, ticket ${ticketNumber} created.`);
+      } catch (dbUpdateErr) {
+        console.error("Database status update transaction failed:", dbUpdateErr);
+        return new Response(
+          JSON.stringify({ error: "Failed to update booking status." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // --- NON-CRITICAL OPERATIONS (can fail silently) ---
+
+      // PDF Upload (placeholder)
+      try {
+        const ticketPdf = new Uint8Array([]);
+        const invoicePdf = new Uint8Array([]);
+        const { error: ticketUploadErr } = await supabaseAdmin.storage
+          .from('tickets')
+          .upload(`tickets/${ticketNumber}.pdf`, ticketPdf, { upsert: true });
+        const { error: invoiceUploadErr } = await supabaseAdmin.storage
+          .from('invoices')
+          .upload(`invoices/${invoiceNumber}.pdf`, invoicePdf, { upsert: true });
+        if (ticketUploadErr) console.error('Ticket upload error (non-critical):', ticketUploadErr);
+        if (invoiceUploadErr) console.error('Invoice upload error (non-critical):', invoiceUploadErr);
+
+        const { data: ticketUrlData } = await supabaseAdmin.storage
+          .from('tickets')
+          .createSignedUrl(`tickets/${ticketNumber}.pdf`, 3600);
+        const { data: invoiceUrlData } = await supabaseAdmin.storage
+          .from('invoices')
+          .createSignedUrl(`invoices/${invoiceNumber}.pdf`, 3600);
+        ticketDownloadUrl = ticketUrlData?.signedURL || null;
+        invoiceDownloadUrl = invoiceUrlData?.signedURL || null;
+      } catch (storageErr) {
+        console.error("Storage operations failed (non-critical):", storageErr);
+      }
+
+      // SMTP Email
+      try {
         const smtpHost = Deno.env.get("SMTP_HOST");
         if (smtpHost) {
-          try {
-            const client = new SmtpClient();
-            await client.connectTLS({
-              hostname: smtpHost,
-              port: Number(Deno.env.get("SMTP_PORT") || 465),
-              username: Deno.env.get("SMTP_USER") || "",
-              password: Deno.env.get("SMTP_PASS") || "",
-            });
+          const client = new SmtpClient();
+          await client.connectTLS({
+            hostname: smtpHost,
+            port: Number(Deno.env.get("SMTP_PORT") || 465),
+            username: Deno.env.get("SMTP_USER") || "",
+            password: Deno.env.get("SMTP_PASS") || "",
+          });
 
-            await client.send({
-              from: `"BFI Ticketing" <${Deno.env.get("SMTP_USER")}>`,
-              to: user.email,
-              subject: `BFI | Booking Confirmed - Ticket ${ticketNumber}`,
-              content: `Dear Film Enthusiast,
+          await client.send({
+            from: `"BFI Ticketing" <${Deno.env.get("SMTP_USER")}>`,
+            to: user.email,
+            subject: `BFI | Booking Confirmed - Ticket ${ticketNumber}`,
+            content: `Dear Film Enthusiast,
 
 Your ticket booking for "Vishwavikhyatha Nata Sarvabhouma" has been verified and confirmed.
 
@@ -359,26 +487,25 @@ We look forward to hosting you. Your secure streaming link will be active on the
 Warm regards,
 Bharat Film Industry Treasury
 `,
-            });
-            await client.close();
-            console.log(`Confirmation email sent to ${user.email} for ticket ${ticketNumber}`);
-          } catch (mailErr) {
-            console.error("SMTP email dispatch failed:", mailErr);
-          }
+          });
+          await client.close();
+
+          // Mark email as sent
+          await supabaseAdmin
+            .from("tickets")
+            .update({ email_sent: true })
+            .eq("booking_id", booking.id);
+
+          console.log(`Confirmation email sent to ${user.email} for ticket ${ticketNumber}`);
         } else {
           console.warn("SMTP host not set, skipping automatic email dispatch.");
         }
-
-      } catch (dbUpdateErr) {
-        console.error("Database status update transaction failed:", dbUpdateErr);
-        return new Response(
-          JSON.stringify({ error: "Failed to update booking status." }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      } catch (mailErr) {
+        console.error("SMTP email dispatch failed (non-critical):", mailErr);
       }
 
       return new Response(
-        JSON.stringify({ success: true, message: "Payment verified successfully." }),
+        JSON.stringify({ success: true, message: "Payment verified successfully.", ticket_download_url: ticketDownloadUrl, invoice_download_url: invoiceDownloadUrl, booking: booking }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
 

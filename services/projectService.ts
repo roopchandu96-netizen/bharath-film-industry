@@ -36,7 +36,7 @@ export const subscribeToActiveProjects = (
       if (activeRole === 'DIRECTOR') {
         query = query.eq('directorId', session.user.id);
       } else if (activeRole === 'INVESTOR') {
-        query = query.eq('status', 'ACTIVE');
+        query = query.ilike('status', 'ACTIVE');
       }
 
       const { data, error } = await query;

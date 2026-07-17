@@ -2,15 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/firebase'; // Actually using supabase as per codebase
 import { MovieProject, User } from '../types';
-import { CheckCircle, XCircle, ShieldCheck, DollarSign, Users, Film, AlertTriangle, Loader2, Bell } from 'lucide-react';
+import { CheckCircle, XCircle, ShieldCheck, DollarSign, Users, Film, AlertTriangle, Loader2, Bell, X, BarChart, CreditCard, FileText, Ticket } from 'lucide-react';
 import { notifyProjectApproved, notifyInvestmentReceived } from '../services/notificationService';
+
+// Import new modular admin components
+import { AdminAnalytics } from './admin/AdminAnalytics';
+import { AdminUserManagement } from './admin/AdminUserManagement';
+import { AdminPaymentManagement } from './admin/AdminPaymentManagement';
+import { AdminInvoiceManagement } from './admin/AdminInvoiceManagement';
+import { AdminTicketManagement } from './admin/AdminTicketManagement';
+import { AdminUserProfile } from './admin/AdminUserProfile';
 
 interface AdminDashboardProps {
     user: User;
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
-    const [activeAdminTab, setActiveAdminTab] = useState<'projects' | 'investments' | 'users' | 'settings'>('projects');
+    const [activeAdminTab, setActiveAdminTab] = useState<'analytics' | 'userManagement' | 'payments' | 'invoices' | 'tickets' | 'projects_queue' | 'investments_queue' | 'users_queue'>('analytics');
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [pendingProjects, setPendingProjects] = useState<MovieProject[]>([]);
     const [pendingInvestments, setPendingInvestments] = useState<any[]>([]);
     const [pendingUsers, setPendingUsers] = useState<User[]>([]);
@@ -88,69 +97,55 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 console.error("DEBUG [AdminDashboard] failed to get auth user:", err);
             }
             
-            // 1. Fetch pending projects
+            // 1. Fetch ONLY pending projects for approval queue
             try {
                 const { data: projects, error } = await supabase
                     .from('projects')
-                    .select('*');
+                    .select('*')
+                    .ilike('status', 'PENDING');
                 if (error) {
                     console.error("SUPABASE ERROR [projects query]:", error);
                 }
                 if (projects) {
-                    const sortedProjects = [...projects].sort((a, b) => {
-                        const aPending = (a.status || '').toUpperCase() === 'PENDING';
-                        const bPending = (b.status || '').toUpperCase() === 'PENDING';
-                        if (aPending && !bPending) return -1;
-                        if (!aPending && bPending) return 1;
-                        return 0;
-                    });
-                    setPendingProjects(sortedProjects as MovieProject[]);
-                    pendingProjectsCount = projects.filter(p => (p.status || '').toUpperCase() === 'PENDING').length;
+                    setPendingProjects(projects as MovieProject[]);
+                    pendingProjectsCount = projects.length;
+                } else {
+                    setPendingProjects([]);
                 }
             } catch (err) {
                 console.error("Error fetching projects:", err);
             }
 
-            // 2. Fetch pending users
+            // 2. Fetch ONLY pending users for approval queue
             try {
                 const { data: users, error } = await supabase
                     .from('profiles')
-                    .select('*');
+                    .select('*')
+                    .ilike('kycStatus', 'PENDING');
                 if (error) {
                     console.error("SUPABASE ERROR [profiles query]:", error);
                 }
                 if (users) {
-                    const sortedUsers = [...users].sort((a, b) => {
-                        const aPending = (a.kycStatus || '').toUpperCase() === 'PENDING';
-                        const bPending = (b.kycStatus || '').toUpperCase() === 'PENDING';
-                        if (aPending && !bPending) return -1;
-                        if (!aPending && bPending) return 1;
-                        return 0;
-                    });
-                    setPendingUsers(sortedUsers as User[]);
-                    pendingUsersCount = users.filter(u => (u.kycStatus || '').toUpperCase() === 'PENDING').length;
+                    setPendingUsers(users as User[]);
+                    pendingUsersCount = users.length;
+                } else {
+                    setPendingUsers([]);
                 }
             } catch (err) {
                 console.error("Error fetching pending users:", err);
             }
 
-            // 3. Fetch pending investments
+            // 3. Fetch ONLY pending investments for verification queue
             try {
                 const { data: investments, error } = await supabase
                     .from('investments')
-                    .select('*');
+                    .select('*')
+                    .ilike('status', 'PENDING');
                 if (error) {
                     console.error("SUPABASE ERROR [investments query]:", error);
                 }
                 if (investments) {
-                    const sortedInvestments = [...investments].sort((a, b) => {
-                        const aPending = (a.status || '').toUpperCase() === 'PENDING';
-                        const bPending = (b.status || '').toUpperCase() === 'PENDING';
-                        if (aPending && !bPending) return -1;
-                        if (!aPending && bPending) return 1;
-                        return 0;
-                    });
-                    setPendingInvestments(sortedInvestments);
+                    setPendingInvestments(investments);
                 } else {
                     setPendingInvestments([]);
                 }
@@ -212,13 +207,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
     const verifyUser = async (userId: string, status: 'VERIFIED' | 'REJECTED') => {
         try {
-            const { error } = await supabase.from('profiles').update({ kycStatus: status }).eq('id', userId);
+            // Attempt RPC first (bypasses RLS if security definer function exists)
+            let { error } = await supabase.rpc('admin_verify_user', { p_user_id: userId, p_status: status });
+            
+            // Fallback to direct update if RPC doesn't exist
+            if (error && error.message.includes('Could not find')) {
+                const res = await supabase.from('profiles').update({ kycStatus: status }).eq('id', userId);
+                error = res.error;
+            }
+
             if (error) throw error;
             setPendingUsers(prev => prev.filter(u => u.id !== userId));
             alert(status === 'VERIFIED' ? "User Account Verified & Activated." : "User Account Rejected.");
         } catch (e: any) {
             console.error("Action failed", e);
-            alert("Action failed: " + (e?.message || "Check network/RLS configuration."));
+            alert("Action failed: " + (e?.message || "Check network/RLS configuration. Please run the SQL fix script."));
         }
     };
 
@@ -444,29 +447,80 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             {/* Admin Navigation Tabs */}
             <div className="flex gap-4 border-b border-zinc-800 pb-1 overflow-x-auto flex-nowrap scrollbar-hide">
-                <button
-                    onClick={() => setActiveAdminTab('projects')}
-                    className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'projects' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
-                >
-                    Script Approvals ({stats.pendingProjects})
-                </button>
-                <button
-                    onClick={() => setActiveAdminTab('investments')}
-                    className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'investments' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
-                >
-                    Investment Gateway ({pendingInvestments.length})
-                </button>
-                <button
-                    onClick={() => setActiveAdminTab('users')}
-                    className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${activeAdminTab === 'users' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
-                >
-                    User Approvals ({stats.pendingUsers})
-                </button>
-
+                <nav className="flex items-center gap-1 overflow-x-auto custom-scrollbar">
+                    <button 
+                        onClick={() => setActiveAdminTab('analytics')}
+                        className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${activeAdminTab === 'analytics' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        <BarChart size={16} /> Analytics
+                    </button>
+                    <button 
+                        onClick={() => setActiveAdminTab('userManagement')}
+                        className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${activeAdminTab === 'userManagement' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        <Users size={16} /> All Users
+                    </button>
+                    <button 
+                        onClick={() => setActiveAdminTab('payments')}
+                        className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${activeAdminTab === 'payments' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        <CreditCard size={16} /> Payments
+                    </button>
+                    <button 
+                        onClick={() => setActiveAdminTab('invoices')}
+                        className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${activeAdminTab === 'invoices' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        <FileText size={16} /> Users Invoices & Payments
+                    </button>
+                    <button 
+                        onClick={() => setActiveAdminTab('tickets')}
+                        className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${activeAdminTab === 'tickets' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        <Ticket size={16} /> Tickets
+                    </button>
+                    <div className="w-px h-6 bg-slate-800 mx-2"></div>
+                    <button 
+                        onClick={() => setActiveAdminTab('projects_queue')}
+                        className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${activeAdminTab === 'projects_queue' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        Script Approvals
+                        {pendingProjects.length > 0 && (
+                            <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{pendingProjects.length}</span>
+                        )}
+                    </button>
+                    <button 
+                        onClick={() => setActiveAdminTab('users_queue')}
+                        className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${activeAdminTab === 'users_queue' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        KYC Approvals
+                        {pendingUsers.length > 0 && (
+                            <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{pendingUsers.length}</span>
+                        )}
+                    </button>
+                    <button 
+                        onClick={() => setActiveAdminTab('investments_queue')}
+                        className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${activeAdminTab === 'investments_queue' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        Wire Transfers
+                        {pendingInvestments.length > 0 && (
+                            <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{pendingInvestments.length}</span>
+                        )}
+                    </button>
+                </nav>
             </div>
 
             {/* Content Area */}
-            {activeAdminTab === 'projects' && (
+            {activeAdminTab === 'analytics' && <AdminAnalytics />}
+            {activeAdminTab === 'userManagement' && <AdminUserManagement onUserSelect={setSelectedUserId} />}
+            {activeAdminTab === 'payments' && <AdminPaymentManagement />}
+            {activeAdminTab === 'invoices' && <AdminInvoiceManagement />}
+            {activeAdminTab === 'tickets' && <AdminTicketManagement />}
+
+            {selectedUserId && (
+                <AdminUserProfile userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
+            )}
+
+            {activeAdminTab === 'projects_queue' && (
                 <div className="space-y-6">
                     <h2 className="text-xl font-serif text-white flex items-center gap-3">
                         <Film className="text-yellow-500" size={20} />
@@ -546,7 +600,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 </div>
             )}
 
-            {activeAdminTab === 'users' && (
+            {activeAdminTab === 'users_queue' && (
                 <div className="space-y-6">
                     <h2 className="text-xl font-serif text-white flex items-center gap-3">
                         <Users className="text-yellow-500" size={20} />
@@ -634,7 +688,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 </div>
             )}
 
-            {activeAdminTab === 'investments' && (
+            {activeAdminTab === 'investments_queue' && (
                 <div className="space-y-6">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <h2 className="text-xl font-serif text-white flex items-center gap-3">

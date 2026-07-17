@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { auth } from '../services/firebase';
+import { signIn, signUp } from '../services/authService';
 import { Loader2, Mail, Lock, User, EyeOff, Eye, ShieldCheck, Key, ArrowLeft, PlaySquare, Briefcase } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -71,7 +72,7 @@ const AuthView: React.FC = () => {
 
       if (isLogin) {
         try {
-          await auth.signIn(email.trim(), password);
+          await signIn(email.trim(), password);
           window.location.reload();
         } catch (err: any) {
           throw err;
@@ -79,7 +80,7 @@ const AuthView: React.FC = () => {
       } else {
         const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
         try {
-          await auth.signUp(email.trim(), password, selectedRole, fullName);
+          await signUp(email.trim(), password, selectedRole, fullName);
           setIsVerifyingOtp(true);
         } catch (err: any) {
           throw err;

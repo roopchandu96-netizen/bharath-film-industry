@@ -1,9 +1,13 @@
 import { supabase } from "./firebase";
 import { User, UserRole } from "../types";
 
+/**
+ * Synchronise a Supabase auth user with the "profiles" table.
+ * Returns a fully populated {@link User} object.
+ */
 export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, name?: string): Promise<User> => {
   console.log("SYNC_USER: starting sync for ID:", supabaseUser?.id, "Email:", supabaseUser?.email);
-  
+
   let profile: any = null;
   try {
     console.log("SYNC_USER: executing select profiles query...");
@@ -12,7 +16,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
       .select('*')
       .eq('id', supabaseUser.id)
       .limit(1);
-    
+
     if (error) {
       console.warn("SYNC_USER: Select query returned error:", error);
     } else if (data && data.length > 0) {
@@ -41,7 +45,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
         profile.active_role = UserRole.ADMIN;
       }
     } else {
-      // Non-admin email: Ensure they do NOT have the ADMIN role in any field!
+      // Ensure non‑admin users never retain ADMIN role.
       let changed = false;
       let resolvedPrimary = profile.primary_role;
       let resolvedActive = profile.active_role;
@@ -50,7 +54,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
       if (resolvedPrimary === UserRole.ADMIN || !resolvedPrimary || resolvedPrimary === UserRole.MOVIE_LOVER) {
         resolvedPrimary = supabaseUser.user_metadata?.role || UserRole.INVESTOR;
         if (resolvedPrimary === UserRole.ADMIN || resolvedPrimary === UserRole.MOVIE_LOVER) {
-          resolvedPrimary = UserRole.INVESTOR; // Hard fallback
+          resolvedPrimary = UserRole.INVESTOR; // hard fallback
         }
         changed = true;
       }
@@ -65,11 +69,11 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
 
       if (changed) {
         try {
-          console.log("SYNC_USER: Demoting non-admin user back to standard role:", resolvedPrimary);
-          const { error: updErr } = await supabase.from('profiles').update({ 
-            role: resolvedRole, 
-            primary_role: resolvedPrimary, 
-            active_role: resolvedActive 
+          console.log("SYNC_USER: Demoting non‑admin user back to standard role:", resolvedPrimary);
+          const { error: updErr } = await supabase.from('profiles').update({
+            role: resolvedRole,
+            primary_role: resolvedPrimary,
+            active_role: resolvedActive
           }).eq('id', supabaseUser.id);
           if (updErr) console.error("SYNC_USER: Failed to demote user:", updErr);
         } catch (e) {
@@ -80,7 +84,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
         profile.active_role = resolvedActive;
       }
     }
-    
+
     return {
       id: profile.id,
       name: profile.name,
@@ -97,7 +101,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     } as User;
   }
 
-  // Metadata from Supabase Auth options or inputs
+  // No existing profile – create a new one.
   console.log("SYNC_USER: Profile not found. Preparing new profile registration...");
   const finalName = name || supabaseUser.user_metadata?.full_name || "BFI Member";
   let finalRole = role || supabaseUser.user_metadata?.role || UserRole.INVESTOR;
@@ -112,7 +116,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
   if (isAdminEmail) {
     finalRole = UserRole.ADMIN;
   } else if (finalRole === UserRole.ADMIN) {
-    finalRole = UserRole.INVESTOR; // Hard fallback for non-admin email
+    finalRole = UserRole.INVESTOR; // fallback for non‑admin email
   }
 
   const newUserDb = {
@@ -130,10 +134,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
 
   try {
     console.log("SYNC_USER: Inserting new profile record into database...", newUserDb);
-    const { error: insertError } = await supabase
-      .from('profiles')
-      .insert([newUserDb]);
-
+    const { error: insertError } = await supabase.from('profiles').insert([newUserDb]);
     if (insertError) {
       console.error("SYNC_USER: Profile sync insert error:", insertError);
     }
@@ -156,6 +157,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
   } as User;
 };
 
+/** Update a user profile in the "profiles" table. */
 export const updateUserInFirestore = async (uid: string, data: Partial<User>) => {
   const dbData: any = {};
   if (data.name !== undefined) dbData.name = data.name;
@@ -167,13 +169,16 @@ export const updateUserInFirestore = async (uid: string, data: Partial<User>) =>
   if (data.photoURL !== undefined) dbData.photoURL = data.photoURL;
   if (data.photoFileName !== undefined) dbData.photoFileName = data.photoFileName;
 
-  await supabase
-    .from('profiles')
-    .update(dbData)
-    .eq('id', uid);
+  await supabase.from('profiles').update(dbData).eq('id', uid);
 };
 
+/** Delete a user profile and sign out. */
 export const deleteUserAccount = async (uid: string) => {
   await supabase.from('profiles').delete().eq('id', uid);
   await supabase.auth.signOut();
+};
+
+/** Helper to check if a user has admin privileges. */
+export const isAdmin = (user: User): boolean => {
+  return user.role === UserRole.ADMIN;
 };

@@ -116,19 +116,19 @@ const ProducerDashboard: React.FC<ProducerDashboardProps> = ({ user }) => {
                 <div>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-zinc-400">Schedule Completion</span>
-                    <span className="text-white">25%</span>
+                    <span className="text-white">0%</span>
                   </div>
                   <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
-                    <div className="bg-yellow-500 h-full rounded-full" style={{ width: '25%' }}></div>
+                    <div className="bg-yellow-500 h-full rounded-full" style={{ width: '0%' }}></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-zinc-400">Budget Spent</span>
-                    <span className="text-white">₹1.4Cr / ₹5Cr</span>
+                    <span className="text-white">₹0 / ₹0</span>
                   </div>
                   <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
-                    <div className="bg-green-500 h-full rounded-full" style={{ width: '28%' }}></div>
+                    <div className="bg-green-500 h-full rounded-full" style={{ width: '0%' }}></div>
                   </div>
                 </div>
               </div>
@@ -282,11 +282,7 @@ const ProducerDashboard: React.FC<ProducerDashboardProps> = ({ user }) => {
               <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Released capital schedule</p>
             </div>
             <div className="space-y-4">
-              {[
-                { name: 'Initial Advance (Script development)', amt: '₹15L', status: 'RELEASED' },
-                { name: 'Schedule 1 Shooting Tranche', amt: '₹50L', status: 'RELEASED' },
-                { name: 'Schedule 2 Shoot & Post-production', amt: '₹85L', status: 'LOCKED' }
-              ].map((tranche, i) => (
+              {[].map((tranche: any, i) => (
                 <div key={i} className="p-4 bg-zinc-950/60 border border-zinc-900 rounded-xl flex items-center justify-between text-xs">
                   <div>
                     <h5 className="font-bold text-white">{tranche.name}</h5>

@@ -45,7 +45,7 @@ const WriterDashboard: React.FC<WriterDashboardProps> = ({ user }) => {
           { label: 'Scripts Listed', val: scripts.length, icon: '📄', color: 'text-amber-500' },
           { label: 'SWA Registered', val: '100%', icon: '🛡️', color: 'text-green-500' },
           { label: 'Producer Matches', val: '2 Active', icon: '🤝', color: 'text-blue-500' },
-          { label: 'Licensing Offers', val: '₹12L Est.', icon: '💰', color: 'text-purple-500' }
+          { label: 'Licensing Offers', val: '₹0', icon: '💰', color: 'text-purple-500' }
         ].map((m, i) => (
           <div key={i} className="p-6 bg-slate-900/50 border border-slate-800 rounded-3xl shadow-xl flex items-center justify-between">
             <div>

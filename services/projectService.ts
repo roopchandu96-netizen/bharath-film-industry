@@ -20,10 +20,12 @@ export const subscribeToActiveProjects = (
       const activeRole = localStorage.getItem(`bfi_active_role_${session.user.id}`) || session.user.user_metadata?.role || 'MOVIE_LOVER';
 
       // 8. Database Query Restrictions: Only Investors, Directors, and Admins can access projects/scripts.
+      const normalizedRole = activeRole.toUpperCase();
+
       if (
-        activeRole !== 'INVESTOR' &&
-        activeRole !== 'DIRECTOR' &&
-        activeRole !== 'ADMIN'
+        normalizedRole !== 'INVESTOR' &&
+        normalizedRole !== 'DIRECTOR' &&
+        normalizedRole !== 'ADMIN'
       ) {
         callback([]);
         return;
@@ -33,10 +35,10 @@ export const subscribeToActiveProjects = (
 
       // - Directors can only see their own uploaded scripts.
       // - Investors can only see approved (ACTIVE) scripts available for investment.
-      if (activeRole === 'DIRECTOR') {
+      if (normalizedRole === 'DIRECTOR') {
         query = query.eq('directorId', session.user.id);
-      } else if (activeRole === 'INVESTOR') {
-        query = query.ilike('status', 'ACTIVE');
+      } else if (normalizedRole === 'INVESTOR') {
+        query = query.in('status', ['ACTIVE', 'APPROVED', 'active', 'approved', 'Active', 'Approved']);
       }
 
       const { data, error } = await query;

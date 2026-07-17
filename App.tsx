@@ -607,7 +607,7 @@ const App: React.FC = () => {
           <ProjectDetailView
             project={selectedProject}
             onBack={() => setSelectedProject(null)}
-            onInvest={(user.activeRole || user.role) === UserRole.INVESTOR ? (amount) => setInvestmentRequest({ project: selectedProject, amount }) : undefined}
+            onInvest={(user.activeRole || user.role)?.toUpperCase() === UserRole.INVESTOR ? (amount) => setInvestmentRequest({ project: selectedProject, amount }) : undefined}
             onPlayTrailer={() => { }}
           />
         ) : (

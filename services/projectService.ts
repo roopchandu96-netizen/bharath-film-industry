@@ -16,8 +16,10 @@ export const subscribeToActiveProjects = (
         return;
       }
 
-      // 7. Backend & database active role verification
-      const activeRole = localStorage.getItem(`bfi_active_role_${session.user.id}`) || session.user.user_metadata?.role || 'MOVIE_LOVER';
+      // Fetch the actual role from the profiles table in case user_metadata is stale
+      const { data: profile } = await supabase.from('profiles').select('role, active_role').eq('id', session.user.id).single();
+      
+      const activeRole = localStorage.getItem(`bfi_active_role_${session.user.id}`) || profile?.active_role || profile?.role || session.user.user_metadata?.role || 'MOVIE_LOVER';
 
       // 8. Database Query Restrictions: Only Investors, Directors, and Admins can access projects/scripts.
       const normalizedRole = activeRole.toUpperCase();

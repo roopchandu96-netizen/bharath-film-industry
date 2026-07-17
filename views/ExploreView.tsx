@@ -39,7 +39,8 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onSelectProject, onQuickInves
     return () => unsubscribe();
   }, [user.id, user.role, user.activeRole]);
 
-  const activeRole = user.activeRole || user.role;
+  const rawActiveRole = user.activeRole || user.role;
+  const activeRole = rawActiveRole?.toUpperCase();
   const isAuthorized = activeRole === UserRole.INVESTOR || activeRole === UserRole.DIRECTOR || activeRole === UserRole.ADMIN || activeRole === UserRole.MOVIE_LOVER;
 
   const filteredProjects = useMemo(() => {
@@ -53,9 +54,9 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onSelectProject, onQuickInves
         return false;
       }
 
-      const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.genre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.tagline.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.genre || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.description || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesGenre = selectedGenre === 'All' || p.genre === selectedGenre;
       return matchesSearch && matchesGenre;
     });
@@ -108,7 +109,7 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onSelectProject, onQuickInves
             <div className="flex gap-4 pt-2">
               <button 
                 onClick={() => {
-                  const vnsProj = projects.find(p => p.title.toLowerCase().includes('nata') || p.title.toLowerCase().includes('sarvabhouma')) || projects[0];
+                  const vnsProj = projects.find(p => (p.title || '').toLowerCase().includes('nata') || (p.title || '').toLowerCase().includes('sarvabhouma')) || projects[0];
                   if (vnsProj) onSelectProject(vnsProj);
                 }}
                 className="px-6 py-3 bg-yellow-500 text-black font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-yellow-400 active:scale-95 transition-all flex items-center gap-2"

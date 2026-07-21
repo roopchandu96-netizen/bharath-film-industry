@@ -341,7 +341,7 @@ export const MobileAuthView: React.FC = () => {
                 className="mt-[3px] min-w-4 w-4 h-4 rounded border-yellow-500/10 bg-emerald-950 text-[#FACC15] focus:ring-[#FACC15] focus:ring-offset-0 focus:ring-0 cursor-pointer"
               />
               <label htmlFor="terms" className="text-[10px] text-emerald-400/90 leading-relaxed cursor-pointer font-medium select-none">
-                I agree to the <a href="#" className="font-bold text-[#FACC15] hover:underline">Terms of Service</a> and <a href="https://sites.google.com/view/bharatfilmindustry/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-[#FACC15] hover:underline">Privacy Policy</a>. I understand this is a financial investment platform.
+                I agree to the <a href="https://sites.google.com/view/bharatfilmindustry/terms-of-service" target="_blank" rel="noopener noreferrer" className="font-bold text-[#FACC15] hover:underline">Terms of Service</a> and <a href="https://sites.google.com/view/bharatfilmindustry/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-[#FACC15] hover:underline">Privacy Policy</a>. I understand this is a financial investment platform.
               </label>
             </div>
           )}
@@ -356,23 +356,7 @@ export const MobileAuthView: React.FC = () => {
           </button>
         </form>
 
-        {/* Social Authentication */}
-        <div className="space-y-4 pt-2">
-          <div className="flex items-center justify-between text-emerald-400/80 text-[9px] font-black uppercase tracking-widest">
-            <span className="h-px bg-white/5 flex-1 mr-4" />
-            Or Continue With
-            <span className="h-px bg-white/5 flex-1 ml-4" />
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <button className="py-3 bg-emerald-950/20 border border-yellow-500/10 rounded-xl text-xs font-bold text-zinc-300 flex items-center justify-center gap-2 hover:bg-emerald-900/40 active:scale-95 transition-all cursor-pointer">
-              <span> Apple</span>
-            </button>
-            <button className="py-3 bg-emerald-950/20 border border-yellow-500/10 rounded-xl text-xs font-bold text-zinc-300 flex items-center justify-center gap-2 hover:bg-emerald-900/40 active:scale-95 transition-all cursor-pointer">
-              <span>G Google</span>
-            </button>
-          </div>
-        </div>
 
         {/* Footer Link */}
         <div className="text-center text-xs text-emerald-400/90 pt-2">

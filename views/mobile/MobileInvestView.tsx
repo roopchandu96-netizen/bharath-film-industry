@@ -134,7 +134,7 @@ export const MobileInvestView: React.FC<MobileInvestViewProps> = ({
 
       {/* Escrows List */}
       <div className="space-y-3">
-        <h3 className="text-sm font-black uppercase text-[#FACC15] tracking-widest block px-1">Active Escrow Vaults</h3>
+        <h3 className="text-sm font-black uppercase text-[#FACC15] tracking-widest block px-1">Investment History</h3>
         
         <div className="space-y-3">
           {investments.length === 0 ? (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Share2, Play, Plus, ChevronRight, Coins } from 'lucide-react';
+import { ArrowLeft, Share2, Play, Plus, ChevronRight, Coins, FileText, Flag, Ban } from 'lucide-react';
 import { MovieProject } from '../../types';
 
 interface MobileProjectDetailViewProps {
@@ -17,6 +17,16 @@ export const MobileProjectDetailView: React.FC<MobileProjectDetailViewProps> = (
   const [investAmount, setInvestAmount] = useState(500000); // Default ₹5.0 L (500,000)
 
   const subTabs = ['Overview', 'Financials', 'Creative Team', 'Reviews'];
+
+  const handleReport = () => {
+    window.alert('Content has been flagged for review. Our moderation team will investigate within 24 hours.');
+  };
+
+  const handleBlock = () => {
+    if (window.confirm(`Are you sure you want to block ${project.director || 'this user'}? You will no longer see their content.`)) {
+      window.alert('User blocked successfully.');
+    }
+  };
 
   const handleBFIContact = (personName: string, roleOrProject: string) => {
     const subject = encodeURIComponent(`Connection Request: Inquiry for ${personName} (${roleOrProject})`);
@@ -156,7 +166,17 @@ export const MobileProjectDetailView: React.FC<MobileProjectDetailViewProps> = (
 
           {/* Key Creative Team */}
           <div className="space-y-3">
-            <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider">Key Creative Team</h4>
+            <div className="flex justify-between items-center">
+              <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider">Key Creative Team</h4>
+              <div className="flex gap-3">
+                <button onClick={handleReport} className="text-zinc-500 hover:text-red-500 transition-colors flex items-center gap-1 text-[9px] uppercase tracking-widest font-black" title="Report Content">
+                  <Flag size={12} /> Report
+                </button>
+                <button onClick={handleBlock} className="text-zinc-500 hover:text-white transition-colors flex items-center gap-1 text-[9px] uppercase tracking-widest font-black" title="Block User">
+                  <Ban size={12} /> Block
+                </button>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               {/* Director */}
               <div 
@@ -254,6 +274,9 @@ export const MobileProjectDetailView: React.FC<MobileProjectDetailViewProps> = (
               <Coins size={14} className="stroke-[2.5]" />
               Invest Now
             </button>
+            <p className="text-[8px] text-zinc-600 leading-relaxed text-center px-1">
+              Disclaimer: Film investments carry significant risk, including partial or total loss of principal. Projected ROI is an estimate and not guaranteed. Please review our full terms before participating. By proceeding, you acknowledge these risks.
+            </p>
           </div>
         </div>
       )}

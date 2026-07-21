@@ -29,7 +29,7 @@ export const MobileDiscoverView: React.FC<MobileDiscoverViewProps> = ({
     return () => unsubscribe();
   }, []);
 
-  const activeProjects = projects.filter(p => p.status === 'ACTIVE' || p.status === 'PENDING');
+  const activeProjects = projects.filter(p => p.status === 'ACTIVE');
 
   const listToUse = activeProjects;
   const currentPitch = listToUse[currentIndex];
@@ -93,14 +93,7 @@ export const MobileDiscoverView: React.FC<MobileDiscoverViewProps> = ({
           >
             <RefreshCw size={14} /> Replay Pitches
           </button>
-          {onOpenSubmission && (
-            <button
-              onClick={onOpenSubmission}
-              className="w-full py-4 bg-gradient-to-r from-[#FACC15] via-[#eab308] to-[#f59e0b] text-[#021f18] font-black text-xs uppercase tracking-wider rounded-2xl active:scale-95 transition-transform flex items-center justify-center gap-2"
-            >
-              List Screenplay
-            </button>
-          )}
+
         </div>
       </div>
     );

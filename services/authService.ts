@@ -32,13 +32,14 @@ export const signUp = async (
   email: string,
   password: string,
   role: UserRole,
-  name: string
+  name: string,
+  phone?: string
 ): Promise<void> => {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { full_name: name, role: role },
+      data: { full_name: name, role: role, phone: phone },
       emailRedirectTo: window.location.origin,
     },
   });
@@ -50,6 +51,6 @@ export const signUp = async (
   // If Supabase returns a user immediately (email confirmation disabled),
   // sync their profile right away.
   if (data.user) {
-    await syncUserToFirestore(data.user, role, name);
+    await syncUserToFirestore(data.user, role, name, phone);
   }
 };

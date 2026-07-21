@@ -85,7 +85,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
       </header>
 
       {/* Main viewport */}
-      <main className="flex-1 w-full px-4 py-4 animate-in fade-in duration-300">
+      <main className="flex-1 w-full px-4 py-4">
         {children}
       </main>
 

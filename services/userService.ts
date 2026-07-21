@@ -5,7 +5,7 @@ import { User, UserRole } from "../types";
  * Synchronise a Supabase auth user with the "profiles" table.
  * Returns a fully populated {@link User} object.
  */
-export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, name?: string): Promise<User> => {
+export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, name?: string, phone?: string): Promise<User> => {
   console.log("SYNC_USER: starting sync for ID:", supabaseUser?.id, "Email:", supabaseUser?.email);
 
   let profile: any = null;
@@ -97,7 +97,8 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
       totalInvested: profile.totalInvested || 0,
       projects: profile.projects || [],
       photoURL: profile.photoURL,
-      photoFileName: profile.photoFileName
+      photoFileName: profile.photoFileName,
+      phone: profile.phone
     } as User;
   }
 
@@ -123,6 +124,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     id: supabaseUser.id,
     name: finalName,
     email: supabaseUser.email || "",
+    phone: phone || supabaseUser.user_metadata?.phone || null,
     role: finalRole,
     primary_role: finalRole,
     active_role: finalRole,
@@ -153,7 +155,8 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
     kycStatus: finalRole === UserRole.ADMIN ? 'VERIFIED' : 'PENDING',
     totalInvested: 0,
     projects: [],
-    photoURL: newUserDb.photoURL
+    photoURL: newUserDb.photoURL,
+    phone: newUserDb.phone
   } as User;
 };
 
@@ -161,6 +164,7 @@ export const syncUserToFirestore = async (supabaseUser: any, role?: UserRole, na
 export const updateUserInFirestore = async (uid: string, data: Partial<User>) => {
   const dbData: any = {};
   if (data.name !== undefined) dbData.name = data.name;
+  if (data.phone !== undefined) dbData.phone = data.phone;
   if (data.role !== undefined) dbData.role = data.role;
   if (data.primaryRole !== undefined) dbData.primary_role = data.primaryRole;
   if (data.activeRole !== undefined) dbData.active_role = data.activeRole;

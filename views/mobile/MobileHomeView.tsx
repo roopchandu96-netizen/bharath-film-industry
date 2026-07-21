@@ -33,7 +33,7 @@ export const MobileHomeView: React.FC<MobileHomeViewProps> = ({
   }, []);
 
   // Filter projects if needed, or use mock if none
-  const activeProjects = projects.filter(p => p.status === 'ACTIVE' || p.status === 'PENDING');
+  const activeProjects = projects.filter(p => p.status === 'ACTIVE');
   
   const displayFeatured = activeProjects.length > 0 ? activeProjects[0] : null;
 

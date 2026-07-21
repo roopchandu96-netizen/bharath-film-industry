@@ -5,7 +5,7 @@ import { updateUserInFirestore, deleteUserAccount } from '../services/userServic
 import {
   ShieldCheck, User as UserIcon, Camera, Save,
   Trash2, AlertTriangle, Loader2,
-  CheckCircle, Globe, Award, Mail, Key, LogOut
+  CheckCircle, Globe, Award, Mail, Key, LogOut, Phone
 } from 'lucide-react';
 import { supabase } from '../services/firebase.ts';
 
@@ -16,6 +16,7 @@ interface ProfileViewProps {
 
 const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
   const [name, setName] = useState(user.name);
+  const [phone, setPhone] = useState(user.phone || '');
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -129,9 +130,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
       if (authError) throw authError;
 
       // 2. Update Profiles Table (Ledger)
-      await updateUserInFirestore(user.id, { name });
+      await updateUserInFirestore(user.id, { name, phone });
 
-      onUpdate({ ...user, name });
+      onUpdate({ ...user, name, phone });
       setMessage({ type: 'success', text: 'Institutional profile updated successfully.' });
     } catch (err: any) {
       console.error("Profile update error:", err);
@@ -250,6 +251,19 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
                   </div>
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] px-2">Phone Number</label>
+                  <div className="relative">
+                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-700" size={18} />
+                    <input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-14 pr-6 text-sm text-white focus:border-yellow-400 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2 opacity-50 cursor-not-allowed">
                   <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] px-2">Institutional Email</label>
                   <div className="relative">
@@ -318,6 +332,34 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
                   </div>
                 </div>
               </button>
+            </div>
+
+            <div className="pt-8 border-t border-zinc-900 space-y-3">
+              <div className="space-y-2 mb-2">
+                <h4 className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Legal & Policies</h4>
+              </div>
+              <a href="https://sites.google.com/view/bharatfilmindustry/terms-of-service" target="_blank" rel="noopener noreferrer" className="w-full p-5 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group hover:border-yellow-400/30 transition-all block">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-yellow-400 transition-colors">
+                    <Globe size={18} />
+                  </div>
+                  <div className="text-left">
+                    <span className="text-xs font-bold text-white">Terms of Service</span>
+                    <p className="text-[8px] text-zinc-600 font-black uppercase">Read our platform rules</p>
+                  </div>
+                </div>
+              </a>
+              <a href="https://sites.google.com/view/bharatfilmindustry/privacy-policy" target="_blank" rel="noopener noreferrer" className="w-full p-5 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group hover:border-yellow-400/30 transition-all block">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-yellow-400 transition-colors">
+                    <ShieldCheck size={18} />
+                  </div>
+                  <div className="text-left">
+                    <span className="text-xs font-bold text-white">Privacy Policy</span>
+                    <p className="text-[8px] text-zinc-600 font-black uppercase">How we handle your data</p>
+                  </div>
+                </div>
+              </a>
             </div>
 
             <div className="pt-8 border-t border-zinc-900 space-y-6">

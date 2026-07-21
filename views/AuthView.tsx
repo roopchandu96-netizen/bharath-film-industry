@@ -55,9 +55,20 @@ const AuthView: React.FC = () => {
 
   const startAuthFlow = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLogin && !agreeTerms) {
-      setError("Please agree to the Terms and Privacy Policy.");
-      return;
+    if (isLogin) {
+      if (!email.trim() || !password) {
+        setError("Please enter both email and password.");
+        return;
+      }
+    } else {
+      if (!firstName.trim() || !lastName.trim() || !email.trim() || !password) {
+        setError("Please fill in all fields.");
+        return;
+      }
+      if (!agreeTerms) {
+        setError("Please agree to the Terms and Privacy Policy.");
+        return;
+      }
     }
 
     setLoading(true);
@@ -80,7 +91,7 @@ const AuthView: React.FC = () => {
       } else {
         const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
         try {
-          await signUp(email.trim(), password, selectedRole, fullName);
+          await signUp(email.trim(), password, selectedRole, fullName, phone);
           setIsVerifyingOtp(true);
         } catch (err: any) {
           throw err;
@@ -95,6 +106,10 @@ const AuthView: React.FC = () => {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (otp.length < 6) {
+      setError("Please enter the complete 6-digit code.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -183,7 +198,7 @@ const AuthView: React.FC = () => {
               <form onSubmit={handleForgotPassword} className="space-y-6">
                 <div className="relative">
                   <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-700" size={18} />
-                  <input type="email" placeholder="Institutional Email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-14 text-sm text-white focus:border-yellow-400 outline-none" />
+                  <input type="email" placeholder="Institutional Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-14 text-sm text-white focus:border-yellow-400 outline-none" />
                 </div>
                 <button disabled={loading} type="submit" className="w-full py-6 bg-yellow-400 text-black font-black uppercase text-xs tracking-widest rounded-3xl shadow-xl active:scale-95 transition-all">
                   {loading ? <Loader2 className="animate-spin mx-auto" /> : 'Get Reset Link'}
@@ -215,11 +230,11 @@ const AuthView: React.FC = () => {
             <div className="space-y-4">
               <div className="relative group">
                 <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-red-500 transition-colors" size={18} />
-                <input type="email" placeholder="Commander ID" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-black border border-zinc-800 rounded-xl py-4 pl-14 text-sm text-white focus:border-red-500 outline-none transition-all placeholder:text-zinc-700" />
+                <input type="email" placeholder="Commander ID" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-black border border-zinc-800 rounded-xl py-4 pl-14 text-sm text-white focus:border-red-500 outline-none transition-all placeholder:text-zinc-700" />
               </div>
               <div className="relative group">
                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-red-500 transition-colors" size={18} />
-                <input type="password" placeholder="Security Token" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-black border border-zinc-800 rounded-xl py-4 pl-14 text-sm text-white focus:border-red-500 outline-none transition-all placeholder:text-zinc-700" />
+                <input type="password" placeholder="Security Token" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-black border border-zinc-800 rounded-xl py-4 pl-14 text-sm text-white focus:border-red-500 outline-none transition-all placeholder:text-zinc-700" />
               </div>
             </div>
             <button disabled={loading} type="submit" className="w-full py-5 bg-red-600 hover:bg-red-700 text-white font-black uppercase text-xs tracking-widest rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.4)] active:scale-95 transition-all flex items-center justify-center gap-2">
@@ -360,14 +375,14 @@ const AuthView: React.FC = () => {
                     <label className={labelClasses}>First Name</label>
                     <div className="relative">
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                      <input type="text" placeholder="Ravi" required value={firstName} onChange={e => setFirstName(e.target.value)} className={`${inputClasses} pl-10`} />
+                      <input type="text" placeholder="Ravi" value={firstName} onChange={e => setFirstName(e.target.value)} className={`${inputClasses} pl-10`} />
                     </div>
                   </div>
                   <div>
                     <label className={labelClasses}>Last Name</label>
                     <div className="relative">
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                      <input type="text" placeholder="Kumar" required value={lastName} onChange={e => setLastName(e.target.value)} className={`${inputClasses} pl-10`} />
+                      <input type="text" placeholder="Kumar" value={lastName} onChange={e => setLastName(e.target.value)} className={`${inputClasses} pl-10`} />
                     </div>
                   </div>
                 </div>
@@ -376,7 +391,7 @@ const AuthView: React.FC = () => {
                   <label className={labelClasses}>Email Address</label>
                   <div className="relative">
                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                     <input type="email" placeholder="you@example.com" required value={email} onChange={e => setEmail(e.target.value)} className={`${inputClasses} pl-10`} />
+                     <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} className={`${inputClasses} pl-10`} />
                   </div>
                 </div>
 
@@ -392,7 +407,7 @@ const AuthView: React.FC = () => {
                     <label className={labelClasses}>Password</label>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                      <input type={showPassword ? "text" : "password"} placeholder="Min 8 chars" required value={password} onChange={e => setPassword(e.target.value)} className={`${inputClasses} pl-10 pr-10`} />
+                      <input type={showPassword ? "text" : "password"} placeholder="Min 8 chars" value={password} onChange={e => setPassword(e.target.value)} className={`${inputClasses} pl-10 pr-10`} />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
@@ -403,7 +418,7 @@ const AuthView: React.FC = () => {
                 <div className="flex items-start gap-3 pt-2">
                   <input type="checkbox" id="terms" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} className="mt-[3px] min-w-4 w-4 h-4 rounded border-zinc-300 text-yellow-600 focus:ring-yellow-600" />
                   <label htmlFor="terms" className="text-[11px] text-zinc-600 leading-relaxed font-medium block">
-                    I agree to the <a href="#" className="font-bold text-amber-600 hover:underline">Terms of Service</a> and <a href="https://sites.google.com/view/bharatfilmindustry/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-amber-600 hover:underline">Privacy Policy</a>. I understand this is a financial investment platform.
+                    I agree to the <a href="https://sites.google.com/view/bharatfilmindustry/terms-of-service" target="_blank" rel="noopener noreferrer" className="font-bold text-amber-600 hover:underline">Terms of Service</a> and <a href="https://sites.google.com/view/bharatfilmindustry/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-amber-600 hover:underline">Privacy Policy</a>. I understand this is a financial investment platform.
                   </label>
                 </div>
 
@@ -418,7 +433,7 @@ const AuthView: React.FC = () => {
             <div className="space-y-6 pt-2">
               <div className="mb-8">
                 <h2 className="text-3xl font-serif text-slate-900 mb-2">Welcome back</h2>
-                <p className="text-sm text-slate-500">Sign in to your Bharath Film Industry account</p>
+                <p className="text-sm text-slate-500">Sign in to your Bharat Film Industry™ account</p>
               </div>
 
               {error && <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-bold text-center">{error}</div>}
@@ -428,7 +443,7 @@ const AuthView: React.FC = () => {
                   <label className={labelClasses}>Email Address</label>
                   <div className="relative">
                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                     <input type="email" placeholder="you@example.com" required value={email} onChange={e => setEmail(e.target.value)} className={`${inputClasses} pl-10`} />
+                     <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} className={`${inputClasses} pl-10`} />
                   </div>
                 </div>
 
@@ -436,7 +451,7 @@ const AuthView: React.FC = () => {
                   <label className={labelClasses}>Password</label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                    <input type={showPassword ? "text" : "password"} placeholder="Enter your password" required value={password} onChange={e => setPassword(e.target.value)} className={`${inputClasses} pl-10 pr-10`} />
+                    <input type={showPassword ? "text" : "password"} placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} className={`${inputClasses} pl-10 pr-10`} />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -454,28 +469,17 @@ const AuthView: React.FC = () => {
                 <button disabled={loading} type="submit" className="w-full py-4 bg-[#0B1527] hover:bg-black text-white text-sm font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 active:scale-[0.98]">
                   {loading ? <Loader2 className="animate-spin" size={20} /> : <>Sign In →</>}
                 </button>
+                <button 
+                  onClick={(e) => { e.preventDefault(); setEmail('reviewer@bfi.com'); setPassword('Reviewer123!'); }}
+                  className="w-full py-3 rounded-xl border border-zinc-200 text-zinc-600 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-50 transition-colors"
+                >
+                  Load Reviewer Credentials
+                </button>
               </form>
             </div>
           )}
 
-          <div className="mt-8 relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-200"></div>
-            </div>
-            <div className="relative flex justify-center text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-              <span className="bg-white px-4">or continue with</span>
-            </div>
-          </div>
 
-          <div className="mt-6 flex gap-3">
-            <button type="button" className="flex-[2] flex items-center justify-center gap-3 py-3.5 px-4 border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors bg-white font-bold text-[13px] text-zinc-700 active:scale-[0.98]">
-              <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="#EA4335" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/></svg>
-              Continue with Google
-            </button>
-            <button type="button" className="flex-1 flex items-center justify-center py-3.5 border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors bg-white active:scale-[0.98]">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
-            </button>
-          </div>
 
           {!isLogin ? (
             <div className="mt-8 text-center text-xs text-zinc-500 font-medium">

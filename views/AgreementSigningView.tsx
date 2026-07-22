@@ -4,7 +4,7 @@ import { agreementService } from '../services/agreementService';
 import { pdfService } from '../services/pdfService';
 import { Shield, CheckCircle, FileText, Smartphone, Lock, AlertCircle } from 'lucide-react';
 import { Agreement, MovieProject } from '../types';
-import { supabase } from '../supabase';
+import { supabase } from '../services/firebase';
 
 interface AgreementSigningViewProps {
   agreementId: string;

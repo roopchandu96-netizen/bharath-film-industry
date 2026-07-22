@@ -1,4 +1,4 @@
-import { supabase } from '../supabase';
+import { supabase } from './firebase';
 import { Agreement, AgreementSignature, User, MovieProject } from '../types';
 import crypto from 'crypto-js';
 

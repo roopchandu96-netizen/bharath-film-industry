@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../supabase';
+import { supabase } from '../../services/firebase';
 import { Agreement } from '../../types';
 import { FileText, Download, ShieldCheck, Search } from 'lucide-react';
 

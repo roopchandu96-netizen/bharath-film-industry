@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../components/AuthProvider';
+
 import { agreementService } from '../services/agreementService';
 import { pdfService } from '../services/pdfService';
 import { Shield, CheckCircle, FileText, Smartphone, Lock, AlertCircle } from 'lucide-react';
@@ -8,16 +8,17 @@ import { supabase } from '../services/firebase';
 
 interface AgreementSigningViewProps {
   agreementId: string;
+  user: User;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
 export const AgreementSigningView: React.FC<AgreementSigningViewProps> = ({
   agreementId,
+  user,
   onSuccess,
   onCancel
 }) => {
-  const { user } = useAuth();
   const [agreement, setAgreement] = useState<Agreement | null>(null);
   const [project, setProject] = useState<MovieProject | null>(null);
   

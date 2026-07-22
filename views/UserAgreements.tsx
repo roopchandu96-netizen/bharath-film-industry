@@ -57,6 +57,7 @@ export const UserAgreements: React.FC<UserAgreementsProps> = ({ user }) => {
         </button>
         <AgreementSigningView 
           agreementId={signingId} 
+          user={user}
           onSuccess={() => setSigningId(null)} 
           onCancel={() => setSigningId(null)} 
         />

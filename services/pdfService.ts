@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import QRCode from 'qrcode';
-import { supabase } from '../supabase';
+import { supabase } from './firebase';
 import { Agreement, User, MovieProject } from '../types';
 
 export const pdfService = {

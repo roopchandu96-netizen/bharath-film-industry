@@ -1,6 +1,7 @@
 
 import { supabase } from "./firebase";
-import { Investment } from "../types";
+import { Investment, MovieProject } from "../types";
+import { agreementService } from "./agreementService";
 
 export const recordInvestment = async (uid: string, investment: Omit<Investment, 'id'>): Promise<string> => {
   const { data, error } = await supabase
@@ -20,6 +21,12 @@ export const recordInvestment = async (uid: string, investment: Omit<Investment,
         investor_count: project.investor_count + 1
       }).eq('id', investment.projectId);
     }
+  }
+
+  try {
+    await agreementService.createAgreement('investor', uid, investment.projectId);
+  } catch (err) {
+    console.error("Failed to create investor agreement:", err);
   }
 
   return data.id;

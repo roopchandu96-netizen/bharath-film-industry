@@ -133,12 +133,29 @@ export interface FileRecord {
 /**
  * BFI Registry: Smart Legal Agreement
  */
-export interface SmartAgreement {
+export interface Agreement {
   id: string;
-  content: string;
-  projectId?: string;
-  investorId?: string;
-  status: 'DRAFT' | 'SIGNED';
+  agreement_number: string;
+  type: 'investor' | 'filmmaker';
+  user_id: string;
+  project_id: string;
+  status: 'pending' | 'signed' | 'cancelled';
+  pdf_url?: string;
+  hash_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AgreementSignature {
+  id: string;
+  agreement_id: string;
+  user_id: string;
+  ip_address?: string;
+  device_info?: string;
+  browser_info?: string;
+  os_info?: string;
+  otp_verified_at?: string;
+  signed_at: string;
 }
 
 /**

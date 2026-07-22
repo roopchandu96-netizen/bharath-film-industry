@@ -1,5 +1,6 @@
 import { supabase } from "./firebase";
 import { MovieProject } from "../types";
+import { agreementService } from "./agreementService";
 
 /**
  * Subscribe to active projects from Supabase based on the user's active role.
@@ -88,6 +89,13 @@ export const createProject = async (projectData: Omit<MovieProject, 'id' | 'dire
     .single();
 
   if (error) throw error;
+
+  try {
+    await agreementService.createAgreement('filmmaker', session.user.id, data.id);
+  } catch (err) {
+    console.error("Failed to create filmmaker agreement:", err);
+  }
+
   return data.id;
 };
 

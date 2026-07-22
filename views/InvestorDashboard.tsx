@@ -11,6 +11,7 @@ import {
   Loader2, TrendingUp, Calendar, BadgeCheck, Download, ExternalLink, Filter, Scale
 } from 'lucide-react';
 import { notifyInvestmentInterest } from '../services/notificationService';
+import { UserAgreements } from './UserAgreements';
 
 interface InvestorDashboardProps {
   user: User;

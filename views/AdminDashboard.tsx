@@ -12,13 +12,14 @@ import { AdminPaymentManagement } from './admin/AdminPaymentManagement';
 import { AdminInvoiceManagement } from './admin/AdminInvoiceManagement';
 import { AdminTicketManagement } from './admin/AdminTicketManagement';
 import { AdminUserProfile } from './admin/AdminUserProfile';
+import { AdminAgreements } from './admin/AdminAgreements';
 
 interface AdminDashboardProps {
     user: User;
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
-    const [activeAdminTab, setActiveAdminTab] = useState<'analytics' | 'userManagement' | 'payments' | 'invoices' | 'tickets' | 'projects_queue' | 'investments_queue' | 'users_queue'>('analytics');
+    const [activeAdminTab, setActiveAdminTab] = useState<'analytics' | 'userManagement' | 'payments' | 'invoices' | 'tickets' | 'agreements' | 'projects_queue' | 'investments_queue' | 'users_queue'>('analytics');
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [pendingProjects, setPendingProjects] = useState<MovieProject[]>([]);
     const [pendingInvestments, setPendingInvestments] = useState<any[]>([]);
@@ -478,6 +479,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     >
                         <Ticket size={16} /> Tickets
                     </button>
+                    <button 
+                        onClick={() => setActiveAdminTab('agreements')}
+                        className={`pb-3 px-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${activeAdminTab === 'agreements' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        <FileText size={16} /> Agreements
+                    </button>
                     <div className="w-px h-6 bg-slate-800 mx-2"></div>
                     <button 
                         onClick={() => setActiveAdminTab('projects_queue')}
@@ -515,6 +522,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             {activeAdminTab === 'payments' && <AdminPaymentManagement />}
             {activeAdminTab === 'invoices' && <AdminInvoiceManagement />}
             {activeAdminTab === 'tickets' && <AdminTicketManagement />}
+            {activeAdminTab === 'agreements' && <AdminAgreements />}
 
             {selectedUserId && (
                 <AdminUserProfile userId={selectedUserId} onClose={() => setSelectedUserId(null)} />

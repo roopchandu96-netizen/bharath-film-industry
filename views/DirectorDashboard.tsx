@@ -4,6 +4,7 @@ import { supabase } from '../services/firebase';
 import { User, MovieProject } from '../types';
 import { CURRENCY_FORMATTER } from '../constants';
 import { notifyNewSynopsis } from '../services/notificationService';
+import { UserAgreements } from './UserAgreements';
 
 interface DirectorDashboardProps {
     user: User;
@@ -114,6 +115,7 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
         { id: 'my_project', label: 'Details', icon: '🎬' },
         { id: 'synopsis', label: 'Script', icon: '📝' },
         { id: 'funding', label: 'Funding', icon: '💰' },
+        { id: 'agreements', label: 'Agreements', icon: '📄' },
         { id: 'updates', label: 'Updates', icon: '📢' },
         { id: 'notifications', label: 'Inbox', icon: '🔔' },
     ];
@@ -406,7 +408,7 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
                 )}
 
                 {/* 5. UPDATES, 6. NOTIFICATIONS, 7. PROFILE (Standard Website Cards) */}
-                {['updates', 'notifications', 'profile'].includes(activeView) && (
+                {['updates', 'notifications', 'profile', 'agreements'].includes(activeView) && (
                     <div className="max-w-3xl mx-auto space-y-8">
                         <div className="p-12 bg-slate-900 border border-slate-800 rounded-[3rem] text-center">
                             <div className="bg-slate-950 w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 shadow-xl border border-slate-800">
@@ -435,6 +437,13 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
                                         <p className="text-slate-500 text-sm">No new system alerts.</p>
                                     </div>
                                 )}
+
+                                {activeView === 'agreements' && (
+                                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                                        <UserAgreements user={user} />
+                                    </div>
+                                )}
+
                                 {activeView === 'profile' && (
                                     <div className="space-y-8">
                                         <div className="flex items-center gap-6">

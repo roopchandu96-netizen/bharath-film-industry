@@ -179,7 +179,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
               <UserIcon size={48} strokeWidth={1} />
             )}
           </div>
-          <button className="absolute -bottom-2 -right-2 p-3 rounded-2xl bg-yellow-400 text-black shadow-xl hover:scale-110 active:scale-95 transition-all">
+          <button onClick={() => alert('Coming soon!')} className="absolute -bottom-2 -right-2 p-3 rounded-2xl bg-yellow-400 text-black shadow-xl hover:scale-110 active:scale-95 transition-all">
             <Camera size={16} />
           </button>
         </div>
@@ -306,7 +306,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
             </div>
 
             <div className="space-y-3">
-              <button className="w-full p-5 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group hover:border-yellow-400/30 transition-all">
+              <button onClick={() => alert('Coming soon!')} className="w-full p-5 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group hover:border-yellow-400/30 transition-all">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-yellow-400 transition-colors">
                     <Key size={18} />
@@ -349,7 +349,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
                   </div>
                 </div>
               </a>
-              <a href="https://sites.google.com/view/bharatfilmindustry/privacy-policy" target="_blank" rel="noopener noreferrer" className="w-full p-5 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group hover:border-yellow-400/30 transition-all block">
+              <a href="https://roopchandu96-netizen.github.io/bharath-film-industry/#privacy" target="_blank" rel="noopener noreferrer" className="w-full p-5 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group hover:border-yellow-400/30 transition-all block">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-yellow-400 transition-colors">
                     <ShieldCheck size={18} />

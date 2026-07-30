@@ -216,9 +216,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
           <div>
             <h4 className="text-white font-bold mb-4">Platform</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-yellow-500 transition-colors">Marketplace</a></li>
-              <li><a href="#" className="hover:text-yellow-500 transition-colors">Studio Tools</a></li>
-              <li><a href="#" className="hover:text-yellow-500 transition-colors">Tokenomics</a></li>
+              <li><button onClick={() => setActiveTab('explore')} className="hover:text-yellow-500 transition-colors text-left w-full">Marketplace</button></li>
+              <li><button onClick={() => setActiveTab('portfolio')} className="hover:text-yellow-500 transition-colors text-left w-full">Studio Tools</button></li>
+              <li><button onClick={() => setActiveTab('explore')} className="hover:text-yellow-500 transition-colors text-left w-full">Tokenomics</button></li>
             </ul>
           </div>
 
@@ -226,17 +226,17 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
             <h4 className="text-white font-bold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-slate-400">
               <li><button onClick={() => setActiveTab('terms')} className="hover:text-yellow-500 transition-colors text-left w-full">Terms of Service</button></li>
-              <li><a href="https://sites.google.com/view/bharatfilmindustry/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-yellow-500 transition-colors">Risk Disclosure</a></li>
+              <li><a href="https://roopchandu96-netizen.github.io/bharath-film-industry/privacy-policy.html" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 transition-colors">Privacy Policy</a></li>
+              <li><button onClick={() => setActiveTab('explore')} className="hover:text-yellow-500 transition-colors text-left w-full">Risk Disclosure</button></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-white font-bold mb-4">Connect</h4>
             <div className="flex gap-4">
-              <div className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-slate-400 hover:bg-yellow-500 hover:text-black transition-colors cursor-pointer">X</div>
-              <div className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-slate-400 hover:bg-yellow-500 hover:text-black transition-colors cursor-pointer">In</div>
-              <div className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-slate-400 hover:bg-yellow-500 hover:text-black transition-colors cursor-pointer">Ig</div>
+              <button onClick={() => window.open('https://twitter.com/bharatfilmind', '_blank')} className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-slate-400 hover:bg-yellow-500 hover:text-black transition-colors cursor-pointer" aria-label="Twitter">X</button>
+              <button onClick={() => window.open('https://linkedin.com/company/bharatfilmindustry', '_blank')} className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-slate-400 hover:bg-yellow-500 hover:text-black transition-colors cursor-pointer" aria-label="LinkedIn">In</button>
+              <button onClick={() => window.open('https://instagram.com/bharatfilmindustry', '_blank')} className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-slate-400 hover:bg-yellow-500 hover:text-black transition-colors cursor-pointer" aria-label="Instagram">Ig</button>
             </div>
           </div>
         </div>

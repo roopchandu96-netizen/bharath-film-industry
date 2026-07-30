@@ -418,7 +418,7 @@ const AuthView: React.FC = () => {
                 <div className="flex items-start gap-3 pt-2">
                   <input type="checkbox" id="terms" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} className="mt-[3px] min-w-4 w-4 h-4 rounded border-zinc-300 text-yellow-600 focus:ring-yellow-600" />
                   <label htmlFor="terms" className="text-[11px] text-zinc-600 leading-relaxed font-medium block">
-                    I agree to the <a href="https://sites.google.com/view/bharatfilmindustry/terms-of-service" target="_blank" rel="noopener noreferrer" className="font-bold text-amber-600 hover:underline">Terms of Service</a> and <a href="https://sites.google.com/view/bharatfilmindustry/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-amber-600 hover:underline">Privacy Policy</a>. I understand this is a financial investment platform.
+                    I agree to the <a href="https://sites.google.com/view/bharatfilmindustry/terms-of-service" target="_blank" rel="noopener noreferrer" className="font-bold text-amber-600 hover:underline">Terms of Service</a> and <a href="https://roopchandu96-netizen.github.io/bharath-film-industry/privacy-policy.html" target="_blank" rel="noopener noreferrer" className="font-bold text-amber-600 hover:underline">Privacy Policy</a>. I understand this is a financial investment platform.
                   </label>
                 </div>
 

@@ -341,7 +341,7 @@ export const MobileAuthView: React.FC = () => {
                 className="mt-[3px] min-w-4 w-4 h-4 rounded border-yellow-500/10 bg-emerald-950 text-[#FACC15] focus:ring-[#FACC15] focus:ring-offset-0 focus:ring-0 cursor-pointer"
               />
               <label htmlFor="terms" className="text-[10px] text-emerald-400/90 leading-relaxed cursor-pointer font-medium select-none">
-                I agree to the <a href="https://sites.google.com/view/bharatfilmindustry/terms-of-service" target="_blank" rel="noopener noreferrer" className="font-bold text-[#FACC15] hover:underline">Terms of Service</a> and <a href="https://sites.google.com/view/bharatfilmindustry/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-[#FACC15] hover:underline">Privacy Policy</a>. I understand this is a financial investment platform.
+                I agree to the <a href="https://sites.google.com/view/bharatfilmindustry/terms-of-service" target="_blank" rel="noopener noreferrer" className="font-bold text-[#FACC15] hover:underline">Terms of Service</a> and <a href="https://roopchandu96-netizen.github.io/bharath-film-industry/privacy-policy.html" target="_blank" rel="noopener noreferrer" className="font-bold text-[#FACC15] hover:underline">Privacy Policy</a>. I understand this is a financial investment platform.
               </label>
             </div>
           )}

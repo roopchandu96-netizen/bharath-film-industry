@@ -22,6 +22,7 @@ const ProjectDetailView = lazy(() => import('./views/ProjectDetailView.tsx'));
 const AboutView = lazy(() => import('./views/AboutView.tsx'));
 const OurWorksView = lazy(() => import('./views/OurWorksView.tsx'));
 const TermsView = lazy(() => import('./views/TermsView.tsx'));
+const PrivacyView = lazy(() => import('./views/PrivacyView.tsx'));
 const MovieBookingView = lazy(() => import('./views/MovieBookingView.tsx').then(m => ({ default: m.MovieBookingView })));
 const AdminDashboard = lazy(() => import('./views/AdminDashboard.tsx'));
 const DirectorDashboard = lazy(() => import('./views/DirectorDashboard.tsx'));
@@ -674,6 +675,7 @@ const App: React.FC = () => {
              {activeTab === 'works' && <OurWorksView />}
              {activeTab === 'booking' && <MovieBookingView user={user} />}
              {activeTab === 'terms' && <TermsView />}
+             {activeTab === 'privacy' && <PrivacyView />}
              {activeTab === 'profile' && <ProfileView user={user} onUpdate={(updated) => setUser(updated)} />}
              {activeTab === 'about' && <AboutView />}
              {activeTab === 'posts' && <PostsView />}

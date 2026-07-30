@@ -110,7 +110,7 @@ const PrivacyView: React.FC = () => {
           If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us at:
         </p>
         <ul className="text-xs text-slate-300 space-y-1 mt-4">
-          <li><strong>Email:</strong> bharatfilmindustry@gmail.com</li>
+          <li><strong>Email:</strong> bharathfilmindustry@gmail.com</li>
           <li><strong>WhatsApp:</strong> +91 9652919968</li>
           <li><strong>Developer:</strong> Prathapaneni Roopchandu</li>
           <li><strong>LEI Code:</strong> UDYAM-AP-23-0080757 / 37CZVPR2615G1ZU</li>

@@ -65,8 +65,38 @@ const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState('explore');
-  const [loggedOutTab, setLoggedOutTab] = useState<'about' | 'works' | 'terms' | 'posts' | 'booking'>('booking');
+  const [activeTab, setActiveTabInternal] = useState(() => {
+    const hash = window.location.hash.replace('#', '');
+    return hash || 'explore';
+  });
+  const [loggedOutTab, setLoggedOutTabInternal] = useState<'about' | 'works' | 'terms' | 'posts' | 'booking' | 'privacy'>(() => {
+    const hash = window.location.hash.replace('#', '');
+    return (['about', 'works', 'terms', 'posts', 'booking', 'privacy'].includes(hash) ? hash as any : 'booking');
+  });
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash) {
+        setActiveTabInternal(hash);
+        if (['about', 'works', 'terms', 'posts', 'booking', 'privacy'].includes(hash)) {
+          setLoggedOutTabInternal(hash as any);
+        }
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const setActiveTab = (tab: string) => {
+    setActiveTabInternal(tab);
+    window.location.hash = tab;
+  };
+
+  const setLoggedOutTab = (tab: any) => {
+    setLoggedOutTabInternal(tab);
+    window.location.hash = tab;
+  };
   const [showAuth, setShowAuth] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<MovieProject | null>(null);

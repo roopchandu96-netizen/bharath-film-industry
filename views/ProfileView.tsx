@@ -338,7 +338,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
               <div className="space-y-2 mb-2">
                 <h4 className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Legal & Policies</h4>
               </div>
-              <a href="https://www.bfiiy.com/terms-of-service.html" target="_blank" rel="noopener noreferrer" className="w-full p-5 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group hover:border-yellow-400/30 transition-all block">
+              <a href="https://www.bfiiy.com/terms-of-service" target="_blank" rel="noopener noreferrer" className="w-full p-5 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group hover:border-yellow-400/30 transition-all block">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-yellow-400 transition-colors">
                     <Globe size={18} />
@@ -349,7 +349,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onUpdate }) => {
                   </div>
                 </div>
               </a>
-              <a href="https://www.bfiiy.com/privacy-policy.html" target="_blank" rel="noopener noreferrer" className="w-full p-5 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group hover:border-yellow-400/30 transition-all block">
+              <a href="https://www.bfiiy.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="w-full p-5 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group hover:border-yellow-400/30 transition-all block">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-yellow-400 transition-colors">
                     <ShieldCheck size={18} />

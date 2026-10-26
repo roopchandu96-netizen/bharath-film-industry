@@ -395,26 +395,18 @@ const App: React.FC = () => {
               >
                 Blog & News
               </button>
-              <button
-                onClick={() => setLoggedOutTab('terms')}
-                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
-                  loggedOutTab === 'terms'
-                    ? 'bg-yellow-500 text-black shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+              <a
+                href="/terms-of-service"
+                className="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all text-slate-400 hover:text-white hover:bg-white/5"
               >
                 Terms
-              </button>
-              <button
-                onClick={() => setLoggedOutTab('privacy')}
-                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
-                  loggedOutTab === 'privacy'
-                    ? 'bg-yellow-500 text-black shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+              </a>
+              <a
+                href="/privacy-policy"
+                className="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all text-slate-400 hover:text-white hover:bg-white/5"
               >
                 Privacy
-              </button>
+              </a>
             </div>
 
             <div className="flex items-center gap-4">
@@ -439,9 +431,7 @@ const App: React.FC = () => {
                 { id: 'booking', label: 'Movie Booking' },
                 { id: 'about', label: 'About BFI' },
                 { id: 'works', label: 'Our Works' },
-                { id: 'posts', label: 'Blog & News' },
-                { id: 'terms', label: 'Terms' },
-                { id: 'privacy', label: 'Privacy Policy' }
+                { id: 'posts', label: 'Blog & News' }
               ].map(item => (
                 <button
                   key={item.id}
@@ -454,6 +444,18 @@ const App: React.FC = () => {
                   {item.label}
                 </button>
               ))}
+              <a
+                href="/terms-of-service"
+                className="flex items-center justify-center p-4 rounded-xl text-lg font-bold border border-slate-800 bg-slate-900/50 text-slate-400 hover:text-white"
+              >
+                Terms of Service
+              </a>
+              <a
+                href="/privacy-policy"
+                className="flex items-center justify-center p-4 rounded-xl text-lg font-bold border border-slate-800 bg-slate-900/50 text-slate-400 hover:text-white"
+              >
+                Privacy Policy
+              </a>
               <button 
                 onClick={() => { setShowAuth(true); setMobileMenuOpen(false); }} 
                 className="w-full py-4 bg-yellow-500 text-black font-bold rounded-xl shadow-lg mt-4 active:scale-95 transition-all text-center"
@@ -476,20 +478,14 @@ const App: React.FC = () => {
         </main>
         
         <footer className="bg-[#020617] border-t border-slate-900 py-12 text-center text-slate-400 text-sm space-y-4">
-          <div className="flex justify-center gap-6 text-xs font-bold uppercase tracking-wider">
+          <div className="flex flex-wrap justify-center gap-6 text-xs font-bold uppercase tracking-wider">
             <button onClick={() => setLoggedOutTab('booking')} className="hover:text-yellow-500 transition-colors">Movie Booking</button>
             <button onClick={() => setLoggedOutTab('about')} className="hover:text-yellow-500 transition-colors">About BFI</button>
             <button onClick={() => setLoggedOutTab('works')} className="hover:text-yellow-500 transition-colors">Our Works</button>
             <button onClick={() => setLoggedOutTab('posts')} className="hover:text-yellow-500 transition-colors">Blog & News</button>
-            <button onClick={() => setLoggedOutTab('terms')} className="hover:text-yellow-500 transition-colors">Terms of Service</button>
-            <button onClick={() => setLoggedOutTab('privacy')} className="hover:text-yellow-500 transition-colors">Privacy Policy</button>
-          </div>
-          <div className="flex flex-wrap justify-center gap-4 text-[11px] text-slate-500">
-            <a href="https://www.bfiiy.com/privacy-policy.html" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 underline">Direct Privacy Policy (HTML)</a>
-            <span>•</span>
-            <a href="https://www.bfiiy.com/terms-of-service.html" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 underline">Terms of Service (HTML)</a>
-            <span>•</span>
-            <a href="https://www.bfiiy.com/delete-account.html" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 underline">Account Deletion</a>
+            <a href="/terms-of-service" className="hover:text-yellow-500 transition-colors">Terms of Service</a>
+            <a href="/privacy-policy" className="hover:text-yellow-500 transition-colors">Privacy Policy</a>
+            <a href="/delete-account" className="hover:text-yellow-500 transition-colors">Account Deletion</a>
           </div>
            <div>
              Bharat Film Industry™<br />

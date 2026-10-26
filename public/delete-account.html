@@ -4,97 +4,378 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account & Data Deletion - Bharat Film Industry</title>
+    <link rel="canonical" href="https://www.bfiiy.com/delete-account" />
+    <meta name="description" content="Request permanent account and user data deletion for Bharat Film Industry (BFI) mobile application.">
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f9f9f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            line-height: 1.7;
+            color: #cbd5e1;
+            background-color: #020617;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .container {
-            background-color: #fff;
-            padding: 30px;
+        a { color: #facc15; text-decoration: none; transition: color 0.2s; }
+        a:hover { color: #fef08a; text-decoration: underline; }
+
+        /* Navigation Header */
+        header {
+            position: sticky;
+            top: 16px;
+            z-index: 50;
+            max-width: 1200px;
+            width: 92%;
+            margin: 16px auto 0;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            padding: 12px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.7);
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .brand img {
+            width: 40px;
+            height: 40px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            object-fit: cover;
         }
-        h1 { color: #020617; border-bottom: 2px solid #eab308; padding-bottom: 10px; }
-        h2 { color: #1e293b; margin-top: 25px; }
-        .card { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .badge { display: inline-block; background-color: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; }
-        a { color: #2563eb; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        hr { border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0; }
-        .btn { display: inline-block; background-color: #dc2626; color: #ffffff; padding: 12px 24px; border-radius: 6px; font-weight: bold; text-decoration: none; margin-top: 10px; }
-        .btn:hover { background-color: #b91c1c; text-decoration: none; color: #ffffff; }
+        .brand-text h1 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+        .brand-text h1 span { color: #eab308; }
+        .brand-text p {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .nav-link {
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #94a3b8;
+            border-radius: 9999px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .nav-link:hover {
+            color: #ffffff;
+            text-decoration: none;
+        }
+        .nav-link.active {
+            background-color: #eab308;
+            color: #020617;
+        }
+        .btn-portal {
+            background: #eab308;
+            color: #020617;
+            font-weight: 800;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 10px 22px;
+            border-radius: 9999px;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
+        }
+        .btn-portal:hover {
+            background: #facc15;
+            color: #020617;
+            text-decoration: none;
+            transform: scale(1.02);
+        }
+
+        /* Content Area */
+        main {
+            flex: 1;
+            max-width: 900px;
+            width: 92%;
+            margin: 48px auto 64px;
+        }
+        .hero-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .badge {
+            display: inline-block;
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            margin-bottom: 16px;
+        }
+        .page-title {
+            font-size: 42px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+        .page-title span { color: #f87171; font-style: italic; }
+        .page-subtitle {
+            font-size: 16px;
+            color: #94a3b8;
+            max-width: 650px;
+            margin: 0 auto 20px;
+        }
+
+        .meta-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-left: 4px solid #ef4444;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 32px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            font-size: 13px;
+        }
+        .meta-card div strong { color: #f87171; }
+
+        .clause-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .clause-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .clause-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .clause-card h3 {
+            color: #f1f5f9;
+            font-size: 15px;
+            margin: 18px 0 8px;
+        }
+        .clause-card p {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        .clause-card ul, .clause-card ol {
+            padding-left: 20px;
+            margin-bottom: 12px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .clause-card li { margin-bottom: 8px; }
+        .clause-card strong { color: #e2e8f0; }
+
+        .btn-delete {
+            display: inline-block;
+            background: #dc2626;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 13px;
+            padding: 12px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+        .btn-delete:hover {
+            background: #b91c1c;
+            color: #ffffff;
+            text-decoration: none;
+            transform: scale(1.02);
+        }
+
+        /* Footer */
+        footer {
+            background: #01040f;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 48px 24px;
+            text-align: center;
+            margin-top: auto;
+        }
+        .footer-nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 24px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .footer-nav a { color: #94a3b8; }
+        .footer-nav a:hover { color: #facc15; text-decoration: none; }
+        .copyright {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .registration {
+            font-size: 11px;
+            font-family: monospace;
+            color: #475569;
+            letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 768px) {
+            header { padding: 10px 18px; border-radius: 20px; }
+            .nav-links { display: none; }
+            .page-title { font-size: 30px; }
+            .clause-card { padding: 20px; border-radius: 16px; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Account & Data Deletion Request</h1>
-        <p><strong>App:</strong> Bharat Film Industry (<code>com.bharatfilmindustry.app1</code>)</p>
-        <p>In accordance with Google Play's User Data Policy, users of the Bharat Film Industry application have the right to request the permanent deletion of their account and all associated personal data.</p>
 
-        <hr>
+    <!-- Professional BFI Header -->
+    <header>
+        <a href="/" class="brand">
+            <img src="/logo.jpg" alt="BFI Logo" />
+            <div class="brand-text">
+                <h1>Bharat <span>Film Industry™</span></h1>
+                <p>Decentralized Production</p>
+            </div>
+        </a>
 
-        <h2>How to Request Account & Data Deletion</h2>
+        <nav class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/terms-of-service" class="nav-link">Terms</a>
+            <a href="/privacy-policy" class="nav-link">Privacy</a>
+            <a href="/delete-account" class="nav-link active">Data Deletion</a>
+        </nav>
 
-        <div class="card">
-            <h3>Option 1: Delete Directly Inside the App (Instant)</h3>
+        <a href="/" class="btn-portal">Open Portal</a>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="hero-section">
+            <div class="badge">User Data Rights & Compliance</div>
+            <h1 class="page-title">Account & Data <span>Deletion</span></h1>
+            <p class="page-subtitle">In compliance with Google Play's User Data Policy, users of the Bharat Film Industry application have the right to request the permanent deletion of their account and all associated personal data.</p>
+        </div>
+
+        <div class="meta-card">
+            <div><strong>Application:</strong> Bharat Film Industry</div>
+            <div><strong>Package ID:</strong> <code>com.bharatfilmindustry.app1</code></div>
+            <div><strong>Processing Timeline:</strong> 7 to 30 Business Days</div>
+            <div><strong>Support:</strong> bharatfilmindustry@gmail.com</div>
+        </div>
+
+        <!-- Option 1: In App -->
+        <div class="clause-card">
+            <div class="clause-title">
+                <span class="clause-number">1</span>
+                <h2>Delete Directly Inside the App (Instant)</h2>
+            </div>
+            <p>If you have the Bharat Film Industry app installed on your device:</p>
             <ol>
-                <li>Open the <strong>Bharat Film Industry</strong> App on your device.</li>
+                <li>Open the <strong>Bharat Film Industry</strong> App.</li>
                 <li>Log in to your account.</li>
-                <li>Navigate to the <strong>Profile</strong> tab.</li>
+                <li>Tap the <strong>Profile</strong> tab in the navigation bar.</li>
                 <li>Scroll down to the <strong>Danger Zone</strong> section.</li>
-                <li>Tap <strong>"Revoke Institutional Node" (Delete Account)</strong> and confirm your request.</li>
+                <li>Tap <strong>"Revoke Institutional Node" (Delete Account)</strong> and confirm.</li>
             </ol>
         </div>
 
-        <div class="card">
-            <h3>Option 2: Submit a Deletion Request via Email (Web)</h3>
-            <p>If you have uninstalled the app or cannot log in, you can request account and data deletion by emailing us directly:</p>
+        <!-- Option 2: Email Web -->
+        <div class="clause-card">
+            <div class="clause-title">
+                <span class="clause-number">2</span>
+                <h2>Request Deletion via Web / Email</h2>
+            </div>
+            <p>If you uninstalled the application or cannot access your account, submit a deletion request via email:</p>
             <ul>
-                <li><strong>Recipient Email:</strong> <a href="mailto:bharatfilmindustry@gmail.com?subject=Account%20and%20Data%20Deletion%20Request">bharatfilmindustry@gmail.com</a></li>
+                <li><strong>Recipient:</strong> <a href="mailto:bharatfilmindustry@gmail.com?subject=Account%20and%20Data%20Deletion%20Request">bharatfilmindustry@gmail.com</a></li>
                 <li><strong>Subject Line:</strong> <code>Account and Data Deletion Request - Bharat Film Industry</code></li>
-                <li><strong>Required Information:</strong>
-                    <ul>
-                        <li>Your Registered Full Name</li>
-                        <li>Your Registered Email Address</li>
-                        <li>Your Registered Phone Number</li>
-                    </ul>
-                </li>
+                <li><strong>Required Details:</strong> Your registered Name, Email Address, and Phone Number.</li>
             </ul>
-            <a href="mailto:bharatfilmindustry@gmail.com?subject=Account%20and%20Data%20Deletion%20Request&body=Please%20delete%20my%20Bharat%20Film%20Industry%20account%20and%20associated%20personal%20data.%0A%0ARegistered%20Name:%20%0ARegistered%20Email:%20%0ARegistered%20Phone:%20" class="btn">Send Deletion Request Email</a>
+            <a href="mailto:bharatfilmindustry@gmail.com?subject=Account%20and%20Data%20Deletion%20Request&body=Please%20delete%20my%20Bharat%20Film%20Industry%20account%20and%20all%20associated%20data.%0A%0ARegistered%20Name:%20%0ARegistered%20Email:%20%0ARegistered%20Phone:%20" class="btn-delete">Send Deletion Request Email</a>
         </div>
 
-        <hr>
+        <!-- Data Details -->
+        <div class="clause-card">
+            <div class="clause-title">
+                <span class="clause-number">3</span>
+                <h2>What Data Is Deleted vs. Retained</h2>
+            </div>
+            <h3>Data That Is Permanently Deleted:</h3>
+            <ul>
+                <li>Account profile, full name, email address, and phone number.</li>
+                <li>Stored authentication tokens and password hashes.</li>
+                <li>Device identifiers and activity log entries.</li>
+            </ul>
 
-        <h2>What Data Is Deleted?</h2>
-        <ul>
-            <li><strong>Account Credentials:</strong> User ID, authentication profile, and hashed password.</li>
-            <li><strong>Personal Information:</strong> Full name, email address, phone number, and KYC documents.</li>
-            <li><strong>Device & Log Data:</strong> Device identifiers and system activity logs.</li>
-        </ul>
+            <h3>Data That May Be Retained:</h3>
+            <p>Under Indian financial, tax auditing, and regulatory statutes, records of completed monetary investments and signed legal agreements must be retained securely for statutory record-keeping periods.</p>
+        </div>
+    </main>
 
-        <h2>What Data May Be Retained?</h2>
-        <p>In compliance with Indian financial regulations, tax auditing laws, and anti-money laundering (AML) statutes, records of completed financial transactions, invoices, and signed investment contracts cannot be immediately expunged and will be retained securely solely for the statutory period required by law.</p>
+    <!-- Professional BFI Footer -->
+    <footer>
+        <div class="footer-nav">
+            <a href="/">Home</a>
+            <a href="/terms-of-service">Terms of Service</a>
+            <a href="/privacy-policy">Privacy Policy</a>
+            <a href="/delete-account">Account Deletion</a>
+        </div>
+        <div class="copyright">
+            Bharat Film Industry™ • All rights reserved. Built on Secured Nodes.
+        </div>
+        <div class="registration">
+            UDYAM REGISTRATION: UDYAM-AP-23-0080757 &nbsp;|&nbsp; GSTIN: 37CZVPR2615G1ZU
+        </div>
+    </footer>
 
-        <h2>Processing Timeline</h2>
-        <p>Deletion requests submitted via email are verified and processed within <strong>7 to 30 business days</strong>. You will receive an email confirmation once your account and personal data have been permanently purged.</p>
-
-        <hr>
-
-        <h2>Contact Information</h2>
-        <ul>
-            <li><strong>Organization:</strong> Bharat Film Industry</li>
-            <li><strong>Developer:</strong> Prathapaneni Roopchandu</li>
-            <li><strong>Email:</strong> <a href="mailto:bharatfilmindustry@gmail.com">bharatfilmindustry@gmail.com</a></li>
-            <li><strong>Helpline (WhatsApp):</strong> +91 9652919968</li>
-            <li><strong>Registration:</strong> UDYAM-AP-23-0080757 / GSTIN: 37CZVPR2615G1ZU</li>
-        </ul>
-        <p><a href="privacy-policy.html">&larr; Return to Privacy Policy</a></p>
-    </div>
 </body>
 </html>

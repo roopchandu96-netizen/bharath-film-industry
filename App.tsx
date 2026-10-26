@@ -405,6 +405,16 @@ const App: React.FC = () => {
               >
                 Terms
               </button>
+              <button
+                onClick={() => setLoggedOutTab('privacy')}
+                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
+                  loggedOutTab === 'privacy'
+                    ? 'bg-yellow-500 text-black shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Privacy
+              </button>
             </div>
 
             <div className="flex items-center gap-4">
@@ -430,7 +440,8 @@ const App: React.FC = () => {
                 { id: 'about', label: 'About BFI' },
                 { id: 'works', label: 'Our Works' },
                 { id: 'posts', label: 'Blog & News' },
-                { id: 'terms', label: 'Terms' }
+                { id: 'terms', label: 'Terms' },
+                { id: 'privacy', label: 'Privacy Policy' }
               ].map(item => (
                 <button
                   key={item.id}
@@ -459,6 +470,7 @@ const App: React.FC = () => {
             {loggedOutTab === 'about' && <AboutView />}
             {loggedOutTab === 'works' && <OurWorksView />}
             {loggedOutTab === 'terms' && <TermsView />}
+            {loggedOutTab === 'privacy' && <PrivacyView />}
             {loggedOutTab === 'posts' && <PostsView />}
           </Suspense>
         </main>
@@ -470,6 +482,14 @@ const App: React.FC = () => {
             <button onClick={() => setLoggedOutTab('works')} className="hover:text-yellow-500 transition-colors">Our Works</button>
             <button onClick={() => setLoggedOutTab('posts')} className="hover:text-yellow-500 transition-colors">Blog & News</button>
             <button onClick={() => setLoggedOutTab('terms')} className="hover:text-yellow-500 transition-colors">Terms of Service</button>
+            <button onClick={() => setLoggedOutTab('privacy')} className="hover:text-yellow-500 transition-colors">Privacy Policy</button>
+          </div>
+          <div className="flex flex-wrap justify-center gap-4 text-[11px] text-slate-500">
+            <a href="https://www.bfiiy.com/privacy-policy.html" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 underline">Direct Privacy Policy (HTML)</a>
+            <span>•</span>
+            <a href="https://www.bfiiy.com/terms-of-service.html" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 underline">Terms of Service (HTML)</a>
+            <span>•</span>
+            <a href="https://www.bfiiy.com/delete-account.html" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 underline">Account Deletion</a>
           </div>
            <div>
              Bharat Film Industry™<br />

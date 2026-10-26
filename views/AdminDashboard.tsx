@@ -380,7 +380,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     </div>
                     <button onClick={() => {
                         supabase.auth.signOut().then(() => {
-                            window.location.hash = ''; // Clear admin hash
+                            window.history.replaceState(null, '', '/');
                             window.location.reload(); // Force full reload to clear state
                         });
                     }} className="px-6 py-2 bg-red-600 border border-red-500 rounded-full text-white hover:bg-red-700 transition-all text-xs font-bold uppercase tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.5)]">

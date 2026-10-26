@@ -253,7 +253,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TCx8Bwnh4y2e2A',
         amount: data.amount,
         currency: data.currency,
-        name: "BHARAT FILM INDUSTRY™",
+        name: "BHARAT FILM INDUSTRYï¿½",
         description: `Pre-booking for ${quantity} Ticket(s)`,
         order_id: data.order_id,
         handler: async function (response: any) {
@@ -350,7 +350,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
         <body>
           <div class="ticket-card">
             <div class="header">
-              <h1>BHARAT FILM INDUSTRY™</h1>
+              <h1>BHARAT FILM INDUSTRYï¿½</h1>
               <p>OFFICIAL DIGITAL TICKET</p>
             </div>
             <div class="content">
@@ -402,7 +402,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
               Your secure movie premiere link is issued to your registered email account and can be opened in your account dashboard. It allows for a single viewing session only.
             </div>
           </div>
-          <button class="print-btn" onclick="window.print()">Print Ticket</button>
+          <button onClick={() => alert('Coming soon!')} class="print-btn" onclick="window.print()">Print Ticket</button>
         </body>
       </html>
     `);
@@ -451,7 +451,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                   <span style="font-size: 14px; font-weight: bold; color: #c2410c;">BHARAT BFI</span>
                 </td>
                 <td class="company-details">
-                  <strong>BHARAT FILM INDUSTRY™</strong><br/>
+                  <strong>BHARAT FILM INDUSTRYï¿½</strong><br/>
                   Registration No: UDYAM-AP-23-0080757<br/>
                   GSTIN: 37CZVPR2615G1ZU<br/>
                   Email: bharathfilmindustry@gmail.com
@@ -527,7 +527,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
               Thank you for supporting independent cinema. Cinema Powered by the Audience.
             </div>
           </div>
-          <button class="print-btn" onclick="window.print()">Print / Download PDF</button>
+          <button onClick={() => alert('Coming soon!')} class="print-btn" onclick="window.print()">Print / Download PDF</button>
         </body>
       </html>
     `);
@@ -632,7 +632,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                   </p>
                   <p className="text-slate-400 text-sm leading-relaxed">
                     A movie doesn't begin when it releases. It begins when movie lovers believe in it. 
-                    Support independent storytelling and emergent creative talent through BHARAT FILM INDUSTRY™.
+                    Support independent storytelling and emergent creative talent through BHARAT FILM INDUSTRYï¿½.
                   </p>
                 </div>
               </div>
@@ -678,7 +678,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                 
                 <div className="p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl space-y-1.5 text-center">
                   <p className="text-xs font-bold text-white uppercase tracking-wider">"You are not just buying a ticket. You are becoming part of the journey."</p>
-                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Watch. Support. Inspire. â€¢ BHARAT FILM INDUSTRY™</p>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Watch. Support. Inspire. â€¢ BHARAT FILM INDUSTRYï¿½</p>
                 </div>
               </div>
 
@@ -769,7 +769,7 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                   <p>8. The movie access link is non-transferable and is issued only to the purchaser's registered email.</p>
                   <p>9. The release date may change due to production, technical, certification, or regulatory requirements.</p>
                   <p>10. Refunds are generally not available after successful booking, except where required by applicable law.</p>
-                  <p>11. BHARAT FILM INDUSTRY™ reserves the right to update these terms whenever necessary.</p>
+                  <p>11. BHARAT FILM INDUSTRYï¿½ reserves the right to update these terms whenever necessary.</p>
                 </div>
               </details>
             </div>
@@ -800,12 +800,16 @@ export const MovieBookingView: React.FC<MovieBookingViewProps> = ({ user }) => {
                   <p className="text-xs text-slate-400 leading-relaxed">
                     Please log in to pre-book tickets and receive viewing links.
                   </p>
-                  <a 
-                    href="/#/register" 
+                  <button 
+                    onClick={() => {
+                      const signupBtn = document.querySelector('button[class*="Sign Up"]') as HTMLButtonElement;
+                      if (signupBtn) signupBtn.click();
+                      else window.location.href = '/';
+                    }}
                     className="block w-full py-3.5 bg-yellow-500 text-black font-black uppercase text-xs tracking-wider rounded-xl hover:bg-yellow-400 transition-all text-center"
                   >
                     Register / Sign In
-                  </a>
+                  </button>
                 </div>
               ) : (
                 <>

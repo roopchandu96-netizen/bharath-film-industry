@@ -35,7 +35,7 @@ const AuthView: React.FC = () => {
   React.useEffect(() => {
     isUnmountedRef.current = false;
     const checkHash = () => {
-      if (window.location.hash === '#/admin') {
+      if (window.location.hash === '#/admin' || window.location.pathname === '/admin') {
         setShowAdminLogin(true);
         setIsLogin(true);
         setSelectedRole(UserRole.ADMIN);
@@ -242,7 +242,7 @@ const AuthView: React.FC = () => {
             </button>
           </form>
           <div className="text-center">
-            <button onClick={() => { window.location.hash = ''; setShowAdminLogin(false); }} className="text-[9px] text-zinc-600 hover:text-white uppercase tracking-widest transition-colors">
+            <button onClick={() => { window.history.replaceState(null, '', '/'); setShowAdminLogin(false); }} className="text-[9px] text-zinc-600 hover:text-white uppercase tracking-widest transition-colors">
               Return to Public Gateway
             </button>
           </div>

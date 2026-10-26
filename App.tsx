@@ -65,37 +65,62 @@ const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  // Clean URL helper: Extracts path and strips any hash symbol automatically
+  const getRouteFromUrl = (): string => {
+    if (window.location.hash) {
+      const hashClean = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+      if (hashClean) {
+        const cleanPath = (hashClean === 'explore' || hashClean === 'booking') ? '/' : `/${hashClean}`;
+        window.history.replaceState(null, '', cleanPath);
+        return hashClean;
+      } else {
+        window.history.replaceState(null, '', '/');
+      }
+    }
+    const path = window.location.pathname.replace(/^\/|\/$/g, '').toLowerCase();
+    return path || '';
+  };
+
   const [activeTab, setActiveTabInternal] = useState(() => {
-    const hash = window.location.hash.replace('#', '');
-    return hash || 'explore';
+    const route = getRouteFromUrl();
+    return route || 'explore';
   });
   const [loggedOutTab, setLoggedOutTabInternal] = useState<'about' | 'works' | 'terms' | 'posts' | 'booking' | 'privacy'>(() => {
-    const hash = window.location.hash.replace('#', '');
-    return (['about', 'works', 'terms', 'posts', 'booking', 'privacy'].includes(hash) ? hash as any : 'booking');
+    const route = getRouteFromUrl();
+    return (['about', 'works', 'terms', 'posts', 'booking', 'privacy'].includes(route) ? route as any : 'booking');
   });
 
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash) {
-        setActiveTabInternal(hash);
-        if (['about', 'works', 'terms', 'posts', 'booking', 'privacy'].includes(hash)) {
-          setLoggedOutTabInternal(hash as any);
+    const handlePopState = () => {
+      const route = getRouteFromUrl();
+      if (route) {
+        setActiveTabInternal(route);
+        if (['about', 'works', 'terms', 'posts', 'booking', 'privacy'].includes(route)) {
+          setLoggedOutTabInternal(route as any);
         }
+      } else {
+        setActiveTabInternal('explore');
+        setLoggedOutTabInternal('booking');
       }
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const setActiveTab = (tab: string) => {
     setActiveTabInternal(tab);
-    window.location.hash = tab;
+    const targetPath = (tab === 'explore' || tab === 'home') ? '/' : `/${tab}`;
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ tab }, '', targetPath);
+    }
   };
 
   const setLoggedOutTab = (tab: any) => {
     setLoggedOutTabInternal(tab);
-    window.location.hash = tab;
+    const targetPath = tab === 'booking' ? '/' : `/${tab}`;
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ tab }, '', targetPath);
+    }
   };
   const [showAuth, setShowAuth] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

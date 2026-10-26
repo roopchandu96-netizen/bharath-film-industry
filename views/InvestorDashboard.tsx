@@ -274,7 +274,7 @@ const InvestorDashboard: React.FC<InvestorDashboardProps> = ({ user, onProjectSe
                 <h2 className="text-2xl font-serif text-white mb-1">Marketplace</h2>
                 <p className="text-zinc-500 text-xs uppercase tracking-widest">Vetted Investment Opportunities</p>
               </div>
-              <button className="p-3 bg-zinc-900 rounded-full text-zinc-400 hover:text-white"><Filter size={16} /></button>
+              <button onClick={() => alert('Coming soon!')} className="p-3 bg-zinc-900 rounded-full text-zinc-400 hover:text-white"><Filter size={16} /></button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

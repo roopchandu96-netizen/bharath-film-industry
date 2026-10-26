@@ -191,7 +191,7 @@ export const MobileInvestView: React.FC<MobileInvestViewProps> = ({
             <span className="text-[8px] font-black text-emerald-400/70 uppercase tracking-widest block">Pool TVL</span>
             <span className="text-lg font-bold text-white font-mono mt-0.5 block">₹45.20 Cr</span>
           </div>
-          <button className="px-5 py-2.5 bg-transparent border border-yellow-500/20 text-[#FACC15] hover:bg-[#FACC15]/10 active:scale-95 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all">
+          <button onClick={() => alert('Coming soon!')} className="px-5 py-2.5 bg-transparent border border-yellow-500/20 text-[#FACC15] hover:bg-[#FACC15]/10 active:scale-95 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all">
             Join the Pool
           </button>
         </div>

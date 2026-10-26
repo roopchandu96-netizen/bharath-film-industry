@@ -15,3 +15,5 @@ yarn-error.log*
 jdk21/
 *.apk
 
+*.aab
+*.code-workspace

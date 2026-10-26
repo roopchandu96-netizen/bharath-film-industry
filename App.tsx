@@ -67,18 +67,24 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   // Clean URL helper: Extracts path and strips any hash symbol automatically
   const getRouteFromUrl = (): string => {
+    let clean = '';
     if (window.location.hash) {
       const hashClean = window.location.hash.replace(/^#\/?/, '').toLowerCase();
       if (hashClean) {
-        const cleanPath = (hashClean === 'explore' || hashClean === 'booking') ? '/' : `/${hashClean}`;
+        clean = hashClean;
+        const cleanPath = (clean === 'explore' || clean === 'booking') ? '/' : `/${clean}`;
         window.history.replaceState(null, '', cleanPath);
-        return hashClean;
       } else {
         window.history.replaceState(null, '', '/');
       }
+    } else {
+      clean = window.location.pathname.replace(/^\/|\/$/g, '').toLowerCase();
     }
-    const path = window.location.pathname.replace(/^\/|\/$/g, '').toLowerCase();
-    return path || '';
+    // Normalize aliases so both clean and legacy routes work seamlessly
+    if (clean === 'privacy-policy' || clean === 'privacy-policy.html' || clean === 'privacy.html') return 'privacy';
+    if (clean === 'terms-of-service' || clean === 'terms-of-service.html' || clean === 'terms.html') return 'terms';
+    if (clean === 'delete-account' || clean === 'delete-account.html' || clean === 'data-deletion.html') return 'data-deletion';
+    return clean || '';
   };
 
   const [activeTab, setActiveTabInternal] = useState(() => {
@@ -421,13 +427,13 @@ const App: React.FC = () => {
                 Blog & News
               </button>
               <a
-                href="/terms-of-service"
+                href="/terms"
                 className="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all text-slate-400 hover:text-white hover:bg-white/5"
               >
                 Terms
               </a>
               <a
-                href="/privacy-policy"
+                href="/privacy"
                 className="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all text-slate-400 hover:text-white hover:bg-white/5"
               >
                 Privacy
@@ -470,13 +476,13 @@ const App: React.FC = () => {
                 </button>
               ))}
               <a
-                href="/terms-of-service"
+                href="/terms"
                 className="flex items-center justify-center p-4 rounded-xl text-lg font-bold border border-slate-800 bg-slate-900/50 text-slate-400 hover:text-white"
               >
                 Terms of Service
               </a>
               <a
-                href="/privacy-policy"
+                href="/privacy"
                 className="flex items-center justify-center p-4 rounded-xl text-lg font-bold border border-slate-800 bg-slate-900/50 text-slate-400 hover:text-white"
               >
                 Privacy Policy
@@ -508,9 +514,9 @@ const App: React.FC = () => {
             <button onClick={() => setLoggedOutTab('about')} className="hover:text-yellow-500 transition-colors">About BFI</button>
             <button onClick={() => setLoggedOutTab('works')} className="hover:text-yellow-500 transition-colors">Our Works</button>
             <button onClick={() => setLoggedOutTab('posts')} className="hover:text-yellow-500 transition-colors">Blog & News</button>
-            <a href="/terms-of-service" className="hover:text-yellow-500 transition-colors">Terms of Service</a>
-            <a href="/privacy-policy" className="hover:text-yellow-500 transition-colors">Privacy Policy</a>
-            <a href="/delete-account" className="hover:text-yellow-500 transition-colors">Account Deletion</a>
+            <a href="/terms" className="hover:text-yellow-500 transition-colors">Terms of Service</a>
+            <a href="/privacy" className="hover:text-yellow-500 transition-colors">Privacy Policy</a>
+            <a href="/data-deletion" className="hover:text-yellow-500 transition-colors">Account Deletion</a>
           </div>
            <div>
              Bharat Film Industry™<br />

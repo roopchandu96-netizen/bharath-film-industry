@@ -68,7 +68,7 @@ export const MobileProjectDetailView: React.FC<MobileProjectDetailViewProps> = (
           Back
         </button>
         <span className="text-xs font-black uppercase text-[#8c826e] tracking-widest">Opportunity Details</span>
-        <button className="p-2 text-amber-500/80 hover:text-amber-500 active:scale-90 transition-transform">
+        <button onClick={() => alert('Coming soon!')} className="p-2 text-amber-500/80 hover:text-amber-500 active:scale-90 transition-transform">
           <Share2 size={16} className="stroke-[2.5]" />
         </button>
       </div>
@@ -101,11 +101,11 @@ export const MobileProjectDetailView: React.FC<MobileProjectDetailViewProps> = (
 
       {/* Action Play & Add Buttons */}
       <div className="flex gap-3">
-        <button className="flex-1 py-3.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md">
+        <button onClick={() => alert('Coming soon!')} className="flex-1 py-3.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md">
           <Play size={14} className="fill-black stroke-none" />
           Watch Trailer
         </button>
-        <button className="p-3.5 bg-[#16120a] border border-[#2e2617] text-amber-500 rounded-2xl active:scale-95 transition-transform">
+        <button onClick={() => alert('Coming soon!')} className="p-3.5 bg-[#16120a] border border-[#2e2617] text-amber-500 rounded-2xl active:scale-95 transition-transform">
           <Plus size={18} className="stroke-[2.5]" />
         </button>
       </div>

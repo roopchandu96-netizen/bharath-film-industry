@@ -111,11 +111,11 @@ export const MobileCastView: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="px-6 py-4 flex gap-3 border-t border-[#251f14]">
-            <button className="flex-1 py-3 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md">
+            <button onClick={() => alert('Coming soon!')} className="flex-1 py-3 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md">
               <Mail size={14} className="stroke-[2.5]" />
               Connect
             </button>
-            <button className="p-3 bg-[#0d0a06] border border-[#251f14] text-amber-500 rounded-xl active:scale-95 transition-transform">
+            <button onClick={() => alert('Coming soon!')} className="p-3 bg-[#0d0a06] border border-[#251f14] text-amber-500 rounded-xl active:scale-95 transition-transform">
               <Bookmark size={16} className="stroke-[2.5]" />
             </button>
           </div>
@@ -147,7 +147,7 @@ export const MobileCastView: React.FC = () => {
               <h4 className="text-sm font-bold text-white mt-4">{star.name}</h4>
               <span className="text-[9px] text-[#a39a88] font-bold uppercase tracking-wider mt-0.5 block">{star.role}</span>
 
-              <button className="w-full py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl mt-4 hover:from-blue-500 hover:to-blue-400 active:scale-95 transition-all shadow-md">
+              <button onClick={() => alert('Coming soon!')} className="w-full py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl mt-4 hover:from-blue-500 hover:to-blue-400 active:scale-95 transition-all shadow-md">
                 Hire
               </button>
             </div>
@@ -159,7 +159,7 @@ export const MobileCastView: React.FC = () => {
       <div className="space-y-4 pt-2">
         <div className="flex justify-between items-center">
           <h3 className="text-base font-bold tracking-wide">Casting Calls</h3>
-          <button className="text-[10px] font-black uppercase text-amber-500 tracking-wider">
+          <button onClick={() => alert('Coming soon!')} className="text-[10px] font-black uppercase text-amber-500 tracking-wider">
             View All
           </button>
         </div>

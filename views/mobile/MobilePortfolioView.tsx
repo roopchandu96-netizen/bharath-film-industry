@@ -102,7 +102,7 @@ export const MobilePortfolioView: React.FC<MobilePortfolioViewProps> = ({
       <div className="space-y-4 pt-2">
         <div className="flex justify-between items-center">
           <h3 className="text-base font-bold tracking-wide">Featured Opportunities</h3>
-          <button className="text-[10px] font-black uppercase text-amber-500 tracking-wider">
+          <button onClick={() => alert('Coming soon!')} className="text-[10px] font-black uppercase text-amber-500 tracking-wider">
             View All
           </button>
         </div>
@@ -208,7 +208,7 @@ export const MobilePortfolioView: React.FC<MobilePortfolioViewProps> = ({
             <span className="text-[8px] font-black uppercase text-[#8c826e] tracking-widest block">Pool TVL</span>
             <span className="text-xl font-bold text-white font-mono mt-0.5 block">₹45.2Cr</span>
           </div>
-          <button className="px-6 py-2.5 bg-transparent border border-[#2e2617] text-amber-500 font-black text-xs uppercase tracking-wider rounded-xl active:scale-95 transition-all">
+          <button onClick={() => alert('Coming soon!')} className="px-6 py-2.5 bg-transparent border border-[#2e2617] text-amber-500 font-black text-xs uppercase tracking-wider rounded-xl active:scale-95 transition-all">
             Join the Pool
           </button>
         </div>

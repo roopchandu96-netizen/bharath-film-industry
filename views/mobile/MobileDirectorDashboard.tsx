@@ -159,7 +159,7 @@ export const MobileDirectorDashboard: React.FC<MobileDirectorDashboardProps> = (
             </div>
           </div>
           
-          <button className="px-4 py-2 bg-transparent border border-[#2e2617] text-amber-500 font-black text-[9px] uppercase tracking-wider rounded-xl active:scale-95 transition-all">
+          <button onClick={() => alert('Coming soon!')} className="px-4 py-2 bg-transparent border border-[#2e2617] text-amber-500 font-black text-[9px] uppercase tracking-wider rounded-xl active:scale-95 transition-all">
             Pitch
           </button>
         </div>

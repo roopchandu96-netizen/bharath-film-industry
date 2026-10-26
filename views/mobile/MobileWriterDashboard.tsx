@@ -32,7 +32,7 @@ export const MobileWriterDashboard: React.FC<MobileWriterDashboardProps> = ({
               <span className="text-3xl font-extrabold text-white font-mono">₹0</span>
             </div>
           </div>
-          <button className="w-10 h-10 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center">
+          <button onClick={() => alert('Coming soon!')} className="w-10 h-10 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center">
             <Wallet size={18} className="stroke-[2.5]" />
           </button>
         </div>
@@ -57,7 +57,7 @@ export const MobileWriterDashboard: React.FC<MobileWriterDashboardProps> = ({
           </div>
         </button>
 
-        <button className="bg-[#16120a] border border-[#2e2617] rounded-2xl p-4 flex flex-col items-center justify-center gap-3 text-center h-28 shadow-sm active:scale-95 transition-transform">
+        <button onClick={() => alert('Coming soon!')} className="bg-[#16120a] border border-[#2e2617] rounded-2xl p-4 flex flex-col items-center justify-center gap-3 text-center h-28 shadow-sm active:scale-95 transition-transform">
           <div className="text-amber-500"><Send size={20} className="stroke-[2.5]" /></div>
           <div className="space-y-0.5">
             <span className="text-[9px] font-black uppercase text-white block leading-none">Pitch Producer</span>
@@ -65,7 +65,7 @@ export const MobileWriterDashboard: React.FC<MobileWriterDashboardProps> = ({
           </div>
         </button>
 
-        <button className="bg-[#16120a] border border-[#2e2617] rounded-2xl p-4 flex flex-col items-center justify-center gap-3 text-center h-28 shadow-sm active:scale-95 transition-transform">
+        <button onClick={() => alert('Coming soon!')} className="bg-[#16120a] border border-[#2e2617] rounded-2xl p-4 flex flex-col items-center justify-center gap-3 text-center h-28 shadow-sm active:scale-95 transition-transform">
           <div className="text-amber-500"><Compass size={20} className="stroke-[2.5]" /></div>
           <div className="space-y-0.5">
             <span className="text-[9px] font-black uppercase text-white block leading-none">Marketplace</span>
@@ -78,7 +78,7 @@ export const MobileWriterDashboard: React.FC<MobileWriterDashboardProps> = ({
       <div className="space-y-4 pt-2">
         <div className="flex justify-between items-center">
           <h3 className="text-base font-bold tracking-wide">My Registered Scripts</h3>
-          <button className="text-[10px] font-black uppercase text-amber-500 tracking-wider">
+          <button onClick={() => alert('Coming soon!')} className="text-[10px] font-black uppercase text-amber-500 tracking-wider">
             View All
           </button>
         </div>
@@ -123,16 +123,16 @@ export const MobileWriterDashboard: React.FC<MobileWriterDashboardProps> = ({
                   {/* Primary triggers */}
                   <div className="flex items-center justify-between pt-3 border-t border-[#251f14]">
                     {script.pitchable ? (
-                      <button className="px-6 py-2.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md active:scale-95 transition-all">
+                      <button onClick={() => alert('Coming soon!')} className="px-6 py-2.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md active:scale-95 transition-all">
                         Pitch Now
                       </button>
                     ) : (
-                      <button className="px-6 py-2.5 bg-transparent border border-[#2e2617] text-[#eae3d2] font-black text-xs uppercase tracking-wider rounded-xl active:scale-95 transition-all">
+                      <button onClick={() => alert('Coming soon!')} className="px-6 py-2.5 bg-transparent border border-[#2e2617] text-[#eae3d2] font-black text-xs uppercase tracking-wider rounded-xl active:scale-95 transition-all">
                         Manage Rights
                       </button>
                     )}
                     
-                    <button className="p-2.5 bg-[#0d0a06] border border-[#251f14] text-amber-500 rounded-xl active:scale-95 transition-all">
+                    <button onClick={() => alert('Coming soon!')} className="p-2.5 bg-[#0d0a06] border border-[#251f14] text-amber-500 rounded-xl active:scale-95 transition-all">
                       <Download size={14} className="stroke-[2.5]" />
                     </button>
                   </div>

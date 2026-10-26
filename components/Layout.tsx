@@ -225,9 +225,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, role
           <div>
             <h4 className="text-white font-bold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="/terms-of-service" className="hover:text-yellow-500 transition-colors text-left w-full block">Terms of Service</a></li>
-              <li><a href="/privacy-policy" className="hover:text-yellow-500 transition-colors text-left w-full block">Privacy Policy</a></li>
-              <li><a href="/delete-account" className="hover:text-yellow-500 transition-colors text-left w-full block">Account Deletion</a></li>
+              <li><a href="/terms" className="hover:text-yellow-500 transition-colors text-left w-full block">Terms of Service</a></li>
+              <li><a href="/privacy" className="hover:text-yellow-500 transition-colors text-left w-full block">Privacy Policy</a></li>
+              <li><a href="/data-deletion" className="hover:text-yellow-500 transition-colors text-left w-full block">Account Deletion</a></li>
               <li><button onClick={() => setActiveTab('explore')} className="hover:text-yellow-500 transition-colors text-left w-full">Risk Disclosure</button></li>
             </ul>
           </div>

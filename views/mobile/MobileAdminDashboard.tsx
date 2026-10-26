@@ -39,7 +39,7 @@ export const MobileAdminDashboard: React.FC<MobileAdminDashboardProps> = ({ user
       <div className="space-y-4 pt-2">
         <div className="flex justify-between items-center">
           <h3 className="text-base font-bold text-white font-serif tracking-wide">Verification Queue</h3>
-          <button className="text-[10px] font-black uppercase text-[#FACC15] tracking-wider">
+          <button onClick={() => alert('Coming soon!')} className="text-[10px] font-black uppercase text-[#FACC15] tracking-wider">
             View All
           </button>
         </div>
@@ -141,7 +141,7 @@ export const MobileAdminDashboard: React.FC<MobileAdminDashboardProps> = ({ user
           </div>
         </div>
 
-        <button className="w-full py-4 bg-gradient-to-r from-[#FACC15] via-[#eab308] to-[#f59e0b] text-[#021f18] font-extrabold text-xs uppercase tracking-wider rounded-2xl active:scale-95 transition-all shadow-md border-none cursor-pointer">
+        <button onClick={() => alert('Coming soon!')} className="w-full py-4 bg-gradient-to-r from-[#FACC15] via-[#eab308] to-[#f59e0b] text-[#021f18] font-extrabold text-xs uppercase tracking-wider rounded-2xl active:scale-95 transition-all shadow-md border-none cursor-pointer">
           Trigger Distribution
         </button>
       </div>

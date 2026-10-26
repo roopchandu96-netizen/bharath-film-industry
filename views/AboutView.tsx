@@ -96,13 +96,13 @@ const AboutView: React.FC = () => {
             </div>
             
             <div className="flex gap-4 pt-6">
-              <button aria-label="LinkedIn" className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-blue-400 hover:border-blue-400 hover:bg-blue-400/10 transition-all">
+              <button onClick={() => alert('Coming soon!')} aria-label="LinkedIn" className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-blue-400 hover:border-blue-400 hover:bg-blue-400/10 transition-all">
                 <Linkedin size={20} />
               </button>
-              <button aria-label="Twitter" className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-800 transition-all">
+              <button onClick={() => alert('Coming soon!')} aria-label="Twitter" className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-800 transition-all">
                 <Twitter size={20} />
               </button>
-              <button aria-label="Email" className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-amber-400 hover:border-amber-400 hover:bg-amber-400/10 transition-all">
+              <button onClick={() => alert('Coming soon!')} aria-label="Email" className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-amber-400 hover:border-amber-400 hover:bg-amber-400/10 transition-all">
                 <Mail size={20} />
               </button>
             </div>

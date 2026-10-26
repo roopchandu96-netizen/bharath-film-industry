@@ -129,7 +129,7 @@ export const MobileProducerDashboard: React.FC<MobileProducerDashboardProps> = (
           )}
         </div>
 
-        <button className="w-full py-3.5 bg-blue-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl active:scale-95 transition-all shadow-md mt-2">
+        <button onClick={() => alert('Coming soon!')} className="w-full py-3.5 bg-blue-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl active:scale-95 transition-all shadow-md mt-2">
           Add New Lead
         </button>
       </div>
@@ -139,8 +139,8 @@ export const MobileProducerDashboard: React.FC<MobileProducerDashboardProps> = (
         <div className="flex justify-between items-center">
           <h3 className="text-base font-bold text-white font-serif">Vendor Management</h3>
           <div className="flex items-center gap-2 text-amber-500/80">
-            <button className="p-1.5 bg-[#0d0a06] border border-[#251f14] rounded-lg"><SlidersHorizontal size={12} /></button>
-            <button className="p-1.5 bg-[#0d0a06] border border-[#251f14] rounded-lg"><Search size={12} /></button>
+            <button onClick={() => alert('Coming soon!')} className="p-1.5 bg-[#0d0a06] border border-[#251f14] rounded-lg"><SlidersHorizontal size={12} /></button>
+            <button onClick={() => alert('Coming soon!')} className="p-1.5 bg-[#0d0a06] border border-[#251f14] rounded-lg"><Search size={12} /></button>
           </div>
         </div>
 
@@ -194,13 +194,13 @@ export const MobileProducerDashboard: React.FC<MobileProducerDashboardProps> = (
           </div>
         </div>
 
-        <button className="w-full py-3.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl active:scale-95 transition-all shadow-md">
+        <button onClick={() => alert('Coming soon!')} className="w-full py-3.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl active:scale-95 transition-all shadow-md">
           Generate Quarterly Report
         </button>
       </div>
 
       {/* Floating Action Button (FAB) */}
-      <button className="fixed bottom-20 right-6 z-[60] w-14 h-14 bg-gradient-to-tr from-amber-500 to-yellow-500 text-black rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-transform">
+      <button onClick={() => alert('Coming soon!')} className="fixed bottom-20 right-6 z-[60] w-14 h-14 bg-gradient-to-tr from-amber-500 to-yellow-500 text-black rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-transform">
         <Plus size={24} className="stroke-[3]" />
       </button>
     </div>

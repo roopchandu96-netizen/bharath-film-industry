@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms and Conditions - Bharat Film Industry</title>
+    <link rel="canonical" href="https://www.bfiiy.com/terms" />
+    <meta name="description" content="Official Terms and Conditions governing Bharat Film Industry (BFI) platform, investors, and filmmakers.">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            line-height: 1.7;
+            color: #cbd5e1;
+            background-color: #020617;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        a { color: #facc15; text-decoration: none; transition: color 0.2s; }
+        a:hover { color: #fef08a; text-decoration: underline; }
+
+        /* Navigation Header */
+        header {
+            position: sticky;
+            top: 16px;
+            z-index: 50;
+            max-width: 1200px;
+            width: 92%;
+            margin: 16px auto 0;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            padding: 12px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.7);
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .brand img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .brand-text h1 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+        .brand-text h1 span { color: #eab308; }
+        .brand-text p {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .nav-link {
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #94a3b8;
+            border-radius: 9999px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .nav-link:hover {
+            color: #ffffff;
+            text-decoration: none;
+        }
+        .nav-link.active {
+            background-color: #eab308;
+            color: #020617;
+        }
+        .btn-portal {
+            background: #eab308;
+            color: #020617;
+            font-weight: 800;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 10px 22px;
+            border-radius: 9999px;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
+        }
+        .btn-portal:hover {
+            background: #facc15;
+            color: #020617;
+            text-decoration: none;
+            transform: scale(1.02);
+        }
+
+        /* Content Area */
+        main {
+            flex: 1;
+            max-width: 900px;
+            width: 92%;
+            margin: 48px auto 64px;
+        }
+        .hero-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .badge {
+            display: inline-block;
+            background: rgba(234, 179, 8, 0.1);
+            color: #facc15;
+            border: 1px solid rgba(234, 179, 8, 0.25);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            margin-bottom: 16px;
+        }
+        .page-title {
+            font-size: 42px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+        .page-title span { color: #facc15; font-style: italic; }
+        .page-subtitle {
+            font-size: 16px;
+            color: #94a3b8;
+            max-width: 650px;
+            margin: 0 auto 20px;
+        }
+
+        .clause-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+            transition: border-color 0.2s;
+        }
+        .clause-card:hover {
+            border-color: rgba(234, 179, 8, 0.3);
+        }
+        .clause-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .clause-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: rgba(234, 179, 8, 0.15);
+            color: #facc15;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .clause-card h3 {
+            color: #f1f5f9;
+            font-size: 15px;
+            margin: 18px 0 8px;
+        }
+        .clause-card p {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        .clause-card ul, .clause-card ol {
+            padding-left: 20px;
+            margin-bottom: 12px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .clause-card li { margin-bottom: 8px; }
+        .clause-card strong { color: #e2e8f0; }
+
+        .alert-box {
+            background: rgba(220, 38, 38, 0.08);
+            border: 1px solid rgba(220, 38, 38, 0.25);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            font-size: 13px;
+            color: #fca5a5;
+        }
+
+        /* Footer */
+        footer {
+            background: #01040f;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 48px 24px;
+            text-align: center;
+            margin-top: auto;
+        }
+        .footer-nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 24px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .footer-nav a { color: #94a3b8; }
+        .footer-nav a:hover { color: #facc15; text-decoration: none; }
+        .copyright {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .registration {
+            font-size: 11px;
+            font-family: monospace;
+            color: #475569;
+            letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 768px) {
+            header { padding: 10px 18px; border-radius: 20px; }
+            .nav-links { display: none; }
+            .page-title { font-size: 30px; }
+            .clause-card { padding: 20px; border-radius: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Professional BFI Header -->
+    <header>
+        <a href="/" class="brand">
+            <img src="/logo.jpg" alt="BFI Logo" />
+            <div class="brand-text">
+                <h1>Bharat <span>Film Industry™</span></h1>
+                <p>Decentralized Production</p>
+            </div>
+        </a>
+
+        <nav class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/terms" class="nav-link active">Terms</a>
+            <a href="/privacy" class="nav-link">Privacy</a>
+            <a href="/data-deletion" class="nav-link">Data Deletion</a>
+        </nav>
+
+        <a href="/" class="btn-portal">Open Portal</a>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="hero-section">
+            <div class="badge">BFI Governance & Risk Disclosures</div>
+            <h1 class="page-title">Terms & <span>Conditions</span></h1>
+            <p class="page-subtitle">Please review the official rules, regulations, and risk disclosures governing the Bharat Film Industry ecosystem.</p>
+        </div>
+
+        <!-- 1. Platform Role -->
+        <div class="clause-card">
+            <div class="clause-title">
+                <span class="clause-number">1</span>
+                <h2>Platform Role</h2>
+            </div>
+            <p>Bharat Film Industry (BFI) acts as a facilitator connecting investors, filmmakers, directors, producers, and film projects. <strong>BFI does not guarantee the commercial success of any film project.</strong></p>
+        </div>
+
+        <!-- 2. Communication Policy -->
+        <div class="clause-card">
+            <div class="clause-title">
+                <span class="clause-number">2</span>
+                <h2>Communication Policy (For Investors)</h2>
+            </div>
+            <p>All communications regarding film projects, investments, agreements, budgets, and returns must be conducted exclusively through the BFI team.</p>
+            <div class="alert-box">
+                <strong>STRICTLY PROHIBITED:</strong> Investors are strictly prohibited from directly negotiating, funding, or entering into separate agreements with directors, writers, producers, or project representatives outside the BFI platform. Any violation may result in termination of investor participation and cancellation of associated benefits.
+            </div>
+        </div>
+
+        <!-- 3. Investment Risk Disclosure -->
+        <div class="clause-card">
+            <div class="clause-title">
+                <span class="clause-number">3</span>
+                <h2>Investment Risk Disclosure</h2>
+            </div>
+            <p><strong>Film investment is a high-risk business activity.</strong> Investors acknowledge and agree that:</p>
+            <ul>
+                <li>Returns are entirely dependent on the commercial performance of the film.</li>
+                <li>Revenue depends on theatrical collections, OTT rights, satellite rights, digital rights, overseas distribution, and other exploitation channels.</li>
+                <li>BFI does not guarantee profits, fixed returns, minimum returns, or capital protection.</li>
+            </ul>
+        </div>
+
+        <!-- 4. Return on Investment -->
+        <div class="clause-card">
+            <div class="clause-title">
+                <span class="clause-number">4</span>
+                <h2>Return on Investment</h2>
+            </div>
+            <p>Investor returns will be distributed according to the agreed revenue-sharing structure of the specific project. The amount payable to investors shall be determined only after actual revenue realization. BFI makes no promise or representation regarding specific profit percentages, fixed returns, or guaranteed timelines for returns.</p>
+        </div>
+
+        <!-- 5. Loss Acknowledgment -->
+        <div class="clause-card">
+            <div class="clause-title">
+                <span class="clause-number">5</span>
+                <h2>Loss Acknowledgment</h2>
+            </div>
+            <p>Investors understand that film projects may generate lower-than-expected revenue or incur losses. BFI shall not be held responsible for any financial losses arising from a project's commercial performance.</p>
+        </div>
+
+        <!-- 6. Script Registration -->
+        <div class="clause-card">
+            <div class="clause-title">
+                <span class="clause-number">6</span>
+                <h2>Script Registration (For Directors)</h2>
+            </div>
+            <p>Before submission to BFI, every screenplay, story, script, dialogue draft, or creative work must be officially registered with the appropriate copyright or writers' association authority. BFI shall not be responsible for ownership disputes involving unregistered content.</p>
+        </div>
+
+        <!-- 7. Budget Accuracy -->
+        <div class="clause-card">
+            <div class="clause-title">
+                <span class="clause-number">7</span>
+                <h2>Budget Accuracy & Production Responsibility</h2>
+            </div>
+            <p>Directors and producers must provide realistic and accurate project budgets. If actual production cost exceeds approved budget estimates, BFI is not obligated to arrange additional funding, and bears no responsibility for overruns. The production team remains solely responsible for execution, crew management, legal compliance, and delivery.</p>
+        </div>
+
+        <!-- 8. Acceptance & Contact -->
+        <div class="clause-card">
+            <div class="clause-title">
+                <span class="clause-number">8</span>
+                <h2>Acceptance & Inquiries</h2>
+            </div>
+            <p>By participating on the BFI platform, all users acknowledge that they have read, understood, and agreed to these Terms and Conditions.</p>
+            <ul>
+                <li><strong>Email:</strong> <a href="mailto:bharatfilmindustry@gmail.com">bharatfilmindustry@gmail.com</a></li>
+                <li><strong>Helpline (WhatsApp):</strong> +91 9652919968</li>
+                <li><strong>Privacy Policy:</strong> <a href="/privacy">https://www.bfiiy.com/privacy</a></li>
+                <li><strong>Account Deletion:</strong> <a href="/data-deletion">https://www.bfiiy.com/data-deletion</a></li>
+            </ul>
+        </div>
+    </main>
+
+    <!-- Professional BFI Footer -->
+    <footer>
+        <div class="footer-nav">
+            <a href="/">Home</a>
+            <a href="/terms">Terms of Service</a>
+            <a href="/privacy">Privacy Policy</a>
+            <a href="/data-deletion">Account Deletion</a>
+        </div>
+        <div class="copyright">
+            Bharat Film Industry™ • All rights reserved. Built on Secured Nodes.
+        </div>
+        <div class="registration">
+            UDYAM REGISTRATION: UDYAM-AP-23-0080757 &nbsp;|&nbsp; GSTIN: 37CZVPR2615G1ZU
+        </div>
+    </footer>
+
+</body>
+</html>

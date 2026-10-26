@@ -289,7 +289,7 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
                                 >
                                     Delete Project
                                 </button>
-                                <button className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-colors shadow-lg shadow-amber-900/20">
+                                <button onClick={() => alert('Coming soon!')} className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-colors shadow-lg shadow-amber-900/20">
                                     Save Changes
                                 </button>
                             </div>
@@ -348,9 +348,9 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
                         </div>
 
                         <div className="grid grid-cols-3 gap-6">
-                            <button className="py-4 bg-slate-900 border border-slate-800 rounded-2xl text-slate-400 font-bold hover:text-white hover:border-slate-600 transition-all shadow-lg">👁 Preview</button>
-                            <button className="py-4 bg-slate-900 border border-slate-800 rounded-2xl text-slate-400 font-bold hover:text-white hover:border-slate-600 transition-all shadow-lg">⬇ Download</button>
-                            <button className="py-4 bg-slate-900 border border-slate-800 rounded-2xl text-amber-500 font-bold hover:bg-amber-500/10 hover:border-amber-500/50 transition-all shadow-lg">↺ Replace Version</button>
+                            <button onClick={() => alert('Coming soon!')} className="py-4 bg-slate-900 border border-slate-800 rounded-2xl text-slate-400 font-bold hover:text-white hover:border-slate-600 transition-all shadow-lg">👁 Preview</button>
+                            <button onClick={() => alert('Coming soon!')} className="py-4 bg-slate-900 border border-slate-800 rounded-2xl text-slate-400 font-bold hover:text-white hover:border-slate-600 transition-all shadow-lg">⬇ Download</button>
+                            <button onClick={() => alert('Coming soon!')} className="py-4 bg-slate-900 border border-slate-800 rounded-2xl text-amber-500 font-bold hover:bg-amber-500/10 hover:border-amber-500/50 transition-all shadow-lg">↺ Replace Version</button>
                         </div>
                     </div>
                 )}
@@ -426,7 +426,7 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
                                 {activeView === 'updates' && (
                                     <>
                                         <textarea className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white resize-none h-32" placeholder="Write an update..." />
-                                        <button className="px-6 py-2 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400">Post Update</button>
+                                        <button onClick={() => alert('Coming soon!')} className="px-6 py-2 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400">Post Update</button>
                                     </>
                                 )}
                                 {activeView === 'notifications' && (
@@ -452,7 +452,7 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user, onOpenSubmi
                                                 <h3 className="text-white font-bold">{user.name}</h3>
                                                 <p className="text-green-500 text-xs font-bold uppercase">✓ Verified Director</p>
                                             </div>
-                                            <button className="ml-auto text-amber-500 text-xs font-bold uppercase hover:underline">Edit</button>
+                                            <button onClick={() => alert('Coming soon!')} className="ml-auto text-amber-500 text-xs font-bold uppercase hover:underline">Edit</button>
                                         </div>
 
                                         <div className="pt-6 border-t border-slate-800 space-y-4">

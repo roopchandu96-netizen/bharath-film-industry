@@ -75,10 +75,10 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
 
         {/* Right Action Icons */}
         <div className="flex items-center gap-4 text-[#FACC15]">
-          <button className="p-1 hover:text-white active:scale-90 transition-transform" aria-label="Notifications">
+          <button onClick={() => alert('Coming soon!')} className="p-1 hover:text-white active:scale-90 transition-transform" aria-label="Notifications">
             <Bell size={18} className="stroke-[2.5]" />
           </button>
-          <button className="p-1 hover:text-white active:scale-90 transition-transform" aria-label="Search">
+          <button onClick={() => alert('Coming soon!')} className="p-1 hover:text-white active:scale-90 transition-transform" aria-label="Search">
             <Search size={18} className="stroke-[2.5]" />
           </button>
         </div>

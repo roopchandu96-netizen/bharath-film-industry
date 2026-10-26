@@ -91,7 +91,7 @@ const WriterDashboard: React.FC<WriterDashboardProps> = ({ user }) => {
                     }`}>
                       {s.status}
                     </span>
-                    <button className="text-[10px] font-bold text-zinc-500 hover:text-white uppercase tracking-wider flex items-center gap-1 mt-2">
+                    <button onClick={() => alert('Coming soon!')} className="text-[10px] font-bold text-zinc-500 hover:text-white uppercase tracking-wider flex items-center gap-1 mt-2">
                       <Download size={10} /> PDF
                     </button>
                   </div>

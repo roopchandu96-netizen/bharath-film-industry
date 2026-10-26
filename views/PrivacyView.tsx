@@ -100,7 +100,7 @@ const PrivacyView: React.FC = () => {
             </p>
             <ul className="text-xs text-slate-300 space-y-1 list-disc pl-4">
               <li><strong>In-App:</strong> Profile &rarr; Danger Zone &rarr; "Revoke Institutional Node".</li>
-              <li><strong>Web:</strong> <a href="https://www.bfiiy.com/delete-account" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline inline-flex items-center gap-1">Delete Account Web Form <ExternalLink size={10} /></a></li>
+              <li><strong>Web:</strong> <a href="https://www.bfiiy.com/data-deletion" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline inline-flex items-center gap-1">Delete Account Web Form <ExternalLink size={10} /></a></li>
               <li><strong>Email:</strong> Send a deletion request to <strong>bharatfilmindustry@gmail.com</strong>. Processed within 7–30 days.</li>
             </ul>
           </div>
@@ -127,7 +127,7 @@ const PrivacyView: React.FC = () => {
           <li><strong>Developer / Officer:</strong> Prathapaneni Roopchandu</li>
           <li><strong>Entity:</strong> Bharat Film Industry</li>
           <li><strong>Registration:</strong> UDYAM-AP-23-0080757 / 37CZVPR2615G1ZU</li>
-          <li><strong>Direct Web Policy:</strong> <a href="https://www.bfiiy.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">https://www.bfiiy.com/privacy-policy</a></li>
+          <li><strong>Direct Web Policy:</strong> <a href="https://www.bfiiy.com/privacy" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">https://www.bfiiy.com/privacy</a></li>
         </ul>
       </div>
     </div>

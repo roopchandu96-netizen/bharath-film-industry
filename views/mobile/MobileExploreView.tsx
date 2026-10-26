@@ -137,7 +137,7 @@ export const MobileExploreView: React.FC<MobileExploreViewProps> = ({
       <div className="space-y-4 pt-2">
         <div className="flex justify-between items-center">
           <h3 className="text-base font-bold tracking-wide">Live Opportunities</h3>
-          <button className="text-[10px] font-black uppercase text-amber-500 tracking-wider hover:underline">
+          <button onClick={() => alert('Coming soon!')} className="text-[10px] font-black uppercase text-amber-500 tracking-wider hover:underline">
             View All
           </button>
         </div>

@@ -112,7 +112,7 @@ export const MobileMessagesView: React.FC = () => {
             </div>
           </div>
 
-          <button className="p-2 bg-emerald-950 border border-yellow-500/10 text-[#FACC15] rounded-xl hover:bg-emerald-900 transition-colors cursor-pointer">
+          <button onClick={() => alert('Coming soon!')} className="p-2 bg-emerald-950 border border-yellow-500/10 text-[#FACC15] rounded-xl hover:bg-emerald-900 transition-colors cursor-pointer">
             <Video size={18} className="stroke-[2.5]" />
           </button>
         </div>
@@ -160,7 +160,7 @@ export const MobileMessagesView: React.FC = () => {
 
         {/* Input Message Area */}
         <div className="pt-4 border-t border-yellow-500/5 bg-[#021f18] flex items-center gap-3">
-          <button className="p-3 bg-emerald-950/60 border border-yellow-500/10 text-[#FACC15] rounded-xl active:scale-95 transition-transform cursor-pointer">
+          <button onClick={() => alert('Coming soon!')} className="p-3 bg-emerald-950/60 border border-yellow-500/10 text-[#FACC15] rounded-xl active:scale-95 transition-transform cursor-pointer">
             <Plus size={16} className="stroke-[2.5]" />
           </button>
           
@@ -195,7 +195,7 @@ export const MobileMessagesView: React.FC = () => {
         </div>
         {/* Right side floating icons */}
         <div className="flex items-center gap-2">
-          <button className="p-2 bg-emerald-950 border border-yellow-500/10 text-[#FACC15] rounded-xl cursor-pointer">
+          <button onClick={() => alert('Coming soon!')} className="p-2 bg-emerald-950 border border-yellow-500/10 text-[#FACC15] rounded-xl cursor-pointer">
             <Video size={16} className="stroke-[2.5]" />
           </button>
         </div>

@@ -113,11 +113,11 @@ export const MobileTalentView: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="px-6 py-4 flex gap-3 border-t border-yellow-500/5">
-            <button className="flex-1 py-3 bg-gradient-to-r from-[#FACC15] via-[#eab308] to-[#f59e0b] text-[#021f18] font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md shadow-yellow-500/10">
+            <button onClick={() => alert('Coming soon!')} className="flex-1 py-3 bg-gradient-to-r from-[#FACC15] via-[#eab308] to-[#f59e0b] text-[#021f18] font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md shadow-yellow-500/10">
               <Mail size={14} className="stroke-[2.5]" />
               Connect
             </button>
-            <button className="p-3 bg-emerald-950 border border-yellow-500/10 text-[#FACC15] rounded-xl active:scale-95 transition-transform">
+            <button onClick={() => alert('Coming soon!')} className="p-3 bg-emerald-950 border border-yellow-500/10 text-[#FACC15] rounded-xl active:scale-95 transition-transform">
               <Bookmark size={16} className="stroke-[2.5]" />
             </button>
           </div>
@@ -149,7 +149,7 @@ export const MobileTalentView: React.FC = () => {
               <h4 className="text-sm font-bold text-white mt-4">{star.name}</h4>
               <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5 block">{star.role}</span>
 
-              <button className="w-full py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl mt-4 hover:from-blue-500 hover:to-blue-400 active:scale-95 transition-all shadow-md">
+              <button onClick={() => alert('Coming soon!')} className="w-full py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl mt-4 hover:from-blue-500 hover:to-blue-400 active:scale-95 transition-all shadow-md">
                 Hire
               </button>
             </div>
@@ -161,7 +161,7 @@ export const MobileTalentView: React.FC = () => {
       <div className="space-y-3">
         <div className="flex justify-between items-center px-1">
           <h3 className="text-sm font-black uppercase text-[#FACC15] tracking-widest block">Active Casting Nodes</h3>
-          <button className="text-[10px] font-bold text-emerald-400 uppercase">
+          <button onClick={() => alert('Coming soon!')} className="text-[10px] font-bold text-emerald-400 uppercase">
             View All
           </button>
         </div>

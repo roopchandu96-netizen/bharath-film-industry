@@ -1,6 +1,6 @@
 {
   "name": "Bharath Film Industry",
-  "description": "The official investment portal for the Bharath Film Industry. Secure producer credits for the next Pan-India blockbusters.",
+  "description": "A collaborative platform connecting filmmakers, creators, and cinema supporters across Indian film projects.",
   "requestFramePermissions": [
     "camera",
     "microphone"

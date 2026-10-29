@@ -24,6 +24,11 @@
 
         </activity>
 
+        <!-- Google Mobile Ads / AdMob App ID -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-4822446012346358~7345606070"/>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

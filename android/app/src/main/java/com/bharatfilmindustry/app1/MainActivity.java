@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import com.getcapacitor.BridgeActivity;
 import com.google.android.gms.ads.AdError;
@@ -26,6 +27,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
 
         // Initialize Google Mobile Ads SDK

@@ -1,21 +1,27 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Add project specific ProGuard / R8 rules here.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+-keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+-keepattributes JavascriptInterface
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep Capacitor Core & Plugins
+-keep class com.getcapacitor.** { *; }
+-keep interface com.getcapacitor.** { *; }
+-keep class * extends com.getcapacitor.Plugin { *; }
+-keepclassmembers class * extends com.getcapacitor.Plugin {
+    public <methods>;
+}
+-keep class * implements com.getcapacitor.PluginMethod { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep WebKit JavaScript Interfaces
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# Keep Google Mobile Ads (AdMob)
+-keep class com.google.android.gms.ads.** { *; }
+-keep interface com.google.android.gms.ads.** { *; }
+-keep class com.google.ads.** { *; }
+
+# Keep App Classes
+-keep class com.bharatfilmindustry.app1.** { *; }

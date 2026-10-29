@@ -27,6 +27,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme_NoActionBar);
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
 

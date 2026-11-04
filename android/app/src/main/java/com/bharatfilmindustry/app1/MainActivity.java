@@ -1,8 +1,9 @@
 package com.bharatfilmindustry.app1;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -17,13 +18,17 @@ import java.util.Date;
 
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "BFI_AdMob";
-    // Production Ad Unit ID: ca-app-pub-4822446012346358/8221974989
+    // Production Ad Unit ID
     private static final String AD_UNIT_ID = "ca-app-pub-4822446012346358/8221974989";
 
     private AppOpenAd appOpenAd = null;
     private boolean isLoadingAd = false;
     private boolean isShowingAd = false;
     private long loadTime = 0;
+    private long lastAdShownTimestamp = 0;
+
+    // Minimum cooldown between App Open ads (at least 4 minutes to strictly comply with AdMob policy)
+    private static final long AD_COOLDOWN_MS = 4 * 60 * 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,33 +36,33 @@ public class MainActivity extends BridgeActivity {
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
 
-        // Initialize Google Mobile Ads SDK
+        // Initialize Google Mobile Ads SDK without blocking startup
         MobileAds.initialize(this, initializationStatus -> {
             Log.d(TAG, "Google Mobile Ads SDK Initialized.");
-            // Load and attempt to show the App Open Ad on launch
-            loadAppOpenAd(true);
+            // Preload the ad in the background; do NOT interrupt cold launch
+            loadAppOpenAd();
         });
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // If an ad is available, show it; otherwise pre-load for next return
-        if (isAdAvailable()) {
-            showAdIfAvailable(this);
-        } else {
-            loadAppOpenAd(false);
+        // Only show if the user is returning to the app and cooldown has passed
+        long now = System.currentTimeMillis();
+        if ((now - lastAdShownTimestamp) >= AD_COOLDOWN_MS) {
+            if (isAdAvailable()) {
+                showAdIfAvailable(this);
+            } else {
+                loadAppOpenAd();
+            }
         }
     }
 
     /**
-     * Request an App Open ad.
+     * Preload App Open Ad silently in background
      */
-    public void loadAppOpenAd(boolean showWhenLoaded) {
+    public void loadAppOpenAd() {
         if (isLoadingAd || isAdAvailable()) {
-            if (showWhenLoaded && isAdAvailable()) {
-                showAdIfAvailable(this);
-            }
             return;
         }
 
@@ -70,13 +75,10 @@ public class MainActivity extends BridgeActivity {
             new AppOpenAd.AppOpenAdLoadCallback() {
                 @Override
                 public void onAdLoaded(@NonNull AppOpenAd ad) {
-                    Log.d(TAG, "App Open Ad loaded successfully.");
+                    Log.d(TAG, "App Open Ad cached successfully.");
                     appOpenAd = ad;
                     isLoadingAd = false;
                     loadTime = (new Date()).getTime();
-                    if (showWhenLoaded) {
-                        showAdIfAvailable(MainActivity.this);
-                    }
                 }
 
                 @Override
@@ -90,7 +92,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     /**
-     * Check if ad exists and is not expired (less than 4 hours old).
+     * Check if ad exists and is valid (< 4 hours old)
      */
     private boolean isAdAvailable() {
         return appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4);
@@ -103,15 +105,11 @@ public class MainActivity extends BridgeActivity {
     }
 
     /**
-     * Shows the ad if available.
+     * Shows ad safely with full compliance
      */
     public void showAdIfAvailable(@NonNull final Activity activity) {
-        if (isShowingAd) {
-            return;
-        }
-
-        if (!isAdAvailable()) {
-            loadAppOpenAd(false);
+        if (isShowingAd || !isAdAvailable()) {
+            loadAppOpenAd();
             return;
         }
 
@@ -122,8 +120,9 @@ public class MainActivity extends BridgeActivity {
                     Log.d(TAG, "App Open Ad dismissed.");
                     appOpenAd = null;
                     isShowingAd = false;
-                    // Pre-load the next ad
-                    loadAppOpenAd(false);
+                    lastAdShownTimestamp = System.currentTimeMillis();
+                    // Preload next ad silently
+                    loadAppOpenAd();
                 }
 
                 @Override
@@ -131,13 +130,14 @@ public class MainActivity extends BridgeActivity {
                     Log.e(TAG, "App Open Ad failed to show: " + adError.getMessage());
                     appOpenAd = null;
                     isShowingAd = false;
-                    loadAppOpenAd(false);
+                    loadAppOpenAd();
                 }
 
                 @Override
                 public void onAdShowedFullScreenContent() {
-                    Log.d(TAG, "App Open Ad showing full screen.");
+                    Log.d(TAG, "App Open Ad displayed.");
                     isShowingAd = true;
+                    lastAdShownTimestamp = System.currentTimeMillis();
                 }
             }
         );

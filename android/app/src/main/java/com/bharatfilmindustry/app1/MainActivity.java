@@ -19,7 +19,7 @@ import java.util.Date;
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "BFI_AdMob";
     // Production Ad Unit ID
-    private static final String AD_UNIT_ID = "ca-app-pub-4822446012346358/8221974989";
+    private static final String AD_UNIT_ID = "ca-app-pub-4822446012346358/1887460919";
 
     private AppOpenAd appOpenAd = null;
     private boolean isLoadingAd = false;
